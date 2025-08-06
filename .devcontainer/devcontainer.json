@@ -1,6 +1,6 @@
 {
   "name": "FitFolio Dev Container",
-  "dockerComposeFile": "../docker-compose.yml", // path relative to .devcontainer
+  "dockerComposeFile": "../docker-compose.yml",
   "service": "backend",
   "workspaceFolder": "/app",
   "customizations": {
@@ -16,5 +16,15 @@
       ]
     }
   },
-  "postCreateCommand": "pip install -r requirements.txt"
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+},
+"mounts": [
+  "source=/home/rutabageldev/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+],
+"remoteEnv": {
+  "SSH_AUTH_SOCK": "/run/host-ssh"
+},
+"postCreateCommand": "pip install -r requirements.txt"
 }
