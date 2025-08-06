@@ -1,6 +1,6 @@
 {
   "name": "FitFolio Dev Container",
-  "dockerComposeFile": "../docker-compose.yml",
+  "dockerComposeFile": "../docker-compose.yml", // path relative to .devcontainer
   "service": "backend",
   "workspaceFolder": "/app",
   "customizations": {
