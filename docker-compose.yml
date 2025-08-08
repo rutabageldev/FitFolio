@@ -18,17 +18,15 @@ services:
       - --reload-dir
       - /workspaces/fitfolio/backend
     environment:
-      DATABASE_URL: postgresql://fitfolio_user:supersecret@db:5432/fitfolio
-      EMAIL_SENDER: noreply@fitfolio.local
-      JWT_SECRET: some_very_secret_key
-      VITE_API_BASE_URL: http://localhost:8080
+      DATABASE_URL: ${DATABASE_URL}
+      EMAIL_SENDER: ${EMAIL_SENDER}
+      JWT_SECRET: ${JWT_SECRET}
       PYTHONPATH: /workspaces/fitfolio
     ports:
       - "8080:8000"
     depends_on:
       db:
         condition: service_started
-        required: true
     volumes:
       - ./:/workspaces/fitfolio:cached
 
@@ -37,13 +35,16 @@ services:
     build:
       context: ./frontend
     container_name: fitfolio-frontend
+    command: ["sh", "-lc", "npm ci && npm run dev -- --host"]
     ports:
       - "5173:5173"
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./:/workspaces/fitfolio:cached
+      - /workspaces/fitfolio/frontend/node_modules
     environment:
       - NODE_ENV=development
+      # - (Optional) Vite will read VITE_* from process.env at dev start
+      # - VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     stdin_open: true
     tty: true
 
