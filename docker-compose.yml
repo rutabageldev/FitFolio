@@ -29,6 +29,7 @@ services:
         condition: service_started
     volumes:
       - ./:/workspaces/fitfolio:cached
+      - sshkeys:/root/.ssh
 
 
   frontend:
@@ -63,3 +64,4 @@ services:
 
 volumes:
   pgdata:
+  sshkeys:
