@@ -21,10 +21,13 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
 },
 "mounts": [
-  "source=/home/rutabageldev/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+  "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
 ],
 "remoteEnv": {
   "SSH_AUTH_SOCK": "/run/host-ssh"
 },
-"postCreateCommand": "pip install -r requirements.txt"
+"postCreateCommand": [
+  "pip install -r requirements.txt",
+  "/bin/bash /workspaces/fitfolio/.devcontainer/scripts/configure-git.sh"
+]
 }

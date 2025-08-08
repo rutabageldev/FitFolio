@@ -18,3 +18,4 @@ build/
 # System
 .DS_Store
 Thumbs.db
+.devcontainer/.gitconfig.dev
