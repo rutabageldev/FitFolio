@@ -2,12 +2,13 @@
   "name": "FitFolio Dev Container",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "backend",
-  "workspaceFolder": "/workspaces/FitFolio",
+  "workspaceFolder": "/workspaces/fitfolio",
   "customizations": {
     "vscode": {
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "editor.formatOnSave": true
+        "editor.formatOnSave": true,
+        "terminal.integrated.defaultProfile.linux": "bash"
       },
       "extensions": [
         "ms-python.python",
@@ -18,16 +19,19 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
-},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+   }
+  },
 "mounts": [
   "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
-],
+  ],
 "remoteEnv": {
   "SSH_AUTH_SOCK": "/run/host-ssh"
-},
+  },
 "postCreateCommand": [
   "pip install -r requirements.txt",
-  "/bin/bash -lc '.devcontainer/scripts/configure-git.sh || bash .devcontainer/scripts/configure-git.sh'"
-]
+   "/bin/bash -lc '.devcontainer/scripts/configure-git.sh || bash .devcontainer/scripts/configure-git.sh'"
+  ]
 }
