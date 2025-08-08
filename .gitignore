@@ -19,3 +19,11 @@ build/
 .DS_Store
 Thumbs.db
 .devcontainer/.gitconfig.dev
+.devcontainer/_pubkey.txt
+
+
+# General
+**/id_ed25519
+**/id_rsa
+**/*.pem
+**/*.key
