@@ -4,16 +4,34 @@ services:
   backend:
     build:
       context: ./backend
+      dockerfile: Dockerfile
     container_name: fitfolio-backend
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    volumes:
-      - ./backend:/app
+    working_dir: /workspaces/fitfolio/backend
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+      - --reload-dir
+      - /workspaces/fitfolio/backend
+    environment:
+      DATABASE_URL: postgresql://fitfolio_user:supersecret@db:5432/fitfolio
+      EMAIL_SENDER: noreply@fitfolio.local
+      JWT_SECRET: some_very_secret_key
+      VITE_API_BASE_URL: http://localhost:8080
+      PYTHONPATH: /workspaces/fitfolio
     ports:
       - "8080:8000"
-    env_file:
-      - .env
     depends_on:
-      - db
+      db:
+        condition: service_started
+        required: true
+    volumes:
+      - ./:/workspaces/fitfolio:cached
+
 
   frontend:
     build:

@@ -2,24 +2,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WORKDIR="/workspaces/fitfolio"   # adjust if your workspace path differs
-CONF="$WORKDIR/.devcontainer/.gitconfig.dev"
+# Find the real repo root even if workspaceFolder is /app (backend subfolder)
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$ROOT"
 
-# Make sure we're in the repo
-cd "$WORKDIR"
+CONF="$ROOT/.devcontainer/.gitconfig.dev"
 
-# Trust this path for “safe directory” complaints
-git config --global --add safe.directory "$WORKDIR" || true
+# Trust this repo path for “safe directory” (global is fine; that's how Git expects it)
+git config --global --add safe.directory "$ROOT" || true
 
 if [[ -f "$CONF" ]]; then
   # shellcheck disable=SC1090
   source "$CONF"
 
-  # Set identity LOCALLY so it never bleeds into other repos
+  # Set identity for THIS repo only
   [[ -n "${GIT_USER_NAME:-}"  ]] && git config --local user.name  "$GIT_USER_NAME"
   [[ -n "${GIT_USER_EMAIL:-}" ]] && git config --local user.email "$GIT_USER_EMAIL"
 
-  # Optionally (idempotent) set remote if not present
+  # Optionally set 'origin' once
   if [[ -n "${GIT_REMOTE_SSH:-}" ]]; then
     if git remote get-url origin >/dev/null 2>&1; then
       echo "origin already set -> $(git remote get-url origin)"
@@ -29,7 +29,7 @@ if [[ -f "$CONF" ]]; then
     fi
   fi
 
-  echo "Git (local) configured for this repo."
+  echo "✅ Git (local) configured for this repo at $ROOT"
 else
-  echo "No .gitconfig.dev found. Skipping local git identity."
+  echo "ℹ️  No .devcontainer/.gitconfig.dev found. Skipping local git identity."
 fi

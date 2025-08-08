@@ -2,7 +2,7 @@
   "name": "FitFolio Dev Container",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "backend",
-  "workspaceFolder": "/app",
+  "workspaceFolder": "/workspaces/FitFolio",
   "customizations": {
     "vscode": {
       "settings": {
@@ -28,6 +28,6 @@
 },
 "postCreateCommand": [
   "pip install -r requirements.txt",
-  "/bin/bash /workspaces/fitfolio/.devcontainer/scripts/configure-git.sh"
+  "/bin/bash -lc '.devcontainer/scripts/configure-git.sh || bash .devcontainer/scripts/configure-git.sh'"
 ]
 }

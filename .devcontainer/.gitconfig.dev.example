@@ -1,0 +1,5 @@
+# .devcontainer/.gitconfig.dev.example
+GIT_USER_NAME="Your Name"
+GIT_USER_EMAIL="you@example.com"
+# Optional:
+# GIT_REMOTE_SSH="git@github.com:youruser/FitFolio.git"
