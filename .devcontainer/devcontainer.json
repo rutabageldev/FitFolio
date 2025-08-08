@@ -25,10 +25,7 @@
   "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
   ],
 
-"postCreateCommand": [
-  "pip install -r backend/requirements.txt",
-  "/usr/bin/bash -lc '.devcontainer/scripts/configure-git.sh || bash .devcontainer/scripts/configure-git.sh'"
-  ],
+"postCreateCommand": "/usr/bin/bash -lc 'python -m pip install -r backend/requirements.txt && .devcontainer/scripts/configure-git.sh'",
 "postStartCommand": "/usr/bin/bash -lc '.devcontainer/scripts/configure-git.sh || true'",
 
 "remoteEnv": { "SSH_AUTH_SOCK": "/run/host-ssh" }

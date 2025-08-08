@@ -5,7 +5,9 @@ ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$ROOT"
 CONF="$ROOT/.devcontainer/.gitconfig.dev"
 
-git config --global --add safe.directory "$ROOT" || true
+if ! git config --global --get-all safe.directory | grep -qx "/workspaces/fitfolio"; then
+  git config --global --add safe.directory "/workspaces/fitfolio"
+fi
 
 if [[ -f "$CONF" ]]; then
   # shellcheck disable=SC1090
