@@ -27,3 +27,7 @@ Thumbs.db
 **/id_rsa
 **/*.pem
 **/*.key
+.devcontainer/_pubkey.txt
+**/id_ed25519
+**/id_rsa
+**/*.pem
