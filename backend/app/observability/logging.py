@@ -2,10 +2,21 @@ import logging
 import os
 import sys
 
-import orjson
 import structlog
 from opentelemetry import trace
 from structlog.contextvars import bind_contextvars, clear_contextvars
+
+# Try orjson; fall back to stdlib json
+try:
+    import orjson as _jsonlib
+
+    def _json_dumps(d):
+        return _jsonlib.dumps(d).decode()
+except Exception:
+    import json as _jsonlib
+
+    def _json_dumps(d):
+        return _jsonlib.dumps(d, default=str)
 
 
 def _add_trace_ids(_, __, event):
@@ -18,7 +29,7 @@ def _add_trace_ids(_, __, event):
 
 
 def _json_renderer(_, __, event):
-    return orjson.dumps(event, option=orjson.OPT_NON_STR_KEYS).decode()
+    return _json_dumps(event)
 
 
 def configure_logging():
@@ -26,7 +37,6 @@ def configure_logging():
     logging.basicConfig(
         level=level, handlers=[logging.StreamHandler(sys.stdout)], format="%(message)s"
     )
-
     for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
         logging.getLogger(name).handlers = []
         logging.getLogger(name).propagate = True
