@@ -1,14 +1,15 @@
 """init schema
 
 Revision ID: 27175cb3061e
-Revises: 
+Revises:
 Create Date: 2025-08-09 15:31:10.805774
 
 """
-from typing import Sequence, Union
+from typing import Sequence
+from typing import Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 # revision identifiers, used by Alembic.

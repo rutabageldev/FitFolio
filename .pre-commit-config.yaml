@@ -1,7 +1,7 @@
 repos:
   # --- Core hygiene ---
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
       - id: check-merge-conflict
@@ -13,7 +13,7 @@ repos:
 
   # --- Pythong lint & format ---
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.6
+    rev: v0.12.8
     hooks:
       - id: ruff
         args: [--fix] # auto-fix where possibl
@@ -21,21 +21,21 @@ repos:
 
   # --- Types ---
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.0
+    rev: v1.17.1
     hooks:
       - id: mypy
         additional_dependencies: ['sqlalchemy>=2.0', 'pydantic>=2']
 
   # --- Security (static) ---
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.9
+    rev: 1.8.6
     hooks:
       - id: bandit
         args: ['-q', '-r', 'backend']
 
   # --- Dependency vulns ---
   - repo: https://github.com/pypa/pip-audit
-    rev: v2.7.3
+    rev: v2.9.0
     hooks:
       - id: pip-audit
         stages: [push]
@@ -43,7 +43,7 @@ repos:
 
   # --- Secrets (local) ---
   - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
+    rev: v1.5.0
     hooks:
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
@@ -52,8 +52,3 @@ repos:
             frontend/node_modules/|
             .*/migrations/|
           )
-
-  - repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.12.0
-    hooks:
-      - id: reorder-python-imports

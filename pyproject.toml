@@ -1,0 +1,19 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = ["backend/migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E203"]  # compatible with many formatters
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+pretty = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+
+[tool.bandit]
+skips = ["B101"]  # assert-used (optional)
