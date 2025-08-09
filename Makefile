@@ -46,3 +46,16 @@ mail-logs:
 
 mail-ui:
 	( xdg-open http://localhost:8025 || open http://localhost:8025 || powershell.exe start http://localhost:8025 ) >/dev/null 2>&1 || true
+
+build-prod:
+	docker build -f backend/Dockerfile.prod -t fitfolio-backend:prod .
+	docker build -f frontend/Dockerfile.prod -t fitfolio-frontend:prod .
+
+up-prod: build-prod
+	docker compose -f compose.prod.yml up -d
+
+down-prod:
+	docker compose -f compose.prod.yml down -v
+
+logs-prod:
+	docker compose -f compose.prod.yml logs -f --tail=200
