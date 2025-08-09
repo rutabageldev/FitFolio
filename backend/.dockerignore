@@ -1,0 +1,27 @@
+# VCS / IDE
+.git
+.gitignore
+.vscode
+__pycache__/
+*.py[cod]
+*.log
+*.sqlite3
+
+# Python envs / build
+.venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.pytype/
+dist/
+build/
+htmlcov/
+.coverage*
+
+# Node
+node_modules/
+
+# Devcontainer & compose noise
+.devcontainer/
+docker-compose.yml
+.env
