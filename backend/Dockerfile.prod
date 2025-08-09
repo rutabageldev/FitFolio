@@ -35,4 +35,4 @@ COPY backend/ /app/
 USER appuser
 EXPOSE 8000
 # uvicorn for demo; later you can switch to gunicorn+uvicorn workers
-CMD ["gunicorn","-k","uvicorn.workers.UvicornWorker","app.main:app","-b","0.0.0.0:8000","--workers","2","--threads","4"]
+CMD ["uvicorn","app.main:app","--host","0.0.0.0","--port","8000","--reload"]
