@@ -4,7 +4,6 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
     container_name: fitfolio-backend
     working_dir: /workspaces/fitfolio/backend
     command:
@@ -17,6 +16,11 @@ services:
       - --reload
       - --reload-dir
       - /workspaces/fitfolio/backend
+    volumes:
+      - ./:/workspaces/fitfolio:cached
+      - sshkeys:/root/.ssh
+    env_file:
+      - .env
     environment:
       DATABASE_URL: ${DATABASE_URL}
       EMAIL_SENDER: ${EMAIL_SENDER}
@@ -27,21 +31,19 @@ services:
     depends_on:
       db:
         condition: service_started
-    volumes:
-      - ./:/workspaces/fitfolio:cached
-      - sshkeys:/root/.ssh
 
 
   frontend:
     build:
       context: ./frontend
     container_name: fitfolio-frontend
+    working_dir: /workspaces/fitfolio/frontend
     command: ["sh", "-lc", "npm ci && npm run dev -- --host"]
-    ports:
-      - "5173:5173"
     volumes:
       - ./:/workspaces/fitfolio:cached
       - /workspaces/fitfolio/frontend/node_modules
+    ports:
+      - "5173:5173"
     environment:
       - NODE_ENV=development
       # - (Optional) Vite will read VITE_* from process.env at dev start
@@ -61,6 +63,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
 
 volumes:
   pgdata:
