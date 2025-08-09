@@ -40,3 +40,9 @@ lint:        ## Lint (pre-commit if you use it)
 
 test:        ## Run backend tests
 	docker compose exec backend bash -lc "pytest -q"
+
+mail-logs:
+	docker compose logs -f mail
+
+mail-ui:
+	( xdg-open http://localhost:8025 || open http://localhost:8025 || powershell.exe start http://localhost:8025 ) >/dev/null 2>&1 || true

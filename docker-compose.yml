@@ -75,6 +75,15 @@ services:
       timeout: 3s
       retries: 20
 
+  mail:
+    image: axllent/mailpit:latest
+    container_name: fitfolio-mail
+    ports:
+      - "8025:8025"   # Web UI
+      - "1025:1025"   # SMTP
+    restart: unless-stopped
+
+
 volumes:
   pgdata:
   sshkeys:

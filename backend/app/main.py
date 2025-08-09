@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+# Dev only imports
+from app.api.routes.dev import router as dev_router
 from app.api.routes.health import router as health_router
 from app.middleware.request_id import RequestIDMiddleware
 from app.observability.logging import configure_logging, get_logger
@@ -15,6 +17,9 @@ app.add_middleware(RequestIDMiddleware)
 
 app.include_router(health_router)
 # app.include_router(users_router)
+
+# Dev only!
+app.include_router(dev_router)
 
 log = get_logger()
 log.info("backend_started")
