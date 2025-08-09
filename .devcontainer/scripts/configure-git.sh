@@ -1,18 +1,17 @@
-#!/usr/bin/env bash
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$ROOT"
+
 CONF="$ROOT/.devcontainer/.gitconfig.dev"
 
-if ! git config --global --get-all safe.directory | grep -qx "/workspaces/fitfolio"; then
-  git config --global --add safe.directory "/workspaces/fitfolio"
+if ! git config --global --get-all safe.directory | grep -qx "$ROOT"; then
+  git config --global --add safe.directory "$ROOT" || true
 fi
 
 if [[ -f "$CONF" ]]; then
   # shellcheck disable=SC1090
   source "$CONF"
-
   strip_cr() { printf '%s' "$1" | tr -d '\r'; }
   GIT_USER_NAME="$(strip_cr "${GIT_USER_NAME:-}")"
   GIT_USER_EMAIL="$(strip_cr "${GIT_USER_EMAIL:-}")"
@@ -25,7 +24,7 @@ if [[ -f "$CONF" ]]; then
     git remote add origin "$GIT_REMOTE_SSH"
   fi
 
-  echo "✅ Git configured for this repo at $ROOT"
+  echo "✅ Git configured for $ROOT"
 else
   echo "ℹ️  No .devcontainer/.gitconfig.dev found. Skipping."
 fi
