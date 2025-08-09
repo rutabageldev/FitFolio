@@ -24,6 +24,9 @@ services:
       EMAIL_SENDER: ${EMAIL_SENDER}
       JWT_SECRET: ${JWT_SECRET}
       PYTHONPATH: /workspaces/fitfolio
+      LOG_LEVEL: info
+      OTEL_SERVICE_NAME: fitfolio-backend
+      # OTEL_EXPORTER_OTLP_ENDPOINT: http://localhost:4318/v1/traces   # enable if you run an OTLP collector (e.g., Tempo/Jaeger/Otel-collector)
     ports:
       - "8080:8000"
     healthcheck:
@@ -50,7 +53,6 @@ services:
       - "5173:5173"
     environment:
       - NODE_ENV=development
-      # - (Optional) Vite will read VITE_* from process.env at dev start
       # - VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     stdin_open: true
     tty: true
