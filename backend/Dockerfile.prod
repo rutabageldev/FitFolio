@@ -1,0 +1,38 @@
+# syntax=docker/dockerfile:1.4
+
+# ---------- builder ----------
+FROM python:3.12-slim AS builder
+WORKDIR /wheels
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential gcc libpq-dev && \
+    rm -rf /var/lib/apt/lists/*
+COPY backend/requirements.txt /tmp/requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip wheel --wheel-dir /wheels -r /tmp/requirements.txt
+
+# ---------- runtime ----------
+FROM python:3.12-slim
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+
+# minimal runtime deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# non-root user
+RUN useradd -m -u 10001 appuser
+WORKDIR /app
+
+# install deps from wheels (no compilers)
+COPY --from=builder /wheels /wheels
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-index --find-links=/wheels /wheels/*
+
+# copy app
+COPY backend/ /app/
+
+USER appuser
+EXPOSE 8000
+# uvicorn for demo; later you can switch to gunicorn+uvicorn workers
+CMD ["gunicorn","-k","uvicorn.workers.UvicornWorker","app.main:app","-b","0.0.0.0:8000","--workers","2","--threads","4"]
