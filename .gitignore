@@ -31,3 +31,4 @@ Thumbs.db
 **/id_ed25519
 **/id_rsa
 **/*.pem
+frontend/node_modules

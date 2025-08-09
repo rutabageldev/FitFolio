@@ -11,9 +11,9 @@ repos:
       - id: check-yaml
       - id: check-json
 
-  # --- Pythong lint & format ---
+  # --- Python lint & format ---
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.8
+    rev: v0.5.6
     hooks:
       - id: ruff
         args: [--fix] # auto-fix where possibl
@@ -21,29 +21,29 @@ repos:
 
   # --- Types ---
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.17.1
+    rev: v1.10.0
     hooks:
       - id: mypy
         additional_dependencies: ['sqlalchemy>=2.0', 'pydantic>=2']
 
   # --- Security (static) ---
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.8.6
+    rev: 1.7.9
     hooks:
       - id: bandit
         args: ['-q', '-r', 'backend']
 
   # --- Dependency vulns ---
   - repo: https://github.com/pypa/pip-audit
-    rev: v2.9.0
+    rev: v2.7.3
     hooks:
       - id: pip-audit
-        stages: [push]
+        stages: [pre-push]
         args: ['-r', 'backend/requirements.txt']
 
   # --- Secrets (local) ---
   - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.5.0
+    rev: v1.4.0
     hooks:
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
@@ -52,3 +52,27 @@ repos:
             frontend/node_modules/|
             .*/migrations/|
           )
+
+  # --- Frontend lint & format (run in devcontainer) ---
+  - repo: local
+    hooks:
+      - id: eslint
+        name: frontend eslint
+        language: system
+        entry: bash -lc 'npx --yes eslint --config frontend/eslint.config.cjs --fix --max-warnings=0 -- "$@"' --
+        files: ^frontend/.*\.(ts|tsx|js|jsx)$
+      - id: prettier-write
+        name: frontend prettier write
+        language: system
+        entry: bash -lc 'npx --yes prettier -w --config frontend/.prettierrc --ignore-path frontend/.prettierignore -- "$@"' --
+        files: ^frontend/.*\.(ts|tsx|js|jsx|json|css|scss|md|markdown|ya?ml|html)$
+
+  # --- Pre-push linting check ---
+  - repo: local
+    hooks:
+      - id: prettier-check
+        name: frontend prettier check (pre-push)
+        language: system
+        entry: bash -lc 'npx --yes prettier -c --config frontend/.prettierrc --ignore-path frontend/.prettierignore -- "$@"' --
+        files: ^frontend/.*\.(ts|tsx|js|jsx|json|css|scss|md|markdown|ya?ml|html)$
+        stages: [pre-push]
