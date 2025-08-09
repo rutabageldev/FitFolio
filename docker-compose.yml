@@ -28,9 +28,15 @@ services:
       PYTHONPATH: /workspaces/fitfolio
     ports:
       - "8080:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
 
 
   frontend:

@@ -17,6 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends openssh-client ca-certificates git \
+    && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the FastAPI app code
