@@ -1,21 +1,32 @@
-# Makefile (repo root)
-.PHONY: help up down rebuild logs be fe dbshell migrate autogen fmt lint test
+.PHONY: help up down ps be-health rebuild be-logs fe-logs logs be fe dbshell migrate autogen fmt lint test mail-logs mail-verify mail-ui open-mailpit open-frontend build-prod up-prod down-prod logs-prod
 
 help:        ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sed 's/:.*##/: /'
 
 up:          ## Start the whole stack (backend, db, frontend)
-	docker compose up -d
+	docker compose up -d --build
 
 down:        ## Stop and remove containers
 	docker compose down
+
+ps:
+	docker compose ps
+
+be-health: # Backend Health Check
+	\tcurl -sS http://localhost:8080/healthz
 
 rebuild:     ## Rebuild backend image then start
 	docker compose build backend
 	docker compose up -d
 
-logs:        ## Follow backend logs
+be-logs:        ## Follow backend logs
 	docker compose logs -f --tail=200 backend
+
+fe-logs:
+	docker compose logs -f frontend
+
+logs:
+	docker compose logs -f
 
 be:          ## Shell into backend container
 	docker compose exec backend bash
@@ -36,7 +47,7 @@ fmt:         ## Format Python (ruff/black if you add them)
 	docker compose exec backend bash -lc "ruff format || true; black . || true"
 
 lint:        ## Lint (pre-commit if you use it)
-	docker compose exec backend bash -lc "pre-commit run --all-files || true"
+	pre-commit run --all-files || true
 
 test:        ## Run backend tests
 	docker compose exec backend bash -lc "pytest -q"
@@ -46,6 +57,15 @@ mail-logs:
 
 mail-ui:
 	( xdg-open http://localhost:8025 || open http://localhost:8025 || powershell.exe start http://localhost:8025 ) >/dev/null 2>&1 || true
+
+mail-verify:
+	curl -sS -X POST "http://localhost:8080/_debug/mail?to=you@rutabagel.com"
+
+open-mailpit:
+	@echo "Mailpit UI -> http://localhost:8025"
+
+open-frontend:
+	@echo "Frontend -> http://localhost:5173"
 
 build-prod:
 	docker build -f backend/Dockerfile.prod -t fitfolio-backend:prod .
