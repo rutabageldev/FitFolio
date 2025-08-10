@@ -21,3 +21,15 @@
 
 - Vite proxies `/api/*` to backend on `http://localhost:8080`, stripping `/api`.
 - Example call from the UI: `fetch('/api/healthz') -> {"status":"ok"}`
+
+## DB Migrations
+
+- Generate migration (autogenerate):
+  `make autogen MSG="description"`
+
+- Apply latest:
+  `make migrate` (or `docker compose exec backend alembic upgrade head`)
+
+- Clean tree check:
+  After applying, run `docker compose exec backend alembic revision --autogenerate -m "noop check"`
+  → It should produce no operations (delete the noop file if empty).

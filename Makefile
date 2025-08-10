@@ -38,10 +38,11 @@ dbshell:     ## psql into the DB (uses env from the container)
 	docker compose exec db psql -U fitfolio_user -d fitfolio
 
 migrate:     ## Apply latest Alembic migrations
-	docker compose exec backend bash -lc "cd backend && alembic upgrade head"
+	alembic -c backend/alembic.ini upgrade head
 
 autogen:     ## Create a new Alembic migration from models
-	docker compose exec backend bash -lc "cd backend && alembic revision --autogenerate -m \"auto\""
+	@if [ -z "$(MSG)" ]; then echo 'Set MSG="your message"'; exit 1; fi
+	alembic -c backend/alembic.ini revision --autogenerate -m "$(MSG)"
 
 fmt:         ## Format Python (ruff/black if you add them)
 	docker compose exec backend bash -lc "ruff format || true; black . || true"
