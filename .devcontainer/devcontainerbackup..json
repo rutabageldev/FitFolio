@@ -1,0 +1,45 @@
+{
+  "name": "FitFolio Dev Container",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "backend",
+  "workspaceFolder": "/workspaces/fitfolio",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "editor.formatOnSave": true,
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-azuretools.vscode-docker",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "ppa": false,
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "installDirectlyFromGitHubRelease": true,
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20",
+      "nodeGypDependencies": true,
+      "installYarnUsingApt": false
+    }
+  },
+  "mounts": [
+    "type=volume,source=vscode-server,target=/root/.vscode-server"
+  ],
+  "containerEnv": {
+    "HOME": "/root",
+    "USER": "root"
+  },
+  "postCreateCommand": "/usr/bin/bash -lc 'cd /workspaces/fitfolio && .devcontainer/scripts/configure-git.sh'",
+  "postStartCommand": "/usr/bin/bash -lc 'cd /workspaces/fitfolio && .devcontainer/scripts/configure-ssh.sh --noninteractive; install -m 0644 .devcontainer/scripts/shell-aliases.sh /etc/profile.d/zz-fitfolio-aliases.sh; .devcontainer/scripts/configure-git.sh; pre-commit install --install-hooks --hook-type pre-commit --hook-type pre-push || true'",
+  "postAttachCommand": "/usr/bin/bash -lc 'cd /workspaces/fitfolio && .devcontainer/scripts/configure-ssh.sh --noninteractive || true'"
+}
