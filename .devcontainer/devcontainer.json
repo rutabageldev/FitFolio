@@ -2,5 +2,38 @@
   "name": "FitFolio Dev Container",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "backend",
-  "workspaceFolder": "/workspaces/fitfolio"
+  "workspaceFolder": "/workspaces/fitfolio",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "editor.formatOnSave": true,
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-azuretools.vscode-docker",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  },
+  "mounts": [
+    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached,readonly"
+  ],
+  "containerEnv": {
+    "SSH_AUTH_SOCK": "/ssh-agent"
+  },
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/ssh-agent"
+  },
+  "postCreateCommand": "python -m pip install -r backend/requirements.txt",
+  "postStartCommand": "bash -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cp -r /root/.ssh/* ~/.ssh/ 2>/dev/null || true && chmod 600 ~/.ssh/* 2>/dev/null || true && ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null || true && .devcontainer/scripts/configure-git.sh && pre-commit install --install-hooks --hook-type pre-commit --hook-type pre-push'",
+  "postAttachCommand": "bash -c 'eval $(ssh-agent -s) && ssh-add ~/.ssh/id_* 2>/dev/null || true'"
 }
