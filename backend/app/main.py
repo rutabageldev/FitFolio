@@ -3,8 +3,10 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes.auth import router as auth_router
 from app.api.routes.dev import router as dev_router  # Dev only
 from app.api.routes.health import router as health_router
+from app.db.database import init_db
 from app.middleware.request_id import RequestIDMiddleware
 from app.observability.logging import configure_logging, get_logger
 from app.observability.otel import setup_otel
@@ -17,8 +19,8 @@ app.include_router(health_router)
 setup_otel(app)
 app.add_middleware(RequestIDMiddleware)
 
-app.include_router(health_router)
-# app.include_router(users_router)
+# Include auth routes
+app.include_router(auth_router)
 
 # Dev only!
 app.include_router(dev_router)
@@ -37,3 +39,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on startup."""
+    try:
+        await init_db()
+        log.info("Database initialized successfully")
+    except Exception as e:
+        log.error(f"Failed to initialize database: {e}")
+        # In production, you might want to exit here
+        # For development, we'll continue and let the app handle DB errors
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up resources on shutdown."""
+    from app.db.database import close_db
+
+    await close_db()
+    log.info("Database connections closed")

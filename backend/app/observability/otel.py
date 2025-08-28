@@ -16,7 +16,9 @@ def setup_otel(app):
     provider = TracerProvider(resource=resource)
 
     endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-    exporter = OTLPSpanExporter(endpoint=endpoint) if endpoint else ConsoleSpanExporter()
+    exporter = (
+        OTLPSpanExporter(endpoint=endpoint) if endpoint else ConsoleSpanExporter()
+    )
 
     provider.add_span_processor(BatchSpanProcessor(exporter))
     trace.set_tracer_provider(provider)

@@ -1,7 +1,8 @@
 import uuid
 
-from app.observability.logging import bind_ctx, clear_ctx
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from app.observability.logging import bind_ctx, clear_ctx
 
 
 class RequestIDMiddleware(BaseHTTPMiddleware):

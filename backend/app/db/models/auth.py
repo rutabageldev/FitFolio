@@ -21,9 +21,15 @@ from ..base import Base
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    email: Mapped[str] = mapped_column(String(320), nullable=False)  # uniq via lower(email) index
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    email: Mapped[str] = mapped_column(
+        String(320), nullable=False
+    )  # uniq via lower(email) index
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true")
+    )
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False
     )
@@ -49,16 +55,22 @@ class User(Base):
 class Session(Base):
     __tablename__ = "sessions"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
 
-    token_hash: Mapped[bytes] = mapped_column(BYTEA, nullable=False, unique=True)  # store HASH only
+    token_hash: Mapped[bytes] = mapped_column(
+        BYTEA, nullable=False, unique=True
+    )  # store HASH only
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False
     )
-    expires_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False
+    )
     rotated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
 
@@ -74,7 +86,9 @@ class Session(Base):
 class WebAuthnCredential(Base):
     __tablename__ = "webauthn_credentials"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
@@ -83,7 +97,9 @@ class WebAuthnCredential(Base):
         BYTEA, nullable=False, unique=True
     )  # WebAuthn "id"
     public_key: Mapped[bytes] = mapped_column(BYTEA, nullable=False)  # COSE key bytes
-    sign_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    sign_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("0")
+    )
 
     transports: Mapped[list[str] | None] = mapped_column(JSONB)
     nickname: Mapped[str | None] = mapped_column(String(100))
@@ -104,7 +120,9 @@ class WebAuthnCredential(Base):
 
     __table_args__ = (
         Index("ix_webauthn_credentials_user_id", "user_id"),
-        UniqueConstraint("user_id", "nickname", name="uq_webauthn_credentials_user_nickname"),
+        UniqueConstraint(
+            "user_id", "nickname", name="uq_webauthn_credentials_user_nickname"
+        ),
     )
 
 

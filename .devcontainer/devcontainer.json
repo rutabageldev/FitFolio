@@ -3,6 +3,7 @@
   "dockerComposeFile": "../docker-compose.yml",
   "service": "backend",
   "workspaceFolder": "/workspaces/fitfolio",
+  "forwardPorts": [8000, 5173, 5432, 1025, 8025],
   "customizations": {
     "vscode": {
       "settings": {

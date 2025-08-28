@@ -2,23 +2,21 @@ from __future__ import annotations
 
 import os
 import sys
-from pathlib import Path
 from logging.config import fileConfig
+from pathlib import Path
+from typing import Any, cast
 
 from alembic import context
-from app.db.base import Base
-from typing import Any, Dict, cast
 from sqlalchemy import engine_from_config, pool
+
+from app.db.base import Base
 
 BASE_DIR = Path(__file__).resolve().parents[1]  # .../backend
 if str(BASE_DIR) not in sys.path:
     sys.path.append(str(BASE_DIR))
 
-from app.db.base import Base
+# ruff: noqa: E402
 from app.db import models  # noqa: F401  <-- important: loads submodules via __init__.py
-
-from app.db.base import Base  # noqa: E402
-from app.db import models      # noqa: F401,E402  (loads submodules via models/__init__.py)
 
 # Alembic Config
 config = context.config
@@ -50,7 +48,7 @@ def run_migrations_online() -> None:
     if section is None:
         raise RuntimeError("Alembic config section missing")
     connectable = engine_from_config(
-        cast(Dict[str, Any], section),
+        cast(dict[str, Any], section),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
@@ -63,6 +61,7 @@ def run_migrations_online() -> None:
         )
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

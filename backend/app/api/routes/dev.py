@@ -1,5 +1,6 @@
-from app.core.email import send_email
 from fastapi import APIRouter, BackgroundTasks, Query
+
+from app.core.email import send_email
 
 router = APIRouter(prefix="/_debug", tags=["debug"])
 
