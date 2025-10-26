@@ -2,23 +2,23 @@ import secrets
 from typing import Any
 
 from webauthn import (
-    base64url_to_bytes,
-    bytes_to_base64url,
     generate_authentication_options,
     generate_registration_options,
     verify_authentication_response,
     verify_registration_response,
 )
+from webauthn.helpers import base64url_to_bytes, bytes_to_base64url
 from webauthn.helpers.structs import (
     AuthenticationCredential,
-    AuthenticationOptions,
     AuthenticatorSelectionCriteria,
     AuthenticatorTransport,
     COSEAlgorithmIdentifier,
+    PublicKeyCredentialCreationOptions,
     PublicKeyCredentialDescriptor,
+    PublicKeyCredentialRequestOptions,
     PublicKeyCredentialType,
     RegistrationCredential,
-    RegistrationOptions,
+    ResidentKeyRequirement,
     UserVerificationRequirement,
 )
 
@@ -37,8 +37,11 @@ class WebAuthnManager:
         user_name: str,
         user_display_name: str,
         exclude_credentials: list[dict[str, Any]] | None = None,
-    ) -> RegistrationOptions:
+    ) -> PublicKeyCredentialCreationOptions:
         """Generate WebAuthn registration options."""
+
+        # Convert user_id string to bytes
+        user_id_bytes = user_id.encode("utf-8")
 
         # Convert exclude_credentials to proper format if provided
         exclude_creds = []
@@ -60,18 +63,18 @@ class WebAuthnManager:
         options = generate_registration_options(
             rp_name=self.rp_name,
             rp_id=self.rp_id,
-            user_id=user_id,
+            user_id=user_id_bytes,
             user_name=user_name,
             user_display_name=user_display_name,
             challenge=secrets.token_bytes(32),
             exclude_credentials=exclude_creds,
             authenticator_selection=AuthenticatorSelectionCriteria(
                 user_verification=UserVerificationRequirement.PREFERRED,
-                resident_key="preferred",
+                resident_key=ResidentKeyRequirement.PREFERRED,
             ),
             supported_pub_key_algs=[
-                COSEAlgorithmIdentifier.ECDSA_WITH_SHA_256,
-                COSEAlgorithmIdentifier.RSA_PKCS1_2048_SHA_256,
+                COSEAlgorithmIdentifier.ECDSA_SHA_256,
+                COSEAlgorithmIdentifier.RSASSA_PKCS1_v1_5_SHA_256,
             ],
         )
 
@@ -80,7 +83,7 @@ class WebAuthnManager:
     def generate_authentication_options(
         self,
         allow_credentials: list[dict[str, Any]] | None = None,
-    ) -> AuthenticationOptions:
+    ) -> PublicKeyCredentialRequestOptions:
         """Generate WebAuthn authentication options."""
 
         # Convert allow_credentials to proper format if provided

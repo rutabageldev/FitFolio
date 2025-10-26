@@ -12,9 +12,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     bash openssh-client curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt ./
+COPY requirements.txt requirements-dev.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install -r requirements.txt
+    pip install -r requirements-dev.txt
 
 COPY . .
 

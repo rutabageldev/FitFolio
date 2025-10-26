@@ -4,38 +4,38 @@ help:        ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sed 's/:.*##/: /'
 
 up:          ## Start the whole stack (backend, db, frontend)
-	docker compose up -d --build
+	docker compose -f compose.dev.yml up -d --build
 
 down:        ## Stop and remove containers
-	docker compose down
+	docker compose -f compose.dev.yml down
 
 ps:
-	docker compose ps
+	docker compose -f compose.dev.yml ps
 
 be-health: # Backend Health Check
 	\tcurl -sS http://localhost:8080/healthz
 
 rebuild:     ## Rebuild backend image then start
-	docker compose build backend
-	docker compose up -d
+	docker compose -f compose.dev.yml build backend
+	docker compose -f compose.dev.yml up -d
 
 be-logs:        ## Follow backend logs
-	docker compose logs -f --tail=200 backend
+	docker compose -f compose.dev.yml logs -f --tail=200 backend
 
 fe-logs:
-	docker compose logs -f frontend
+	docker compose -f compose.dev.yml logs -f frontend
 
 logs:
-	docker compose logs -f
+	docker compose -f compose.dev.yml logs -f
 
 be:          ## Shell into backend container
-	docker compose exec backend bash
+	docker compose -f compose.dev.yml exec backend bash
 
 fe:          ## Shell into frontend container
-	docker compose exec frontend sh
+	docker compose -f compose.dev.yml exec frontend sh
 
 dbshell:     ## psql into the DB (uses env from the container)
-	docker compose exec db psql -U fitfolio_user -d fitfolio
+	docker compose -f compose.dev.yml exec db psql -U fitfolio_user -d fitfolio
 
 migrate:     ## Apply latest Alembic migrations
 	alembic -c backend/alembic.ini upgrade head
@@ -45,16 +45,16 @@ autogen:     ## Create a new Alembic migration from models
 	alembic -c backend/alembic.ini revision --autogenerate -m "$(MSG)"
 
 fmt:         ## Format Python (ruff/black if you add them)
-	docker compose exec backend bash -lc "ruff format || true; black . || true"
+	docker compose -f compose.dev.yml exec backend bash -lc "ruff format || true; black . || true"
 
 lint:        ## Lint (pre-commit if you use it)
 	pre-commit run --all-files || true
 
 test:        ## Run backend tests
-	docker compose exec backend bash -lc "pytest -q"
+	docker compose -f compose.dev.yml exec backend bash -lc "pytest -q"
 
 mail-logs:
-	docker compose logs -f mail
+	docker compose -f compose.dev.yml logs -f mail
 
 mail-ui:
 	( xdg-open http://localhost:8025 || open http://localhost:8025 || powershell.exe start http://localhost:8025 ) >/dev/null 2>&1 || true

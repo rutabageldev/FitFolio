@@ -1,6 +1,46 @@
+## Dependencies
+
+### Backend Python Dependencies
+
+The backend uses a three-tier dependency structure:
+
+- **`requirements.txt`**: Core runtime dependencies (production + development)
+- **`requirements-dev.txt`**: Development & testing dependencies (includes requirements.txt)
+- **`requirements-prod.txt`**: Production-specific dependencies (includes requirements.txt + gunicorn)
+
+**Docker builds:**
+- Dev (`backend/Dockerfile`): Uses `requirements-dev.txt`
+- Prod (`backend/Dockerfile.prod`): Uses `requirements-prod.txt`
+
+**Local installation (if not using Docker):**
+```bash
+# Development
+pip install -r backend/requirements-dev.txt
+
+# Production
+pip install -r backend/requirements-prod.txt
+```
+
+### Frontend Node Dependencies
+
+All frontend dependencies are managed in `frontend/package.json`:
+- `dependencies`: Runtime dependencies (React, etc.)
+- `devDependencies`: Build tools, linters, formatters
+
+**Install:**
+```bash
+cd frontend
+npm install
+```
+
+## Docker Compose Files
+
+- **`compose.dev.yml`**: Development environment (used by default with `make` commands)
+- **`compose.prod.yml`**: Production environment (requires building prod images first)
+
 ## Start / Stop
 
-- Start all services: `make up`
+- Start all services (dev): `make up` or `docker compose -f compose.dev.yml up -d`
 - Stop all services: `make down`
 - See container status: `make ps`
 - Tail logs (all): `make logs`

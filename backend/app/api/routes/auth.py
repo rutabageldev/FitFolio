@@ -6,6 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from webauthn.helpers import options_to_json_dict
 
 from app.core.email import send_email
 from app.core.security import create_session_token, hash_token
@@ -291,7 +292,7 @@ async def start_webauthn_registration(
     challenge = options.challenge.hex()
 
     return WebAuthnRegisterStartResponse(
-        options=options.model_dump(),
+        options=options_to_json_dict(options),
         challenge=challenge,
     )
 
@@ -411,7 +412,7 @@ async def start_webauthn_authentication(
     challenge = options.challenge.hex()
 
     return WebAuthnAuthenticateStartResponse(
-        options=options.model_dump(),
+        options=options_to_json_dict(options),
         challenge=challenge,
     )
 

@@ -7,9 +7,9 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential gcc libpq-dev && \
     rm -rf /var/lib/apt/lists/*
-COPY backend/requirements.txt /tmp/requirements.txt
+COPY backend/requirements.txt backend/requirements-prod.txt /tmp/
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip wheel --wheel-dir /wheels -r /tmp/requirements.txt
+    pip wheel --wheel-dir /wheels -r /tmp/requirements-prod.txt
 
 # ---------- runtime ----------
 FROM python:3.12-slim
@@ -34,5 +34,10 @@ COPY backend/ /app/
 
 USER appuser
 EXPOSE 8000
-# uvicorn for demo; later you can switch to gunicorn+uvicorn workers
-CMD ["uvicorn","app.main:app","--host","0.0.0.0","--port","8000","--reload"]
+# Production: gunicorn with uvicorn workers
+CMD ["gunicorn", "app.main:app", \
+     "--workers", "4", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--bind", "0.0.0.0:8000", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-"]

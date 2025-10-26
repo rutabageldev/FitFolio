@@ -1,0 +1,7 @@
+# Production-specific Dependencies
+# Install these in addition to requirements.txt for production deployments
+
+-r requirements.txt
+
+# Production WSGI server
+gunicorn>=22.0.0
