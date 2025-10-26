@@ -12,8 +12,9 @@ pyjwt==2.8.0
 email-validator==2.1.1
 passlib[bcrypt]==1.7.4
 
-# MFA
+# MFA & WebAuthn
 pyotp==2.9.0
+webauthn>=2.0.0
 
 # Testing
 pytest==8.2.1

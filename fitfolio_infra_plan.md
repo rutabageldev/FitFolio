@@ -28,7 +28,7 @@ This document outlines the phases, activities, objectives, and definitions of do
 
 ---
 
-## Phase 1 — Data model + migrations foundation
+## Phase 1 — Data model + migrations foundation (Complete)
 
 **Activities**
 
