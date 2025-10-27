@@ -67,10 +67,12 @@ async def rotate_session(
     new_token_hash = hash_token(new_token)
 
     # Create new session with extended expiry
+    now = datetime.now(UTC)
     new_session = Session(
         user_id=session.user_id,
         token_hash=new_token_hash,
-        expires_at=datetime.now(UTC) + timedelta(hours=336),  # 14 days
+        created_at=now,  # Explicitly set for database compatibility
+        expires_at=now + timedelta(hours=336),  # 14 days
         ip=session.ip,
         user_agent=session.user_agent,
     )

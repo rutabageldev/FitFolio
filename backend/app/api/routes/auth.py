@@ -115,13 +115,15 @@ async def start_magic_link_login(
         await db.refresh(user)
 
     # Create magic link token with expiration
-    expires_at = datetime.now(UTC) + timedelta(minutes=15)  # 15 minute TTL
+    now = datetime.now(UTC)
+    expires_at = now + timedelta(minutes=15)  # 15 minute TTL
 
     # Store token hash in database (you might want a separate MagicLinkToken model)
     # For now, we'll use a simple approach with the session table
     magic_link_session = Session(
         user_id=user.id,
         token_hash=token_hash,
+        created_at=now,
         expires_at=expires_at,
         ip=http_request.client.host if http_request else None,
         user_agent=http_request.headers.get("user-agent") if http_request else None,
@@ -132,6 +134,7 @@ async def start_magic_link_login(
     login_event = LoginEvent(
         user_id=user.id,
         event_type="magic_link_requested",
+        created_at=datetime.now(UTC),
         ip=http_request.client.host if http_request else None,
         user_agent=http_request.headers.get("user-agent") if http_request else None,
     )
@@ -221,6 +224,7 @@ async def verify_magic_link(
     login_event = LoginEvent(
         user_id=user.id,
         event_type="magic_link_used",
+        created_at=datetime.now(UTC),
         ip=http_request.client.host if http_request else None,
         user_agent=http_request.headers.get("user-agent") if http_request else None,
     )
@@ -387,6 +391,7 @@ async def finish_webauthn_registration(
     login_event = LoginEvent(
         user_id=user.id,
         event_type="webauthn_credential_created",
+        created_at=datetime.now(UTC),
         extra={"credential_id": verification_result["credential_id"]},
     )
     db.add(login_event)
@@ -597,6 +602,7 @@ async def finish_webauthn_authentication(
     login_event = LoginEvent(
         user_id=user.id,
         event_type="webauthn_login",
+        created_at=datetime.now(UTC),
         ip=http_request.client.host if http_request else None,
         user_agent=http_request.headers.get("user-agent") if http_request else None,
         extra={"credential_id": credential_id},

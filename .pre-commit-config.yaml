@@ -31,7 +31,8 @@ repos:
     rev: 1.7.9
     hooks:
       - id: bandit
-        args: ['-q', '-r', 'backend']
+        args: ['-q', '--skip', 'B101']
+        exclude: ^backend/tests/
 
   # --- Dependency vulns ---
   - repo: https://github.com/pypa/pip-audit
@@ -67,7 +68,17 @@ repos:
         entry: bash -lc 'npx --yes prettier -w --config frontend/.prettierrc --ignore-path frontend/.prettierignore -- "$@"' --
         files: ^frontend/.*\.(ts|tsx|js|jsx|json|css|scss|md|markdown|ya?ml|html)$
 
-  # --- Pre-push linting check ---
+  # --- Backend security tests ---
+  - repo: local
+    hooks:
+      - id: pytest-security
+        name: pytest security tests
+        language: system
+        entry: bash -lc 'cd backend && pytest tests/test_security.py tests/test_csrf.py tests/test_session_rotation.py -v --tb=short'
+        pass_filenames: false
+        files: ^backend/(app/(core/(security|session_rotation|csrf)|middleware/csrf|api/(routes/auth|deps))|tests/test_(security|csrf|session_rotation))\.py$
+
+  # --- Pre-push checks ---
   - repo: local
     hooks:
       - id: prettier-check
@@ -75,4 +86,10 @@ repos:
         language: system
         entry: bash -lc 'npx --yes prettier -c --config frontend/.prettierrc --ignore-path frontend/.prettierignore -- "$@"' --
         files: ^frontend/.*\.(ts|tsx|js|jsx|json|css|scss|md|markdown|ya?ml|html)$
+        stages: [pre-push]
+      - id: pytest-all
+        name: pytest all tests (pre-push)
+        language: system
+        entry: bash -lc 'cd backend && pytest -v --tb=short'
+        pass_filenames: false
         stages: [pre-push]
