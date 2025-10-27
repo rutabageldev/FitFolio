@@ -14,7 +14,13 @@ from app.core.email import send_email
 from app.core.security import create_session_token, hash_token
 from app.core.webauthn import get_webauthn_manager
 from app.db.database import get_db
-from app.db.models.auth import LoginEvent, Session, User, WebAuthnCredential
+from app.db.models.auth import (
+    LoginEvent,
+    MagicLinkToken,
+    Session,
+    User,
+    WebAuthnCredential,
+)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -118,17 +124,16 @@ async def start_magic_link_login(
     now = datetime.now(UTC)
     expires_at = now + timedelta(minutes=15)  # 15 minute TTL
 
-    # Store token hash in database (you might want a separate MagicLinkToken model)
-    # For now, we'll use a simple approach with the session table
-    magic_link_session = Session(
+    # Store token in dedicated magic_link_tokens table
+    magic_link_token = MagicLinkToken(
         user_id=user.id,
         token_hash=token_hash,
         created_at=now,
         expires_at=expires_at,
-        ip=http_request.client.host if http_request else None,
+        requested_ip=http_request.client.host if http_request else None,
         user_agent=http_request.headers.get("user-agent") if http_request else None,
     )
-    db.add(magic_link_session)
+    db.add(magic_link_token)
 
     # Log the login attempt
     login_event = LoginEvent(
@@ -175,23 +180,23 @@ async def verify_magic_link(
     """
     Verify magic link token and create session.
     """
-    # Find the session with this token
-    stmt = select(Session).where(
-        Session.token_hash == hash_token(request.token),
-        Session.expires_at > datetime.now(UTC),
-        Session.revoked_at.is_(None),
+    # Find the magic link token
+    stmt = select(MagicLinkToken).where(
+        MagicLinkToken.token_hash == hash_token(request.token),
+        MagicLinkToken.expires_at > datetime.now(UTC),
+        MagicLinkToken.used_at.is_(None),  # Single-use enforcement
     )
     result = await db.execute(stmt)
-    magic_link_session = result.scalar_one_or_none()
+    magic_link_token = result.scalar_one_or_none()
 
-    if not magic_link_session:
+    if not magic_link_token:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired magic link token",
         )
 
     # Get the user
-    user_stmt = select(User).where(User.id == magic_link_session.user_id)
+    user_stmt = select(User).where(User.id == magic_link_token.user_id)
     user_result = await db.execute(user_stmt)
     user = user_result.scalar_one()
 
@@ -201,8 +206,10 @@ async def verify_magic_link(
             detail="User account is inactive or not found",
         )
 
-    # Revoke the magic link token
-    magic_link_session.revoked_at = datetime.now(UTC)
+    # Mark magic link token as used
+    now = datetime.now(UTC)
+    magic_link_token.used_at = now
+    magic_link_token.used_ip = http_request.client.host if http_request else None
 
     # Create a new session for the user
     session_token = create_session_token()
@@ -211,20 +218,21 @@ async def verify_magic_link(
     new_session = Session(
         user_id=user.id,
         token_hash=session_token_hash,
-        expires_at=datetime.now(UTC) + timedelta(hours=336),  # 14 days
+        created_at=now,
+        expires_at=now + timedelta(hours=336),  # 14 days
         ip=http_request.client.host if http_request else None,
         user_agent=http_request.headers.get("user-agent") if http_request else None,
     )
     db.add(new_session)
 
     # Update user's last login
-    user.last_login_at = datetime.now(UTC)
+    user.last_login_at = now
 
     # Log the successful login
     login_event = LoginEvent(
         user_id=user.id,
         event_type="magic_link_used",
-        created_at=datetime.now(UTC),
+        created_at=now,
         ip=http_request.client.host if http_request else None,
         user_agent=http_request.headers.get("user-agent") if http_request else None,
     )

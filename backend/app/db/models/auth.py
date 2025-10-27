@@ -47,6 +47,9 @@ class User(Base):
     credentials: Mapped[list["WebAuthnCredential"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    magic_link_tokens: Mapped[list["MagicLinkToken"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (Index("ix_users_email_ci", text("lower(email)"), unique=True),)
 
@@ -149,4 +152,50 @@ class LoginEvent(Base):
     __table_args__ = (
         Index("ix_login_events_user_id_created_at", "user_id", "created_at"),
         Index("ix_login_events_event_type_created_at", "event_type", "created_at"),
+    )
+
+
+# ---------- magic_link_tokens ----------
+class MagicLinkToken(Base):
+    """
+    Short-lived tokens for magic link authentication.
+
+    Separate from sessions to maintain clear semantics:
+    - MagicLinkTokens are authentication attempts (15-min TTL, single-use)
+    - Sessions are authenticated state (14-day TTL, rotatable)
+    """
+
+    __tablename__ = "magic_link_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+
+    token_hash: Mapped[bytes] = mapped_column(
+        BYTEA, nullable=False, unique=True
+    )  # SHA-256 hash of token
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False
+    )
+    used_at: Mapped[datetime | None] = mapped_column(
+        TIMESTAMP(timezone=True)
+    )  # Single-use tracking
+
+    # Security: Track where link was requested vs used (detect token theft)
+    requested_ip: Mapped[str | None] = mapped_column(INET)
+    used_ip: Mapped[str | None] = mapped_column(INET)
+    user_agent: Mapped[str | None] = mapped_column(String(512))
+
+    user: Mapped["User"] = relationship(back_populates="magic_link_tokens")
+
+    __table_args__ = (
+        Index("ix_magic_link_tokens_token_hash", "token_hash"),
+        Index("ix_magic_link_tokens_expires_at", "expires_at"),  # For cleanup queries
+        Index("ix_magic_link_tokens_user_id_created_at", "user_id", "created_at"),
     )
