@@ -13,7 +13,10 @@
       "Bash(cat:*)",
       "Bash(docker --version:*)",
       "Bash(netstat -tuln:*)",
-      "Bash(ss:*)"
+      "Bash(ss:*)",
+      "Bash(tree:*)",
+      "Bash(xargs cat:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
