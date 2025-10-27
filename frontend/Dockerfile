@@ -1,6 +1,6 @@
 # Use official Node.js image
 FROM node:20-alpine
-WORKDIR /app
+WORKDIR /workspaces/fitfolio/frontend
 COPY package*.json ./
 RUN npm install
 COPY . .

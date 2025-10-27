@@ -1,9 +1,9 @@
 {
   "name": "FitFolio Dev Container",
-  "dockerComposeFile": "../docker-compose.yml",
+  "dockerComposeFile": "../compose.dev.yml",
   "service": "backend",
   "workspaceFolder": "/workspaces/fitfolio",
-  "forwardPorts": [8000, 5173, 5432, 1025, 8025],
+  "forwardPorts": [8080, 5173, 5432, 1025, 8025],
   "customizations": {
     "vscode": {
       "settings": {
@@ -26,15 +26,8 @@
     }
   },
   "mounts": [
-    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached,readonly"
+    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached"
   ],
-  "containerEnv": {
-    "SSH_AUTH_SOCK": "/ssh-agent"
-  },
-  "remoteEnv": {
-    "SSH_AUTH_SOCK": "/ssh-agent"
-  },
-  "postCreateCommand": "python -m pip install -r backend/requirements.txt",
-  "postStartCommand": "bash -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cp -r /root/.ssh/* ~/.ssh/ 2>/dev/null || true && chmod 600 ~/.ssh/* 2>/dev/null || true && ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null || true && .devcontainer/scripts/configure-git.sh && pre-commit install --install-hooks --hook-type pre-commit --hook-type pre-push'",
-  "postAttachCommand": "bash -c 'eval $(ssh-agent -s) && ssh-add ~/.ssh/id_* 2>/dev/null || true'"
+  "postCreateCommand": "python -m pip install -r backend/requirements-dev.txt",
+  "postStartCommand": "bash -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && test -f /root/.ssh/known_hosts && cp /root/.ssh/known_hosts ~/.ssh/known_hosts || true && ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null || true && .devcontainer/scripts/configure-git.sh && pre-commit install --install-hooks --hook-type pre-commit --hook-type pre-push'"
 }
