@@ -4,6 +4,7 @@ Only contains truly shared fixtures that all tests need.
 Test-specific fixtures should be in their respective test files.
 """
 
+import os
 from collections.abc import AsyncGenerator
 
 import pytest
@@ -15,6 +16,12 @@ from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
 from app.main import app
+
+# Disable rate limiting for most tests (rate limiting tests will override)
+os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
+
+# Use separate Redis database for tests to avoid conflicts with dev data
+os.environ.setdefault("REDIS_URL", "redis://redis:6379/1")
 
 # Test database URL (in-memory SQLite for speed)
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -174,3 +181,19 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture(scope="function", autouse=True)
+async def cleanup_redis():
+    """Flush Redis database before each test to prevent state leakage."""
+    from app.core.redis_client import get_redis
+
+    # Flush Redis before test to start clean
+    try:
+        redis = await get_redis()
+        await redis.flushdb()  # Clear all keys in current database (db=1 for tests)
+    except Exception:
+        pass  # Ignore if Redis is not available
+
+    yield
+    # No cleanup after - let Redis connection persist across tests for performance

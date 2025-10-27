@@ -1,24 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git ls-tree:*)",
-      "Bash(docker compose:*)",
-      "Bash(curl:*)",
-      "Bash(python3 -m json.tool:*)",
-      "Bash(pre-commit run:*)",
-      "Bash(python3:*)",
-      "Bash(export PATH=\"$HOME/.local/bin:$PATH\")",
-      "Bash(pip3 install:*)",
-      "Bash(pre-commit:*)",
-      "Bash(cat:*)",
-      "Bash(docker --version:*)",
-      "Bash(netstat -tuln:*)",
-      "Bash(ss:*)",
-      "Bash(tree:*)",
-      "Bash(xargs cat:*)",
-      "Bash(git add:*)",
-      "Bash(pytest:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\ntest: Add comprehensive security test suite with SQLite compatibility\n\nImplemented automated testing for security-critical features (CSRF, session\nmanagement, rotation) with pre-commit integration to prevent regressions.\n\n## Test Coverage (44 tests total)\n\n### test_security.py (14 tests)\n- Token generation and hashing (11 tests)\n  * Session and magic link token uniqueness and URL-safety\n  * SHA-256 hashing determinism and verification\n  * Hash collision resistance\n- Session validation (3 tests)\n  * Expired session rejection\n  * Revoked session rejection\n  * Rotated session rejection\n\n### test_csrf.py (14 tests)\n- Token generation on GET requests (2 tests)\n- Protected endpoints require valid tokens (5 tests)\n  * POST without token rejected\n  * Valid token accepted\n  * Mismatched tokens rejected\n  * Missing header/cookie rejected\n- Exempt paths work without tokens (3 tests)\n  * Magic link start endpoint\n  * Health check endpoint\n  * Debug endpoints\n- HTTP method handling (4 tests)\n  * GET/OPTIONS don''t require CSRF\n  * PUT/DELETE require CSRF\n\n### test_session_rotation.py (16 tests)\n- Rotation logic (4 tests)\n  * Recent sessions (<7 days) not rotated\n  * Old sessions (>=7 days) rotated\n  * Exact threshold (7 days) rotated\n  * Already-rotated sessions not rotated again\n- Rotation function behavior (5 tests)\n  * New session creation\n  * Old session marking\n  * User context inheritance\n  * Reason logging\n  * Fresh expiry on new session\n- Integration tests (7 tests)\n  * Automatic rotation on /me endpoint\n  * Forced rotation after privilege escalation\n  * Rotated session token rejection\n  * Cleanup of old rotated sessions (90+ days)\n  * Active session preservation during cleanup\n\n## Database Compatibility\n\n### SQLite Test Database\n- Uses in-memory SQLite for fast, isolated tests\n- Custom TypeDecorators for PostgreSQL type compatibility:\n  * UUID <-> String(36)\n  * BYTEA <-> LargeBinary\n  * INET <-> String(45)\n  * JSONB <-> String (with JSON serialization)\n  * TIMESTAMP <-> DateTime (with timezone awareness)\n  * BigInteger <-> Integer (for autoincrement compatibility)\n- Server defaults removed (now()/true not supported in SQLite)\n- Explicit created_at/updated_at in all model creation\n\n### Production Code Changes\n- app/core/session_rotation.py: Added explicit created_at in rotate_session()\n- app/api/routes/auth.py: Added explicit created_at/updated_at for all:\n  * User creation\n  * Session creation (magic link, WebAuthn)\n  * LoginEvent creation\n\n## Pre-commit Integration\n\nAdded two pytest hooks to .pre-commit-config.yaml:\n\n1. pytest-security (on commit)\n   - Runs on changes to security-critical files\n   - Tests: test_security.py, test_csrf.py, test_session_rotation.py\n   - Triggers on changes to: security.py, session_rotation.py, csrf.py, \n     middleware/csrf.py, api/routes/auth.py, api/deps.py\n\n2. pytest-all (on pre-push)\n   - Full test suite before pushing\n   - Catches integration issues\n\nUpdated bandit configuration:\n- Skips B101 (assert) warnings globally (common in tests)\n- Excludes test directory from scanning\n\n## Test Infrastructure\n\n### conftest.py\n- Minimal shared fixtures (following user feedback for scalability)\n- db_engine: SQLite with PostgreSQL type compatibility\n- db_session: Async session with automatic rollback\n- client: Test HTTP client with database override\n\n### pytest.ini\n- Async support (asyncio_mode=auto)\n- Test markers: unit, integration, security, slow\n- Verbose output with local variables\n- Strict markers and warning configuration\n\n### requirements-dev.txt\n- Added aiosqlite>=0.19.0 for test database\n\n## Notes\n\n- All 44 tests pass\n- Tests are fast (0.6s total runtime)\n- No external dependencies (Redis, PostgreSQL) needed for tests\n- Tests follow user-requested architecture: fixtures in test files, not conftest\n- Database compatibility changes are production-safe (explicit timestamps \n  work with both PostgreSQL and SQLite)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(python -m pytest:*)"
     ],
     "deny": [],
     "ask": []

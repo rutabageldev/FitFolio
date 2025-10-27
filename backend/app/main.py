@@ -8,6 +8,7 @@ from app.api.routes.dev import router as dev_router  # Dev only
 from app.api.routes.health import router as health_router
 from app.db.database import init_db
 from app.middleware.csrf import CSRFMiddleware
+from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.request_id import RequestIDMiddleware
 from app.observability.logging import configure_logging, get_logger
 from app.observability.otel import setup_otel
@@ -43,6 +44,12 @@ app.add_middleware(
 
 # CSRF protection (must be after CORS)
 app.add_middleware(CSRFMiddleware)
+
+# Rate limiting (must be after CSRF to avoid wasting rate limit budget on CSRF failures)
+app.add_middleware(
+    RateLimitMiddleware,
+    exempt_paths=["/docs", "/redoc", "/openapi.json"],  # Exempt API docs
+)
 
 
 @app.on_event("startup")
