@@ -24,13 +24,12 @@
     "ghcr.io/devcontainers/features/node:1": {
       "version": "20"
     },
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
-    "ghcr.io/sturdy-dev/devcontainer-features/claude:1": {}
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
   "mounts": [
     "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
-  "postCreateCommand": "python -m pip install -r backend/requirements-dev.txt",
+  "postCreateCommand": "bash -c 'python -m pip install -r backend/requirements-dev.txt && npm install -g @anthropic-ai/claude-code'",
   "postStartCommand": "bash -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && test -f /root/.ssh/known_hosts && cp /root/.ssh/known_hosts ~/.ssh/known_hosts || true && ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null || true && .devcontainer/scripts/configure-git.sh && pre-commit install --install-hooks --hook-type pre-commit --hook-type pre-push'"
 }
