@@ -118,17 +118,19 @@ class WebAuthnManager:
         expected_rp_id: str,
         expected_origin: str,
         expected_challenge: bytes,
-        expected_user_id: str,
+        expected_user_id: str | None = None,  # noqa: ARG002
     ) -> dict[str, Any]:
         """Verify WebAuthn registration response."""
 
         try:
+            # Note: webauthn library v2.x doesn't use expected_user_id
+            # in verify_registration_response
+            # User verification happens via the credential response itself
             verification = verify_registration_response(
                 credential=credential,
                 expected_rp_id=expected_rp_id,
                 expected_origin=expected_origin,
                 expected_challenge=expected_challenge,
-                expected_user_id=expected_user_id,
             )
 
             return {

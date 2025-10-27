@@ -42,13 +42,13 @@ class WebAuthnRegisterStartRequest(BaseModel):
 
 class WebAuthnRegisterStartResponse(BaseModel):
     options: dict
-    challenge: str
+    challenge_id: str
 
 
 class WebAuthnRegisterFinishRequest(BaseModel):
     email: EmailStr
     credential: dict
-    challenge: str
+    challenge_id: str
 
 
 class WebAuthnRegisterFinishResponse(BaseModel):
@@ -62,13 +62,13 @@ class WebAuthnAuthenticateStartRequest(BaseModel):
 
 class WebAuthnAuthenticateStartResponse(BaseModel):
     options: dict
-    challenge: str
+    challenge_id: str
 
 
 class WebAuthnAuthenticateFinishRequest(BaseModel):
     email: EmailStr
     credential: dict
-    challenge: str
+    challenge_id: str
 
 
 class WebAuthnAuthenticateFinishResponse(BaseModel):
@@ -249,6 +249,8 @@ async def start_webauthn_registration(
     """
     Start WebAuthn passkey registration process.
     """
+    from app.core.challenge_storage import store_challenge
+
     # Get or create user
     user_stmt = select(User).where(User.email == request.email.lower())
     result = await db.execute(user_stmt)
@@ -287,13 +289,17 @@ async def start_webauthn_registration(
         exclude_credentials=exclude_credentials,
     )
 
-    # Store challenge in session (in production, use Redis or similar)
-    # For now, we'll return it in the response
-    challenge = options.challenge.hex()
+    # Store challenge in Redis (server-side, secure)
+    challenge_hex = options.challenge.hex()
+    challenge_id = await store_challenge(
+        user_email=request.email.lower(),
+        challenge_hex=challenge_hex,
+        challenge_type="registration",
+    )
 
     return WebAuthnRegisterStartResponse(
         options=options_to_json_dict(options),
-        challenge=challenge,
+        challenge_id=challenge_id,
     )
 
 
@@ -305,6 +311,8 @@ async def finish_webauthn_registration(
     """
     Complete WebAuthn passkey registration.
     """
+    from app.core.challenge_storage import retrieve_and_delete_challenge
+
     # Get user
     stmt = select(User).where(User.email == request.email.lower())
     result = await db.execute(stmt)
@@ -316,6 +324,27 @@ async def finish_webauthn_registration(
             detail="User not found",
         )
 
+    # Retrieve challenge from Redis (single-use)
+    challenge_data = await retrieve_and_delete_challenge(
+        challenge_id=request.challenge_id,
+        challenge_type="registration",
+    )
+
+    if challenge_data is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired challenge. Please start registration again.",
+        )
+
+    stored_email, challenge_hex = challenge_data
+
+    # Verify the challenge was issued for this user
+    if stored_email != request.email.lower():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Challenge was issued for a different user",
+        )
+
     # Verify the registration response
     webauthn_manager = get_webauthn_manager()
 
@@ -324,7 +353,7 @@ async def finish_webauthn_registration(
             credential=request.credential,
             expected_rp_id=webauthn_manager.rp_id,
             expected_origin=webauthn_manager.origin,
-            expected_challenge=bytes.fromhex(request.challenge),
+            expected_challenge=bytes.fromhex(challenge_hex),
             expected_user_id=str(user.id),
         )
     except ValueError as e:
@@ -371,6 +400,8 @@ async def start_webauthn_authentication(
     """
     Start WebAuthn passkey authentication.
     """
+    from app.core.challenge_storage import store_challenge
+
     # Get user
     user_stmt = select(User).where(User.email == request.email.lower())
     result = await db.execute(user_stmt)
@@ -408,12 +439,17 @@ async def start_webauthn_authentication(
         allow_credentials=allow_credentials,
     )
 
-    # Store challenge in session (in production, use Redis or similar)
-    challenge = options.challenge.hex()
+    # Store challenge in Redis (server-side, secure)
+    challenge_hex = options.challenge.hex()
+    challenge_id = await store_challenge(
+        user_email=request.email.lower(),
+        challenge_hex=challenge_hex,
+        challenge_type="authentication",
+    )
 
     return WebAuthnAuthenticateStartResponse(
         options=options_to_json_dict(options),
-        challenge=challenge,
+        challenge_id=challenge_id,
     )
 
 
@@ -429,6 +465,8 @@ async def finish_webauthn_authentication(
     """
     Complete WebAuthn passkey authentication.
     """
+    from app.core.challenge_storage import retrieve_and_delete_challenge
+
     # Get user
     user_stmt = select(User).where(User.email == request.email.lower())
     result = await db.execute(user_stmt)
@@ -438,6 +476,27 @@ async def finish_webauthn_authentication(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
+        )
+
+    # Retrieve challenge from Redis (single-use)
+    challenge_data = await retrieve_and_delete_challenge(
+        challenge_id=request.challenge_id,
+        challenge_type="authentication",
+    )
+
+    if challenge_data is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired challenge. Please start authentication again.",
+        )
+
+    stored_email, challenge_hex = challenge_data
+
+    # Verify the challenge was issued for this user
+    if stored_email != request.email.lower():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Challenge was issued for a different user",
         )
 
     # Get the credential being used
@@ -469,7 +528,7 @@ async def finish_webauthn_authentication(
             credential=request.credential,
             expected_rp_id=webauthn_manager.rp_id,
             expected_origin=webauthn_manager.origin,
-            expected_challenge=bytes.fromhex(request.challenge),
+            expected_challenge=bytes.fromhex(challenge_hex),
             credential_public_key=credential.public_key,
             credential_sign_count=credential.sign_count,
         )

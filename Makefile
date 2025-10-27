@@ -1,4 +1,4 @@
-.PHONY: help up down ps be-health rebuild be-logs fe-logs logs be fe dbshell migrate autogen fmt lint test mail-logs mail-verify mail-ui open-mailpit open-frontend build-prod up-prod down-prod logs-prod
+.PHONY: help up down ps be-health rebuild be-logs fe-logs logs be fe dbshell migrate autogen fmt lint test mail-logs mail-verify mail-ui magic-link open-mailpit open-frontend build-prod up-prod down-prod logs-prod
 
 help:        ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sed 's/:.*##/: /'
@@ -61,6 +61,15 @@ mail-ui:
 
 mail-verify:
 	curl -sS -X POST "http://localhost:8080/_debug/mail?to=you@rutabagel.com"
+
+magic-link:  ## Request magic link and open Mailpit UI
+	@echo "Requesting magic link for test@example.com..."
+	@docker exec fitfolio-backend curl -sS -X POST http://localhost:8000/auth/magic-link/start \
+		-H "Content-Type: application/json" \
+		-d '{"email": "test@example.com"}' | python3 -m json.tool
+	@echo ""
+	@echo "✓ Magic link sent! Check Mailpit UI at http://localhost:8025"
+	@( xdg-open http://localhost:8025 || open http://localhost:8025 || powershell.exe start http://localhost:8025 ) >/dev/null 2>&1 || true
 
 open-mailpit:
 	@echo "Mailpit UI -> http://localhost:8025"

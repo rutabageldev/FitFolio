@@ -43,7 +43,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database on startup."""
+    """Initialize database and Redis on startup."""
     try:
         await init_db()
         log.info("Database initialized successfully")
@@ -52,11 +52,25 @@ async def startup_event():
         # In production, you might want to exit here
         # For development, we'll continue and let the app handle DB errors
 
+    # Initialize Redis connection
+    try:
+        from app.core.redis_client import get_redis
+
+        await get_redis()
+        log.info("Redis connection established", redis_url=os.getenv("REDIS_URL"))
+    except Exception as e:
+        log.error(f"Failed to connect to Redis: {e}")
+        # Redis is critical for WebAuthn, so log prominently
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Clean up resources on shutdown."""
+    from app.core.redis_client import close_redis
     from app.db.database import close_db
 
     await close_db()
     log.info("Database connections closed")
+
+    await close_redis()
+    log.info("Redis connection closed")
