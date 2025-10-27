@@ -7,6 +7,7 @@ from app.api.routes.auth import router as auth_router
 from app.api.routes.dev import router as dev_router  # Dev only
 from app.api.routes.health import router as health_router
 from app.db.database import init_db
+from app.middleware.csrf import CSRFMiddleware
 from app.middleware.request_id import RequestIDMiddleware
 from app.observability.logging import configure_logging, get_logger
 from app.observability.otel import setup_otel
@@ -39,6 +40,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# CSRF protection (must be after CORS)
+app.add_middleware(CSRFMiddleware)
 
 
 @app.on_event("startup")
