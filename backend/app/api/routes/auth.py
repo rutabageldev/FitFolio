@@ -1,3 +1,4 @@
+import os
 import secrets
 from datetime import UTC, datetime, timedelta
 
@@ -8,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from webauthn.helpers import options_to_json_dict
 
+from app.api.deps import get_current_session_with_rotation
 from app.core.email import send_email
 from app.core.security import create_session_token, hash_token
 from app.core.webauthn import get_webauthn_manager
@@ -305,16 +307,23 @@ async def start_webauthn_registration(
 
 @router.post("/webauthn/register/finish", response_model=WebAuthnRegisterFinishResponse)
 async def finish_webauthn_registration(
-    request: WebAuthnRegisterFinishRequest,
+    request_data: WebAuthnRegisterFinishRequest,
+    response: Response,
+    http_request: Request,
     db: AsyncSession = Depends(get_db),
 ):
     """
     Complete WebAuthn passkey registration.
+
+    If user is already authenticated (has session), rotates the session
+    as this is a privilege escalation event.
     """
+    from app.api.deps import get_optional_session_with_rotation
     from app.core.challenge_storage import retrieve_and_delete_challenge
+    from app.core.session_rotation import check_and_rotate_if_needed
 
     # Get user
-    stmt = select(User).where(User.email == request.email.lower())
+    stmt = select(User).where(User.email == request_data.email.lower())
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
 
@@ -326,7 +335,7 @@ async def finish_webauthn_registration(
 
     # Retrieve challenge from Redis (single-use)
     challenge_data = await retrieve_and_delete_challenge(
-        challenge_id=request.challenge_id,
+        challenge_id=request_data.challenge_id,
         challenge_type="registration",
     )
 
@@ -339,7 +348,7 @@ async def finish_webauthn_registration(
     stored_email, challenge_hex = challenge_data
 
     # Verify the challenge was issued for this user
-    if stored_email != request.email.lower():
+    if stored_email != request_data.email.lower():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Challenge was issued for a different user",
@@ -350,7 +359,7 @@ async def finish_webauthn_registration(
 
     try:
         verification_result = webauthn_manager.verify_registration_response(
-            credential=request.credential,
+            credential=request_data.credential,
             expected_rp_id=webauthn_manager.rp_id,
             expected_origin=webauthn_manager.origin,
             expected_challenge=bytes.fromhex(challenge_hex),
@@ -383,6 +392,32 @@ async def finish_webauthn_registration(
     db.add(login_event)
 
     await db.commit()
+
+    # Rotate session if user is already authenticated (privilege escalation)
+    current_session, _ = await get_optional_session_with_rotation(
+        response=response,
+        session_token=http_request.cookies.get("ff_sess"),
+        db=db,
+    )
+
+    if current_session:
+        # Force rotation due to credential addition (privilege escalation)
+        new_session, new_token = await check_and_rotate_if_needed(
+            current_session,
+            db,
+            force_reason="credential_added",
+        )
+
+        if new_token:
+            cookie_secure = os.getenv("COOKIE_SECURE", "false").lower() == "true"
+            response.set_cookie(
+                key="ff_sess",
+                value=new_token,
+                httponly=True,
+                secure=cookie_secure,
+                samesite="lax",
+                max_age=336 * 3600,
+            )
 
     return WebAuthnRegisterFinishResponse(
         message="Passkey registered successfully!",
@@ -665,47 +700,20 @@ async def logout(
 
 @router.get("/me")
 async def get_current_user(
-    db: AsyncSession = Depends(get_db),
-    token: HTTPAuthorizationCredentials | None = Depends(security),
+    session_and_user: tuple[Session, User] = Depends(get_current_session_with_rotation),
 ):
     """
     Get current user information.
+
+    Automatically rotates session if older than configured threshold (7 days).
     """
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-        )
-
-    # Find the session
-    stmt = select(Session).where(
-        Session.token_hash == hash_token(token.credentials),
-        Session.expires_at > datetime.now(UTC),
-        Session.revoked_at.is_(None),
-    )
-    result = await db.execute(stmt)
-    session = result.scalar_one_or_none()
-
-    if not session:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired session",
-        )
-
-    # Get the user
-    user_stmt = select(User).where(User.id == session.user_id)
-    user_result = await db.execute(user_stmt)
-    user = user_result.scalar_one()
-
-    if not user or not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User account is inactive or not found",
-        )
+    session, user = session_and_user
 
     return {
         "id": str(user.id),
         "email": user.email,
         "created_at": user.created_at,
         "last_login_at": user.last_login_at,
+        "session_created_at": session.created_at,
+        "session_expires_at": session.expires_at,
     }
