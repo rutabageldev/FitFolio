@@ -28,7 +28,10 @@ class User(Base):
         String(320), nullable=False
     )  # uniq via lower(email) index
     is_active: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default=text("true")
+        Boolean, nullable=False, server_default=text("true"), default=True
+    )
+    is_email_verified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false"), default=False
     )
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False
@@ -177,6 +180,9 @@ class MagicLinkToken(Base):
     token_hash: Mapped[bytes] = mapped_column(
         BYTEA, nullable=False, unique=True
     )  # SHA-256 hash of token
+    purpose: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default=text("'login'"), default="login"
+    )  # 'login' or 'email_verification'
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False
     )

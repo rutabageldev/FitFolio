@@ -99,6 +99,23 @@ class WebAuthnCredentialResponse(BaseModel):
     last_used_at: datetime | None
 
 
+class EmailVerifyRequest(BaseModel):
+    token: str
+
+
+class EmailVerifyResponse(BaseModel):
+    message: str
+    session_token: str
+
+
+class EmailResendVerificationRequest(BaseModel):
+    email: EmailStr
+
+
+class EmailResendVerificationResponse(BaseModel):
+    message: str = "If an account exists, a verification email has been sent."
+
+
 @router.post("/magic-link/start", response_model=MagicLinkResponse)
 async def start_magic_link_login(
     request: MagicLinkRequest,
@@ -118,24 +135,85 @@ async def start_magic_link_login(
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
 
+    is_new_user = False
     if not user:
-        # Create new user
+        # Create new user (email not verified yet)
+        now_utc = datetime.now(UTC)
         user = User(
             email=request.email.lower(),
             is_active=True,
+            is_email_verified=False,
+            created_at=now_utc,
+            updated_at=now_utc,
         )
         db.add(user)
         await db.commit()
         await db.refresh(user)
+        is_new_user = True
 
-    # Create magic link token with expiration
+    # For new users, send email verification instead of magic link
     now = datetime.now(UTC)
+    if is_new_user:
+        # Send email verification
+        verification_token = secrets.token_urlsafe(32)
+        verification_token_hash = hash_token(verification_token)
+        expires_at = now + timedelta(hours=24)  # 24 hour TTL
+
+        magic_link_token = MagicLinkToken(
+            user_id=user.id,
+            token_hash=verification_token_hash,
+            purpose="email_verification",
+            created_at=now,
+            expires_at=expires_at,
+            requested_ip=http_request.client.host if http_request else None,
+            user_agent=http_request.headers.get("user-agent") if http_request else None,
+        )
+        db.add(magic_link_token)
+
+        # Log new user creation
+        login_event = LoginEvent(
+            user_id=user.id,
+            event_type="user_created",
+            created_at=now,
+            ip=http_request.client.host if http_request else None,
+            user_agent=http_request.headers.get("user-agent") if http_request else None,
+        )
+        db.add(login_event)
+
+        await db.commit()
+
+        # Send verification email
+        verification_url = (
+            f"http://localhost:5173/auth/verify-email?token={verification_token}"
+        )
+        email_body = f"""
+        Welcome to FitFolio!
+
+        Please verify your email address by clicking the link below:
+
+        {verification_url}
+
+        This link will expire in 24 hours.
+
+        If you didn't create this account, you can safely ignore this email.
+        """
+
+        await send_email(
+            to=request.email,
+            subject="Welcome to FitFolio - Verify your email",
+            body=email_body.strip(),
+        )
+
+        return MagicLinkResponse()
+
+    # For existing users, send magic link
     expires_at = now + timedelta(minutes=15)  # 15 minute TTL
 
     # Store token in dedicated magic_link_tokens table
     magic_link_token = MagicLinkToken(
         user_id=user.id,
         token_hash=token_hash,
+        purpose="login",
         created_at=now,
         expires_at=expires_at,
         requested_ip=http_request.client.host if http_request else None,
@@ -188,9 +266,10 @@ async def verify_magic_link(
     """
     Verify magic link token and create session.
     """
-    # Find the magic link token
+    # Find the magic link token (must be for login purpose)
     stmt = select(MagicLinkToken).where(
         MagicLinkToken.token_hash == hash_token(request.token),
+        MagicLinkToken.purpose == "login",
         MagicLinkToken.expires_at > datetime.now(UTC),
         MagicLinkToken.used_at.is_(None),  # Single-use enforcement
     )
@@ -219,6 +298,21 @@ async def verify_magic_link(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User account is inactive or not found",
+        )
+
+    # Enforce email verification
+    if not user.is_email_verified:
+        log.warning(
+            "login_attempt_unverified_email",
+            user_id=str(user.id),
+            ip=http_request.client.host if http_request else None,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "Please verify your email address before logging in. "
+                "Check your inbox for the verification link."
+            ),
         )
 
     # Check if account is locked due to failed attempts
@@ -784,8 +878,190 @@ async def get_current_user(
     return {
         "id": str(user.id),
         "email": user.email,
+        "is_email_verified": user.is_email_verified,
         "created_at": user.created_at,
         "last_login_at": user.last_login_at,
         "session_created_at": session.created_at,
         "session_expires_at": session.expires_at,
     }
+
+
+@router.post("/email/verify", response_model=EmailVerifyResponse)
+async def verify_email(
+    request: EmailVerifyRequest,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+    http_request: Request = None,
+):
+    """
+    Verify email address using verification token.
+    Creates a session and logs user in automatically.
+    """
+    # Find the verification token
+    stmt = select(MagicLinkToken).where(
+        MagicLinkToken.token_hash == hash_token(request.token),
+        MagicLinkToken.purpose == "email_verification",
+        MagicLinkToken.expires_at > datetime.now(UTC),
+        MagicLinkToken.used_at.is_(None),
+    )
+    result = await db.execute(stmt)
+    verification_token = result.scalar_one_or_none()
+
+    if not verification_token:
+        log.warning(
+            "email_verification_failed",
+            reason="invalid_or_expired_token",
+            ip=http_request.client.host if http_request else None,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification token",
+        )
+
+    # Get the user
+    user_stmt = select(User).where(User.id == verification_token.user_id)
+    user_result = await db.execute(user_stmt)
+    user = user_result.scalar_one()
+
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User account is inactive or not found",
+        )
+
+    # Mark email as verified
+    now = datetime.now(UTC)
+    user.is_email_verified = True
+    user.updated_at = now
+
+    # Mark verification token as used
+    verification_token.used_at = now
+    verification_token.used_ip = http_request.client.host if http_request else None
+
+    # Create a new session for the user (auto-login after verification)
+    session_token = create_session_token()
+    session_token_hash = hash_token(session_token)
+
+    new_session = Session(
+        user_id=user.id,
+        token_hash=session_token_hash,
+        created_at=now,
+        expires_at=now + timedelta(hours=336),  # 14 days
+        ip=http_request.client.host if http_request else None,
+        user_agent=http_request.headers.get("user-agent") if http_request else None,
+    )
+    db.add(new_session)
+
+    # Update user's last login
+    user.last_login_at = now
+
+    # Log the successful verification
+    login_event = LoginEvent(
+        user_id=user.id,
+        event_type="email_verified",
+        created_at=now,
+        ip=http_request.client.host if http_request else None,
+        user_agent=http_request.headers.get("user-agent") if http_request else None,
+        extra={"verification_token_id": str(verification_token.id)},
+    )
+    db.add(login_event)
+
+    await db.commit()
+
+    log.info(
+        "email_verification_success",
+        user_id=str(user.id),
+        ip=http_request.client.host if http_request else None,
+    )
+
+    # Set session cookie
+    response.set_cookie(
+        key="ff_sess",
+        value=session_token,
+        httponly=True,
+        secure=False,  # Set to True in production with HTTPS
+        samesite="lax",
+        max_age=336 * 3600,  # 14 days
+    )
+
+    return EmailVerifyResponse(
+        message="Email verified successfully. You are now logged in.",
+        session_token=session_token,
+    )
+
+
+@router.post(
+    "/email/resend-verification", response_model=EmailResendVerificationResponse
+)
+async def resend_verification_email(
+    request: EmailResendVerificationRequest,
+    db: AsyncSession = Depends(get_db),
+    http_request: Request = None,
+):
+    """
+    Resend email verification link.
+    Always returns success to prevent email enumeration.
+    """
+    # Find user by email
+    stmt = select(User).where(User.email == request.email.lower())
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
+
+    if user and user.is_active and not user.is_email_verified:
+        # Generate new verification token
+        token = secrets.token_urlsafe(32)
+        token_hash = hash_token(token)
+
+        now = datetime.now(UTC)
+        expires_at = now + timedelta(hours=24)  # 24 hour TTL for verification
+
+        verification_token = MagicLinkToken(
+            user_id=user.id,
+            token_hash=token_hash,
+            purpose="email_verification",
+            created_at=now,
+            expires_at=expires_at,
+            requested_ip=http_request.client.host if http_request else None,
+            user_agent=http_request.headers.get("user-agent") if http_request else None,
+        )
+        db.add(verification_token)
+
+        # Log the resend request
+        login_event = LoginEvent(
+            user_id=user.id,
+            event_type="email_verification_resent",
+            created_at=now,
+            ip=http_request.client.host if http_request else None,
+            user_agent=http_request.headers.get("user-agent") if http_request else None,
+        )
+        db.add(login_event)
+
+        await db.commit()
+
+        # Send verification email
+        verification_url = f"http://localhost:5173/auth/verify-email?token={token}"
+        email_body = f"""
+        Welcome to FitFolio!
+
+        Please verify your email address by clicking the link below:
+
+        {verification_url}
+
+        This link will expire in 24 hours.
+
+        If you didn't create this account, you can safely ignore this email.
+        """
+
+        await send_email(
+            to=request.email,
+            subject="Verify your FitFolio email address",
+            body=email_body.strip(),
+        )
+
+        log.info(
+            "email_verification_resent",
+            user_id=str(user.id),
+            ip=http_request.client.host if http_request else None,
+        )
+
+    return EmailResendVerificationResponse()

@@ -23,6 +23,8 @@ PROTECTED_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
 EXEMPT_PATHS = {
     "/auth/magic-link/start",  # Initial auth request, no session yet
     "/auth/magic-link/verify",  # Token-based, already protected
+    "/auth/email/verify",  # Email verification, token-based
+    "/auth/email/resend-verification",  # Can be called without session
     "/_debug/",  # Debug endpoints
     "/healthz",  # Health check
 }

@@ -130,6 +130,7 @@ class TestMagicLinkLockout:
         user = User(
             email="locked@test.com",
             is_active=True,
+            is_email_verified=True,
             created_at=now,
             updated_at=now,
         )
@@ -177,6 +178,7 @@ class TestMagicLinkLockout:
         user = User(
             email="reset@test.com",
             is_active=True,
+            is_email_verified=True,
             created_at=now,
             updated_at=now,
         )
