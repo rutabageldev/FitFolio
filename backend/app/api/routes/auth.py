@@ -11,7 +11,13 @@ from webauthn.helpers import options_to_json_dict
 
 from app.api.deps import get_current_session_with_rotation
 from app.core.email import send_email
-from app.core.security import create_session_token, hash_token
+from app.core.redis_client import get_redis
+from app.core.security import (
+    check_account_lockout,
+    create_session_token,
+    hash_token,
+    reset_failed_login_attempts,
+)
 from app.core.webauthn import get_webauthn_manager
 from app.db.database import get_db
 from app.db.models.auth import (
@@ -21,10 +27,12 @@ from app.db.models.auth import (
     User,
     WebAuthnCredential,
 )
+from app.observability.logging import get_logger
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 security = HTTPBearer(auto_error=False)
+log = get_logger()
 
 
 class MagicLinkRequest(BaseModel):
@@ -190,6 +198,13 @@ async def verify_magic_link(
     magic_link_token = result.scalar_one_or_none()
 
     if not magic_link_token:
+        # Invalid token - log failed attempt if we can identify the user
+        # (In this case, we can't without the token, so just return error)
+        log.warning(
+            "magic_link_verification_failed",
+            reason="invalid_or_expired_token",
+            ip=http_request.client.host if http_request else None,
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired magic link token",
@@ -204,6 +219,38 @@ async def verify_magic_link(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User account is inactive or not found",
+        )
+
+    # Check if account is locked due to failed attempts
+    redis_client = await get_redis()
+    is_locked, seconds_remaining = await check_account_lockout(redis_client, user.id)
+
+    if is_locked:
+        # Log lockout attempt
+        login_event = LoginEvent(
+            user_id=user.id,
+            event_type="login_attempt_locked",
+            created_at=datetime.now(UTC),
+            ip=http_request.client.host if http_request else None,
+            user_agent=http_request.headers.get("user-agent") if http_request else None,
+            extra={"seconds_remaining": seconds_remaining},
+        )
+        db.add(login_event)
+        await db.commit()
+
+        log.warning(
+            "account_locked_login_attempt",
+            user_id=str(user.id),
+            seconds_remaining=seconds_remaining,
+            ip=http_request.client.host if http_request else None,
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=(
+                f"Account temporarily locked due to too many failed attempts. "
+                f"Try again in {seconds_remaining} seconds."
+            ),
         )
 
     # Mark magic link token as used
@@ -227,18 +274,29 @@ async def verify_magic_link(
 
     # Update user's last login
     user.last_login_at = now
+    user.updated_at = now  # Explicitly set for SQLite test compatibility
+
+    # Reset failed login attempts on successful login
+    await reset_failed_login_attempts(redis_client, user.id)
 
     # Log the successful login
     login_event = LoginEvent(
         user_id=user.id,
-        event_type="magic_link_used",
+        event_type="magic_link_verified_success",
         created_at=now,
         ip=http_request.client.host if http_request else None,
         user_agent=http_request.headers.get("user-agent") if http_request else None,
+        extra={"magic_link_token_id": str(magic_link_token.id)},
     )
     db.add(login_event)
 
     await db.commit()
+
+    log.info(
+        "magic_link_login_success",
+        user_id=str(user.id),
+        ip=http_request.client.host if http_request else None,
+    )
 
     # Set session cookie
     response.set_cookie(
