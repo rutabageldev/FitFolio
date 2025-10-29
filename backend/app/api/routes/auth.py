@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import select
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from webauthn.helpers import options_to_json_dict
 
@@ -114,6 +114,39 @@ class EmailResendVerificationRequest(BaseModel):
 
 class EmailResendVerificationResponse(BaseModel):
     message: str = "If an account exists, a verification email has been sent."
+
+
+class SessionInfo(BaseModel):
+    """Information about a user session."""
+
+    id: str
+    created_at: datetime
+    expires_at: datetime
+    last_seen_at: datetime | None
+    ip: str | None
+    user_agent: str | None
+    is_current: bool
+
+
+class ListSessionsResponse(BaseModel):
+    """Response for listing active sessions."""
+
+    sessions: list[SessionInfo]
+    total: int
+
+
+class RevokeSessionResponse(BaseModel):
+    """Response for revoking a session."""
+
+    message: str
+    revoked_session_id: str
+
+
+class RevokeAllOtherSessionsResponse(BaseModel):
+    """Response for revoking all other sessions."""
+
+    message: str
+    revoked_count: int
 
 
 @router.post("/magic-link/start", response_model=MagicLinkResponse)
@@ -1085,3 +1118,185 @@ async def resend_verification_email(
         )
 
     return EmailResendVerificationResponse()
+
+
+@router.get("/sessions", response_model=ListSessionsResponse)
+async def list_sessions(
+    session_and_user: tuple[Session, User] = Depends(get_current_session_with_rotation),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    List all active sessions for the authenticated user.
+
+    Returns sessions ordered by most recently seen first.
+    Marks the current session with is_current=True.
+    """
+    current_session, user = session_and_user
+
+    # Get all active sessions for this user
+    stmt = (
+        select(Session)
+        .where(
+            Session.user_id == user.id,
+            Session.expires_at > datetime.now(UTC),
+            Session.revoked_at.is_(None),
+            Session.rotated_at.is_(None),
+        )
+        .order_by(desc(Session.created_at))
+    )
+
+    result = await db.execute(stmt)
+    sessions = result.scalars().all()
+
+    # Format response
+    session_infos = [
+        SessionInfo(
+            id=str(session.id),
+            created_at=session.created_at,
+            expires_at=session.expires_at,
+            last_seen_at=session.created_at,  # TODO: track last_seen_at
+            ip=session.ip,
+            user_agent=session.user_agent,
+            is_current=(session.id == current_session.id),
+        )
+        for session in sessions
+    ]
+
+    return ListSessionsResponse(sessions=session_infos, total=len(session_infos))
+
+
+@router.delete("/sessions/{session_id}", response_model=RevokeSessionResponse)
+async def revoke_session(
+    session_id: str,
+    session_and_user: tuple[Session, User] = Depends(get_current_session_with_rotation),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Revoke a specific session by ID.
+
+    Cannot revoke the current session (use logout for that).
+    Can only revoke sessions belonging to the authenticated user.
+    """
+    current_session, user = session_and_user
+
+    # Validate session_id is a valid UUID
+    import uuid as uuid_module
+
+    try:
+        session_uuid = uuid_module.UUID(session_id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid session ID format",
+        ) from e
+
+    # Cannot revoke current session
+    if session_uuid == current_session.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot revoke current session. Use logout instead.",
+        )
+
+    # Find the session
+    stmt = select(Session).where(
+        Session.id == session_uuid,
+        Session.user_id == user.id,
+        Session.revoked_at.is_(None),
+    )
+    result = await db.execute(stmt)
+    target_session = result.scalar_one_or_none()
+
+    if not target_session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found or already revoked",
+        )
+
+    # Revoke the session
+    now = datetime.now(UTC)
+    target_session.revoked_at = now
+
+    # Log the revocation
+    login_event = LoginEvent(
+        user_id=user.id,
+        event_type="session_revoked",
+        created_at=now,
+        extra={"revoked_session_id": str(session_uuid), "reason": "user_requested"},
+    )
+    db.add(login_event)
+
+    await db.commit()
+
+    log.info(
+        "session_revoked",
+        user_id=str(user.id),
+        session_id=str(session_uuid),
+    )
+
+    return RevokeSessionResponse(
+        message="Session revoked successfully",
+        revoked_session_id=str(session_uuid),
+    )
+
+
+@router.post(
+    "/sessions/revoke-all-others", response_model=RevokeAllOtherSessionsResponse
+)
+async def revoke_all_other_sessions(
+    session_and_user: tuple[Session, User] = Depends(get_current_session_with_rotation),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Revoke all sessions except the current one.
+
+    Useful for security purposes:
+    - After password change
+    - After privilege escalation
+    - After suspicious activity detected
+    - User wants to logout from all other devices
+    """
+    current_session, user = session_and_user
+
+    # Find all active sessions except current
+    stmt = select(Session).where(
+        Session.user_id == user.id,
+        Session.id != current_session.id,
+        Session.revoked_at.is_(None),
+        Session.rotated_at.is_(None),
+    )
+    result = await db.execute(stmt)
+    sessions_to_revoke = result.scalars().all()
+
+    # Revoke all found sessions
+    now = datetime.now(UTC)
+    revoked_count = 0
+
+    for session in sessions_to_revoke:
+        session.revoked_at = now
+        revoked_count += 1
+
+    # Log the bulk revocation
+    login_event = LoginEvent(
+        user_id=user.id,
+        event_type="sessions_revoked_all_others",
+        created_at=now,
+        extra={
+            "revoked_count": revoked_count,
+            "kept_session_id": str(current_session.id),
+            "reason": "user_requested",
+        },
+    )
+    db.add(login_event)
+
+    await db.commit()
+
+    log.info(
+        "all_other_sessions_revoked",
+        user_id=str(user.id),
+        revoked_count=revoked_count,
+    )
+
+    return RevokeAllOtherSessionsResponse(
+        message=f"Revoked {revoked_count} other session(s)",
+        revoked_count=revoked_count,
+    )

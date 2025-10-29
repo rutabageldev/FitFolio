@@ -77,6 +77,15 @@ async def startup_event():
         log.error(f"Failed to connect to Redis: {e}")
         # Redis is critical for WebAuthn, so log prominently
 
+    # Start background cleanup job
+    if os.getenv("ENABLE_CLEANUP_JOB", "true").lower() == "true":
+        import asyncio
+
+        from app.core.cleanup import schedule_cleanup_job
+
+        asyncio.create_task(schedule_cleanup_job(interval_hours=24))
+        log.info("Background cleanup job scheduled (runs every 24 hours)")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
