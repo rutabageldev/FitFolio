@@ -3,10 +3,9 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes.admin import router as admin_router
-from app.api.routes.auth import router as auth_router
 from app.api.routes.dev import router as dev_router  # Dev only
 from app.api.routes.health import router as health_router
+from app.api.v1 import router as v1_router
 from app.db.database import init_db
 from app.middleware.csrf import CSRFMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
@@ -29,10 +28,8 @@ app.include_router(health_router)
 setup_otel(app)
 app.add_middleware(RequestIDMiddleware)
 
-# API v1 routes
-API_V1_PREFIX = "/api/v1"
-app.include_router(auth_router, prefix=API_V1_PREFIX)
-app.include_router(admin_router, prefix=API_V1_PREFIX)
+# API v1 routes (all v1 endpoints aggregated in v1 router)
+app.include_router(v1_router, prefix="/api/v1")
 
 # Dev only! (no versioning - debug endpoints)
 app.include_router(dev_router)
