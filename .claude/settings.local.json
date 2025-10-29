@@ -7,7 +7,10 @@
       "Bash(git restore:*)",
       "Bash(git commit:*)",
       "Bash(ruff check:*)",
-      "Bash(ruff format:*)"
+      "Bash(ruff format:*)",
+      "Bash(cut:*)",
+      "Bash(pip index versions:*)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []
