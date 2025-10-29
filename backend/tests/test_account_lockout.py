@@ -156,7 +156,7 @@ class TestMagicLinkLockout:
 
         # Try to verify magic link
         response = await client.post(
-            "/auth/magic-link/verify",
+            "/api/v1/auth/magic-link/verify",
             json={"token": token},
         )
 
@@ -204,7 +204,7 @@ class TestMagicLinkLockout:
 
         # Successful login
         response = await client.post(
-            "/auth/magic-link/verify",
+            "/api/v1/auth/magic-link/verify",
             json={"token": token},
         )
 

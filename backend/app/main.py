@@ -17,18 +17,24 @@ from app.observability.otel import setup_otel
 # from app.api.routes.users import router as users_router
 
 configure_logging()
-app = FastAPI()
+app = FastAPI(
+    title="FitFolio API",
+    version="1.0.0",
+    description="Personal fitness tracking API with passwordless authentication",
+)
+
+# Health check (no versioning - stays at root)
 app.include_router(health_router)
+
 setup_otel(app)
 app.add_middleware(RequestIDMiddleware)
 
-# Include auth routes
-app.include_router(auth_router)
+# API v1 routes
+API_V1_PREFIX = "/api/v1"
+app.include_router(auth_router, prefix=API_V1_PREFIX)
+app.include_router(admin_router, prefix=API_V1_PREFIX)
 
-# Include admin routes
-app.include_router(admin_router)
-
-# Dev only!
+# Dev only! (no versioning - debug endpoints)
 app.include_router(dev_router)
 
 log = get_logger()

@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: apiTarget,
           changeOrigin: true,
-          rewrite: (p) => p.replace(/^\/api/, ''),
+          // Proxy /api/* to backend /api/* (no rewrite needed with versioning)
         },
       },
     },

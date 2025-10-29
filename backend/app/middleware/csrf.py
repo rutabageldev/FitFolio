@@ -21,10 +21,10 @@ PROTECTED_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
 
 # Paths exempt from CSRF (e.g., initial login endpoints)
 EXEMPT_PATHS = {
-    "/auth/magic-link/start",  # Initial auth request, no session yet
-    "/auth/magic-link/verify",  # Token-based, already protected
-    "/auth/email/verify",  # Email verification, token-based
-    "/auth/email/resend-verification",  # Can be called without session
+    "/api/v1/auth/magic-link/start",  # Initial auth request, no session yet
+    "/api/v1/auth/magic-link/verify",  # Token-based, already protected
+    "/api/v1/auth/email/verify",  # Email verification, token-based
+    "/api/v1/auth/email/resend-verification",  # Can be called without session
     "/_debug/",  # Debug endpoints
     "/healthz",  # Health check
 }

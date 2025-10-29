@@ -16,7 +16,7 @@ class TestListSessions:
     @pytest.mark.asyncio
     async def test_list_sessions_requires_auth(self, client: AsyncClient):
         """Should require authentication."""
-        response = await client.get("/auth/sessions")
+        response = await client.get("/api/v1/auth/sessions")
         assert response.status_code == 401
 
     @pytest.mark.asyncio
@@ -59,7 +59,7 @@ class TestListSessions:
         # Use first session to list all
         current_token = sessions[0][1]
         response = await client.get(
-            "/auth/sessions",
+            "/api/v1/auth/sessions",
             cookies={"ff_sess": current_token, "csrf_token": csrf_token},
             headers={"X-CSRF-Token": csrf_token},
         )
@@ -118,7 +118,7 @@ class TestListSessions:
 
         # List sessions
         response = await client.get(
-            "/auth/sessions",
+            "/api/v1/auth/sessions",
             cookies={"ff_sess": active_token, "csrf_token": csrf_token},
             headers={"X-CSRF-Token": csrf_token},
         )
@@ -176,7 +176,7 @@ class TestRevokeSession:
 
         # Revoke the target session
         response = await client.delete(
-            f"/auth/sessions/{target_session.id}",
+            f"/api/v1/auth/sessions/{target_session.id}",
             cookies={"ff_sess": current_token, "csrf_token": csrf_token},
             headers={"X-CSRF-Token": csrf_token},
         )
@@ -223,7 +223,7 @@ class TestRevokeSession:
 
         # Try to revoke current session
         response = await client.delete(
-            f"/auth/sessions/{session.id}",
+            f"/api/v1/auth/sessions/{session.id}",
             cookies={"ff_sess": session_token, "csrf_token": csrf_token},
             headers={"X-CSRF-Token": csrf_token},
         )
@@ -281,7 +281,7 @@ class TestRevokeSession:
 
         # User1 tries to revoke User2's session
         response = await client.delete(
-            f"/auth/sessions/{user2_session.id}",
+            f"/api/v1/auth/sessions/{user2_session.id}",
             cookies={"ff_sess": user1_token, "csrf_token": csrf_token},
             headers={"X-CSRF-Token": csrf_token},
         )
@@ -330,7 +330,7 @@ class TestRevokeAllOtherSessions:
         # Use first session to revoke all others
         current_token = sessions[0][1]
         response = await client.post(
-            "/auth/sessions/revoke-all-others",
+            "/api/v1/auth/sessions/revoke-all-others",
             cookies={"ff_sess": current_token, "csrf_token": csrf_token},
             headers={"X-CSRF-Token": csrf_token},
         )
@@ -382,7 +382,7 @@ class TestRevokeAllOtherSessions:
 
         # Revoke all others (there are none)
         response = await client.post(
-            "/auth/sessions/revoke-all-others",
+            "/api/v1/auth/sessions/revoke-all-others",
             cookies={"ff_sess": session_token, "csrf_token": csrf_token},
             headers={"X-CSRF-Token": csrf_token},
         )

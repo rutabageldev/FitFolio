@@ -15,30 +15,30 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.core.rate_limiter import RateLimit, RateLimiter
 from app.core.redis_client import get_redis
 
-# Rate limit configurations per endpoint pattern
+# Rate limit configurations per endpoint pattern (with API versioning)
 RATE_LIMITS = {
     # Auth endpoints (per IP)
-    r"^/auth/magic-link/start$": RateLimit(
+    r"^/api/v1/auth/magic-link/start$": RateLimit(
         requests=5,
         window=60,  # 5 requests per minute
         key_prefix="rl:magic_link_start",
     ),
-    r"^/auth/magic-link/verify$": RateLimit(
+    r"^/api/v1/auth/magic-link/verify$": RateLimit(
         requests=10,
         window=60,  # 10 requests per minute (allow retries)
         key_prefix="rl:magic_link_verify",
     ),
-    r"^/auth/webauthn/.*/start$": RateLimit(
+    r"^/api/v1/auth/webauthn/.*/start$": RateLimit(
         requests=10,
         window=60,  # 10 requests per minute
         key_prefix="rl:webauthn_start",
     ),
-    r"^/auth/webauthn/.*/finish$": RateLimit(
+    r"^/api/v1/auth/webauthn/.*/finish$": RateLimit(
         requests=20,
         window=60,  # 20 requests per minute (allow failures/retries)
         key_prefix="rl:webauthn_finish",
     ),
-    r"^/auth/logout$": RateLimit(
+    r"^/api/v1/auth/logout$": RateLimit(
         requests=10,
         window=60,
         key_prefix="rl:logout",

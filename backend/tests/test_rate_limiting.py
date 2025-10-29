@@ -146,7 +146,7 @@ class TestRateLimitMiddleware:
 
         # Make request to rate-limited endpoint
         response = await client.post(
-            "/auth/magic-link/start",
+            "/api/v1/auth/magic-link/start",
             json={"email": "ratelimit@test.com"},
         )
 
@@ -178,7 +178,7 @@ class TestRateLimitMiddleware:
         # Send requests up to the limit (5 per minute)
         for _ in range(5):
             response = await client.post(
-                "/auth/magic-link/start",
+                "/api/v1/auth/magic-link/start",
                 json={"email": "ratelimit2@test.com"},
             )
             # Should succeed or fail for other reasons (but not rate limit)
@@ -186,7 +186,7 @@ class TestRateLimitMiddleware:
 
         # 6th request should be rate limited
         response = await client.post(
-            "/auth/magic-link/start",
+            "/api/v1/auth/magic-link/start",
             json={"email": "ratelimit2@test.com"},
         )
         assert response.status_code == 429
@@ -218,7 +218,7 @@ class TestRateLimitMiddleware:
         await db_session.commit()
 
         response = await client.post(
-            "/auth/magic-link/start",
+            "/api/v1/auth/magic-link/start",
             json={"email": "different@test.com"},
         )
         assert response.status_code in [200, 400, 403]  # Not rate limited

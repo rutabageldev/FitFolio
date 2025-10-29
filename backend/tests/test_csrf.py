@@ -39,7 +39,7 @@ class TestCSRFProtectedEndpoints:
     async def test_post_without_csrf_token_rejected(self, client):
         """POST requests without CSRF token should be rejected."""
         response = await client.post(
-            "/auth/webauthn/register/start",
+            "/api/v1/auth/webauthn/register/start",
             json={"email": "test@example.com"},
         )
         assert response.status_code == 403
@@ -69,7 +69,7 @@ class TestCSRFProtectedEndpoints:
 
         # Use token in POST request
         response = await client.post(
-            "/auth/webauthn/register/start",
+            "/api/v1/auth/webauthn/register/start",
             json={"email": "csrf@example.com"},
             cookies={"csrf_token": csrf_token},
             headers={"X-CSRF-Token": csrf_token},
@@ -80,7 +80,7 @@ class TestCSRFProtectedEndpoints:
     async def test_post_with_mismatched_tokens_rejected(self, client):
         """POST with mismatched cookie and header tokens should be rejected."""
         response = await client.post(
-            "/auth/webauthn/register/start",
+            "/api/v1/auth/webauthn/register/start",
             json={"email": "test@example.com"},
             cookies={"csrf_token": "token_in_cookie"},
             headers={"X-CSRF-Token": "different_token_in_header"},
@@ -92,7 +92,7 @@ class TestCSRFProtectedEndpoints:
     async def test_post_with_missing_header_rejected(self, client):
         """POST with cookie but no header should be rejected."""
         response = await client.post(
-            "/auth/webauthn/register/start",
+            "/api/v1/auth/webauthn/register/start",
             json={"email": "test@example.com"},
             cookies={"csrf_token": "some_token"},
             # No X-CSRF-Token header
@@ -104,7 +104,7 @@ class TestCSRFProtectedEndpoints:
     async def test_post_with_missing_cookie_rejected(self, client):
         """POST with header but no cookie should be rejected."""
         response = await client.post(
-            "/auth/webauthn/register/start",
+            "/api/v1/auth/webauthn/register/start",
             json={"email": "test@example.com"},
             # No csrf_token cookie
             headers={"X-CSRF-Token": "some_token"},
@@ -135,7 +135,7 @@ class TestCSRFExemptPaths:
 
         # Should work without CSRF token
         response = await client.post(
-            "/auth/magic-link/start",
+            "/api/v1/auth/magic-link/start",
             json={"email": "exempt@example.com"},
         )
         assert response.status_code == 200

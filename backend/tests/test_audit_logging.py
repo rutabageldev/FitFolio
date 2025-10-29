@@ -18,7 +18,9 @@ class TestAuditLogEvents:
         self, client: AsyncClient, db_session
     ):
         """Magic link request should create login event."""
-        await client.post("/auth/magic-link/start", json={"email": "audit1@test.com"})
+        await client.post(
+            "/api/v1/auth/magic-link/start", json={"email": "audit1@test.com"}
+        )
 
         # Verify event was created
         stmt = select(LoginEvent).where(LoginEvent.event_type == "user_created")
@@ -59,7 +61,7 @@ class TestAuditLogEvents:
         await db_session.commit()
 
         # Verify magic link
-        await client.post("/auth/magic-link/verify", json={"token": token})
+        await client.post("/api/v1/auth/magic-link/verify", json={"token": token})
 
         # Verify event was created
         stmt = select(LoginEvent).where(
@@ -105,7 +107,7 @@ class TestAuditLogEvents:
         await db_session.commit()
 
         # Verify email
-        await client.post("/auth/email/verify", json={"token": token})
+        await client.post("/api/v1/auth/email/verify", json={"token": token})
 
         # Verify event was created
         stmt = select(LoginEvent).where(
@@ -138,7 +140,7 @@ class TestAuditLogEvents:
 
         # Resend verification
         await client.post(
-            "/auth/email/resend-verification", json={"email": "audit4@test.com"}
+            "/api/v1/auth/email/resend-verification", json={"email": "audit4@test.com"}
         )
 
         # Verify event was created
@@ -192,7 +194,7 @@ class TestAuditLogEvents:
         await db_session.commit()
 
         # Try to verify magic link (should be locked)
-        await client.post("/auth/magic-link/verify", json={"token": token})
+        await client.post("/api/v1/auth/magic-link/verify", json={"token": token})
 
         # Verify lockout event was created
         stmt = select(LoginEvent).where(
@@ -214,7 +216,7 @@ class TestAuditLogEndpoints:
     @pytest.mark.asyncio
     async def test_get_audit_events_requires_auth(self, client: AsyncClient):
         """Audit log endpoint should require authentication."""
-        response = await client.get("/admin/audit/events")
+        response = await client.get("/api/v1/admin/audit/events")
 
         # Should be unauthorized
         assert response.status_code == 401
@@ -258,7 +260,7 @@ class TestAuditLogEndpoints:
 
         # Query audit logs
         response = await client.get(
-            "/admin/audit/events", cookies={"ff_sess": session_token}
+            "/api/v1/admin/audit/events", cookies={"ff_sess": session_token}
         )
 
         assert response.status_code == 200
@@ -324,7 +326,7 @@ class TestAuditLogEndpoints:
 
         # Query audit logs filtered by user2
         response = await client.get(
-            f"/admin/audit/events?user_id={user2.id}",
+            f"/api/v1/admin/audit/events?user_id={user2.id}",
             cookies={"ff_sess": session_token},
         )
 
@@ -377,7 +379,7 @@ class TestAuditLogEndpoints:
 
         # Query filtered by event_type
         response = await client.get(
-            "/admin/audit/events?event_type=magic_link_verified_success",
+            "/api/v1/admin/audit/events?event_type=magic_link_verified_success",
             cookies={"ff_sess": session_token},
         )
 
@@ -422,7 +424,7 @@ class TestAuditLogEndpoints:
 
         # Get event types
         response = await client.get(
-            "/admin/audit/event-types", cookies={"ff_sess": session_token}
+            "/api/v1/admin/audit/event-types", cookies={"ff_sess": session_token}
         )
 
         assert response.status_code == 200
@@ -471,7 +473,7 @@ class TestAuditLogEndpoints:
 
         # Get first page (5 items)
         response = await client.get(
-            "/admin/audit/events?page=1&page_size=5",
+            "/api/v1/admin/audit/events?page=1&page_size=5",
             cookies={"ff_sess": session_token},
         )
 
@@ -482,7 +484,7 @@ class TestAuditLogEndpoints:
 
         # Get second page
         response = await client.get(
-            "/admin/audit/events?page=2&page_size=5",
+            "/api/v1/admin/audit/events?page=2&page_size=5",
             cookies={"ff_sess": session_token},
         )
 

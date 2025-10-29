@@ -18,7 +18,7 @@ class TestEmailVerification:
     ):
         """New users should receive verification email, not magic link."""
         response = await client.post(
-            "/auth/magic-link/start",
+            "/api/v1/auth/magic-link/start",
             json={"email": "newuser@test.com"},
         )
 
@@ -67,7 +67,7 @@ class TestEmailVerification:
 
         # Verify email
         response = await client.post(
-            "/auth/email/verify",
+            "/api/v1/auth/email/verify",
             json={"token": token},
         )
 
@@ -87,7 +87,7 @@ class TestEmailVerification:
     async def test_email_verification_invalid_token(self, client: AsyncClient):
         """Should reject invalid verification token."""
         response = await client.post(
-            "/auth/email/verify",
+            "/api/v1/auth/email/verify",
             json={"token": "invalid_token"},
         )
 
@@ -126,7 +126,7 @@ class TestEmailVerification:
 
         # Try to verify
         response = await client.post(
-            "/auth/email/verify",
+            "/api/v1/auth/email/verify",
             json={"token": token},
         )
 
@@ -166,7 +166,7 @@ class TestEmailVerification:
 
         # Try to verify again
         response = await client.post(
-            "/auth/email/verify",
+            "/api/v1/auth/email/verify",
             json={"token": token},
         )
 
@@ -190,7 +190,7 @@ class TestEmailVerification:
 
         # Request resend
         response = await client.post(
-            "/auth/email/resend-verification",
+            "/api/v1/auth/email/resend-verification",
             json={"email": "resend@test.com"},
         )
 
@@ -216,7 +216,7 @@ class TestEmailVerification:
 
         # Request resend (should return success but not send email)
         response = await client.post(
-            "/auth/email/resend-verification",
+            "/api/v1/auth/email/resend-verification",
             json={"email": "verified@test.com"},
         )
 
@@ -227,7 +227,7 @@ class TestEmailVerification:
     async def test_resend_verification_nonexistent_user(self, client: AsyncClient):
         """Should return success for nonexistent users (prevent enumeration)."""
         response = await client.post(
-            "/auth/email/resend-verification",
+            "/api/v1/auth/email/resend-verification",
             json={"email": "nonexistent@test.com"},
         )
 
@@ -264,7 +264,7 @@ class TestEmailVerification:
 
         # Try to verify magic link
         response = await client.post(
-            "/auth/magic-link/verify",
+            "/api/v1/auth/magic-link/verify",
             json={"token": token},
         )
 
@@ -302,7 +302,7 @@ class TestEmailVerification:
 
         # Verify magic link
         response = await client.post(
-            "/auth/magic-link/verify",
+            "/api/v1/auth/magic-link/verify",
             json={"token": token},
         )
 
@@ -345,7 +345,7 @@ class TestEmailVerification:
 
         # Call /me endpoint
         response = await client.get(
-            "/auth/me",
+            "/api/v1/auth/me",
             cookies={"ff_sess": session_token},
         )
 

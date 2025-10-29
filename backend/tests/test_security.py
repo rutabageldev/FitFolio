@@ -130,7 +130,7 @@ class TestSessionValidation:
         await db_session.commit()
 
         # Try to use expired session
-        response = await client.get("/auth/me", cookies={"ff_sess": token})
+        response = await client.get("/api/v1/auth/me", cookies={"ff_sess": token})
         assert response.status_code == 401
         assert "expired" in response.json()["detail"].lower()
 
@@ -167,7 +167,7 @@ class TestSessionValidation:
         await db_session.commit()
 
         # Try to use revoked session
-        response = await client.get("/auth/me", cookies={"ff_sess": token})
+        response = await client.get("/api/v1/auth/me", cookies={"ff_sess": token})
         assert response.status_code == 401
 
     @pytest.mark.asyncio
@@ -203,5 +203,5 @@ class TestSessionValidation:
         await db_session.commit()
 
         # Try to use rotated session
-        response = await client.get("/auth/me", cookies={"ff_sess": token})
+        response = await client.get("/api/v1/auth/me", cookies={"ff_sess": token})
         assert response.status_code == 401

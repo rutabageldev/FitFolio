@@ -286,7 +286,7 @@ class TestSessionRotationIntegration:
         await db_session.commit()
 
         # Request /me with old session
-        response = await client.get("/auth/me", cookies={"ff_sess": token})
+        response = await client.get("/api/v1/auth/me", cookies={"ff_sess": token})
 
         assert response.status_code == 200
         # Should have new session cookie in response
@@ -315,6 +315,6 @@ class TestSessionRotationIntegration:
         await db_session.commit()
 
         # Try to use rotated session
-        response = await client.get("/auth/me", cookies={"ff_sess": token})
+        response = await client.get("/api/v1/auth/me", cookies={"ff_sess": token})
 
         assert response.status_code == 401
