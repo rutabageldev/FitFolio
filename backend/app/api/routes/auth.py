@@ -463,6 +463,16 @@ async def start_webauthn_registration(
         challenge_type="registration",
     )
 
+    # Log registration attempt
+    login_event = LoginEvent(
+        user_id=user.id,
+        event_type="webauthn_register_start",
+        created_at=datetime.now(UTC),
+        extra={"challenge_id": challenge_id},
+    )
+    db.add(login_event)
+    await db.commit()
+
     return WebAuthnRegisterStartResponse(
         options=options_to_json_dict(options),
         challenge_id=challenge_id,
@@ -646,6 +656,16 @@ async def start_webauthn_authentication(
         challenge_hex=challenge_hex,
         challenge_type="authentication",
     )
+
+    # Log authentication attempt
+    login_event = LoginEvent(
+        user_id=user.id,
+        event_type="webauthn_auth_start",
+        created_at=datetime.now(UTC),
+        extra={"challenge_id": challenge_id, "credential_count": len(credentials)},
+    )
+    db.add(login_event)
+    await db.commit()
 
     return WebAuthnAuthenticateStartResponse(
         options=options_to_json_dict(options),

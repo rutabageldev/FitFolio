@@ -3,7 +3,11 @@
     "allow": [
       "Bash(python -m pytest:*)",
       "Bash(alembic revision:*)",
-      "Bash(alembic stamp:*)"
+      "Bash(alembic stamp:*)",
+      "Bash(git restore:*)",
+      "Bash(git commit:*)",
+      "Bash(ruff check:*)",
+      "Bash(ruff format:*)"
     ],
     "deny": [],
     "ask": []

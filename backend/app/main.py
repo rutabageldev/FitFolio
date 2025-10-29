@@ -3,6 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes.admin import router as admin_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.dev import router as dev_router  # Dev only
 from app.api.routes.health import router as health_router
@@ -23,6 +24,9 @@ app.add_middleware(RequestIDMiddleware)
 
 # Include auth routes
 app.include_router(auth_router)
+
+# Include admin routes
+app.include_router(admin_router)
 
 # Dev only!
 app.include_router(dev_router)
