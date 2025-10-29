@@ -10,8 +10,8 @@ This document tracks **outstanding work only**. For completed work history, see 
 ## Phase 3: Production Deployment
 
 **Status:** 🔄 Ready to Start
-**Estimated Effort:** 12-16 hours
-**Target:** Deploy production-ready system to VPS
+**Estimated Effort:** 10-12 hours (reduced from 12-16 by leveraging existing Traefik)
+**Target:** Deploy production-ready system to utility node (existing VPS)
 
 ### Prerequisites
 
@@ -22,27 +22,38 @@ This document tracks **outstanding work only**. For completed work history, see 
 
 ### Tasks
 
-#### 1. Traefik Integration (4-6 hours)
+#### 1. Traefik Integration (2-3 hours)
 
-Configure reverse proxy with automatic TLS:
+**Decision:** Use existing Traefik instance (already running UniFi + Vaultwarden)
 
-- [ ] Add Traefik service to `compose.prod.yml`
-- [ ] Configure TLS with Let's Encrypt certresolver
-- [ ] Set up routing rules:
-  - `/` → frontend (nginx)
-  - `/api/` → backend (strip prefix)
-- [ ] Configure security headers:
+Add FitFolio to existing Traefik setup via Docker labels:
+
+- [ ] Update `compose.prod.yml` with Traefik labels:
+  - Backend routing: `Host(rutabagel.com) && PathPrefix(/api)`
+  - Frontend routing: `Host(rutabagel.com)` (lower priority)
+  - TLS cert resolver: `letsencrypt` (existing)
+  - HTTP → HTTPS redirect
+- [ ] Connect FitFolio services to `traefik-net` network (existing)
+- [ ] Configure security headers middleware:
   - HSTS (Strict-Transport-Security)
   - CSP (Content-Security-Policy)
   - X-Frame-Options, X-Content-Type-Options
-- [ ] Test HTTPS enforcement (HTTP → HTTPS redirect)
-- [ ] Verify Traefik dashboard access (secured)
+- [ ] Test deployment on utility node
+- [ ] Verify automatic TLS certificate issuance
+- [ ] Verify routing (frontend, backend, health checks)
+
+**Architecture:** Traefik handles reverse proxy + TLS, Nginx stays in frontend container for static file serving
+
+**Reference:** See [docs/REVERSE_PROXY_ANALYSIS.md](REVERSE_PROXY_ANALYSIS.md) for detailed comparison
 
 **Acceptance Criteria:**
 - HTTPS works on `rutabagel.com`
-- No CORS errors in production
+- TLS certificate auto-issued via Let's Encrypt
+- Backend accessible at `/api/v1/*`
+- Frontend serves at `/` (all other routes)
 - Security headers present in responses
 - HTTP redirects to HTTPS
+- No CORS errors in production
 
 #### 2. Docker Secrets (2-3 hours)
 
