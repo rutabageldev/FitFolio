@@ -85,23 +85,33 @@ async def db_engine():
             return value
 
     class TZAwareDateTime(TypeDecorator):
-        """Store timezone-aware datetimes in SQLite."""
+        """Store timezone-aware datetimes in SQLite with automatic UTC timezone."""
 
         impl = DateTime
         cache_ok = True
 
         def process_bind_param(self, value, _dialect):
-            # Store as UTC timestamp
-            if value is not None and value.tzinfo is not None:
-                return value.replace(tzinfo=None)
+            # Store as UTC timestamp (remove timezone for SQLite)
+            if value is not None:
+                if hasattr(value, "tzinfo") and value.tzinfo is not None:
+                    # SQLite doesn't support timezones, store as naive UTC
+                    return value.replace(tzinfo=None)
             return value
 
         def process_result_value(self, value, _dialect):
-            # Read back as UTC-aware
+            # Read back as UTC-aware (SQLite returns naive datetimes)
             if value is not None:
                 from datetime import UTC
+                from datetime import datetime as dt
 
-                return value.replace(tzinfo=UTC)
+                # Always treat naive datetimes from SQLite as UTC
+                if isinstance(value, dt):
+                    if value.tzinfo is None:
+                        # Naive datetime from SQLite - make it UTC-aware
+                        return value.replace(tzinfo=UTC)
+                    else:
+                        # Already has timezone (shouldn't happen with SQLite)
+                        return value
             return value
 
     engine = create_async_engine(
@@ -110,36 +120,56 @@ async def db_engine():
         poolclass=StaticPool,
     )
 
-    def create_tables_without_pg_defaults(_target, _connection, **_kw):
-        """Create tables with server_default removed for SQLite compatibility."""
+    # Save original column types so we can restore them after tests complete
+    original_types = {}
+    original_defaults = {}
+
+    def setup_sqlite_types():
+        """Replace PostgreSQL types with SQLite-compatible ones.
+
+        IMPORTANT: This modifies column types IN-PLACE on Base.metadata, which is
+        shared globally. We save the original types to restore after testing.
+        """
         from sqlalchemy import BigInteger, Integer
 
-        # Remove PostgreSQL-specific server defaults and replace types
+        # Save and replace types for all tables
         for table in Base.metadata.tables.values():
             for column in table.columns:
+                key = (table.name, column.name)
+
+                # Save originals (only once)
+                if key not in original_types:
+                    original_types[key] = column.type
+                    original_defaults[key] = column.server_default
+
                 # Clear server defaults (SQLite doesn't support now(), true, etc.)
-                if column.server_default is not None:
-                    column.server_default = None
+                column.server_default = None
 
                 # Replace PostgreSQL-specific types with SQLite-compatible ones
-                if isinstance(column.type, UUID):
-                    column.type = UUIDAsString(36)  # UUIDs as strings with conversion
-                elif isinstance(column.type, BYTEA):
-                    column.type = LargeBinary()  # Binary data
-                elif isinstance(column.type, INET):
-                    column.type = SQLAString(45)  # IP addresses as strings
-                elif isinstance(column.type, JSONB):
-                    column.type = JSONBAsString()  # JSON as text with conversion
-                elif isinstance(column.type, TIMESTAMP):
-                    column.type = TZAwareDateTime()  # DateTime with TZ awareness
-                elif isinstance(column.type, BigInteger):
-                    # SQLite uses INTEGER for autoincrement compatibility
-                    column.type = Integer()  # Use regular Integer for SQLite
+                if isinstance(original_types[key], UUID):
+                    column.type = UUIDAsString(36)
+                elif isinstance(original_types[key], BYTEA):
+                    column.type = LargeBinary()
+                elif isinstance(original_types[key], INET):
+                    column.type = SQLAString(45)
+                elif isinstance(original_types[key], JSONB):
+                    column.type = JSONBAsString()
+                elif isinstance(original_types[key], TIMESTAMP):
+                    column.type = TZAwareDateTime()
+                elif isinstance(original_types[key], BigInteger):
+                    column.type = Integer()
 
-    # Listen for before_create event to strip server defaults
-    from sqlalchemy import event
+    def restore_original_types():
+        """Restore original PostgreSQL types after tests complete."""
+        for table in Base.metadata.tables.values():
+            for column in table.columns:
+                key = (table.name, column.name)
+                if key in original_types:
+                    column.type = original_types[key]
+                    column.server_default = original_defaults[key]
 
-    event.listen(Base.metadata, "before_create", create_tables_without_pg_defaults)
+    # Setup SQLite-compatible types
+    setup_sqlite_types()
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -151,8 +181,8 @@ async def db_engine():
 
     await engine.dispose()
 
-    # Clean up the event listener
-    event.remove(Base.metadata, "before_create", create_tables_without_pg_defaults)
+    # Restore original types for production use
+    restore_original_types()
 
 
 @pytest_asyncio.fixture
