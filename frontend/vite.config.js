@@ -15,6 +15,14 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           // Proxy /api/* to backend /api/* (no rewrite needed with versioning)
         },
+        '/healthz': {
+          target: apiTarget,
+          changeOrigin: true,
+        },
+        '/_debug': {
+          target: apiTarget,
+          changeOrigin: true,
+        },
       },
     },
   };

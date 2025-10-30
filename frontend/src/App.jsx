@@ -6,7 +6,7 @@ function App() {
 
   const pingApi = async () => {
     try {
-      const res = await fetch('/api/healthz');
+      const res = await fetch('/healthz');
       const ct = res.headers.get('content-type') || '';
       let data;
       if (ct.includes('application/json')) {
