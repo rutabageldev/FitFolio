@@ -62,6 +62,9 @@ async def db_engine():
 
         def process_result_value(self, value, _dialect):
             if value is not None:
+                # Handle both string and UUID inputs (PostgreSQL returns UUID objects)
+                if isinstance(value, uuid.UUID):
+                    return value
                 return uuid.UUID(value)
             return value
 
