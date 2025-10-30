@@ -64,7 +64,7 @@ mail-verify:
 
 magic-link:  ## Request magic link and open Mailpit UI
 	@echo "Requesting magic link for test@example.com..."
-	@docker exec fitfolio-backend curl -sS -X POST http://localhost:8000/auth/magic-link/start \
+	@docker exec fitfolio-backend curl -sS -X POST http://localhost:8000/api/v1/auth/magic-link/start \
 		-H "Content-Type: application/json" \
 		-d '{"email": "test@example.com"}' | python3 -m json.tool
 	@echo ""
