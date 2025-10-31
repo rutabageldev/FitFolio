@@ -12,7 +12,8 @@
       "Bash(pip index versions:*)",
       "Bash(git mv:*)",
       "Bash(docker exec:*)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

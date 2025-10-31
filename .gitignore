@@ -5,6 +5,13 @@ __pycache__/
 .venv/
 .env
 
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+.pytest_cache/
+
 # Node
 node_modules/
 dist/
