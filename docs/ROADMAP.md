@@ -9,39 +9,64 @@ This document tracks **outstanding work only**. For completed work history, see 
 
 ## 🎯 Immediate Next Steps
 
-**Priority tasks to move toward production deployment:**
+**Critical path to production deployment:**
 
-1. **Build Production Frontend Image** (1-2 hours)
+### Phase 3A: CI/CD Pipeline (MUST DO FIRST - 4-6 hours)
+
+You're on an isolated dev node and need CI/CD to build and deploy to production.
+
+1. **Set up GitHub Actions workflow** (2-3 hours)
+   - Add CI workflow for PRs (tests, linting, security scans)
+   - Add CD workflow for main branch (build images, push to registry)
+   - Configure Docker build and push to GitHub Container Registry
+   - Add environment secrets (DOCKER_USERNAME, etc.)
+
+2. **Build Production Docker Images** (1-2 hours)
    - Create optimized production Dockerfile for frontend
    - Configure Vite production build settings
-   - Test production build locally
-   - Update `compose.prod.yml` to use production frontend image
+   - Test image builds in CI
+   - Verify images pushed to registry
 
-2. **Configure Production SMTP** (1-2 hours)
+3. **Deployment Strategy** (1 hour)
+   - Document manual deployment process (pull images on VPS)
+   - OR set up automated deployment (GitHub Actions → VPS)
+   - Consider: Docker Compose pull + restart vs. SSH deployment
+
+**Why CI/CD First?**
+- Currently on isolated dev node - can't ship to prod without it
+- Need automated image building for production
+- Quality gates before deployment
+- Repeatable deployment process
+
+### Phase 3B: Production Deployment (After CI/CD - 3-4 hours)
+
+Once CI/CD can build and ship images:
+
+4. **Configure Production SMTP** (1 hour)
    - Choose email service (SendGrid/AWS SES/Mailgun)
-   - Configure credentials in production environment
+   - Add credentials as Docker secrets
    - Update backend email configuration
    - Test email delivery
 
-3. **Production Deployment** (2-3 hours)
-   - Deploy to VPS using `compose.prod.yml`
+5. **Deploy to Production VPS** (1-2 hours)
+   - Pull production images from registry
+   - Deploy using `compose.prod.yml`
    - Configure DNS for production domain
    - Verify TLS certificate issuance
-   - Run smoke tests on production
 
-4. **Security Headers Middleware** (1 hour)
+6. **Security Headers & Validation** (1 hour)
    - Configure Traefik middleware for security headers
-   - Test header presence in responses
-   - Document configuration
+   - Run smoke tests on production
+   - Verify all acceptance criteria met
 
-**After these tasks, Phase 3 will be complete and the system will be production-ready!**
+**After these tasks, Phase 3 will be complete!**
 
 ---
 
 ## Phase 3: Production Deployment
 
 **Status:** 🔄 In Progress
-**Estimated Effort:** 8-10 hours (reduced from 10-12 by Traefik dev work)
+**Estimated Effort:** 12-16 hours (includes CI/CD setup)
 **Target:** Deploy production-ready system to utility node (existing VPS)
 
 ### Prerequisites
@@ -54,7 +79,55 @@ This document tracks **outstanding work only**. For completed work history, see 
 
 ### Tasks
 
-#### 1. Traefik Integration (2-3 hours) ✅ PARTIAL
+**Phase 3A: CI/CD & Build (4-6 hours) - REQUIRED FIRST**
+
+#### 1. GitHub Actions CI/CD (4-6 hours) 🚨 BLOCKING
+
+**Status:** Not Started
+**Priority:** CRITICAL - Blocks production deployment
+
+Set up automated build and deployment pipeline:
+
+- [ ] **CI Pipeline for Pull Requests:**
+  - [ ] Backend tests (pytest with coverage)
+  - [ ] Frontend tests (vitest - if/when added)
+  - [ ] Linting (ruff, mypy, ESLint, prettier)
+  - [ ] Security scans (bandit, npm audit)
+  - [ ] Migration check (alembic check)
+  - [ ] Pre-commit hooks validation
+
+- [ ] **CD Pipeline for Main Branch:**
+  - [ ] Build backend Docker image
+  - [ ] Build frontend Docker image (production optimized)
+  - [ ] Push images to GitHub Container Registry (ghcr.io)
+  - [ ] Tag images with commit SHA and 'latest'
+
+- [ ] **Deployment Strategy:**
+  - [ ] Document manual deployment (pull images on VPS)
+  - [ ] OR automate deployment (GitHub Actions → SSH → VPS)
+  - [ ] Consider: Watchtower for auto-updates vs. manual control
+
+- [ ] **Production Frontend Dockerfile:**
+  - [ ] Multi-stage build (node build → nginx serve)
+  - [ ] Optimize Vite build settings
+  - [ ] Configure nginx for SPA routing
+  - [ ] Test image builds locally
+
+**Acceptance Criteria:**
+- PR builds run all tests and quality checks
+- Main branch builds and pushes production images
+- Images available in GitHub Container Registry
+- Deployment process documented
+- Can pull and run images on any Docker host
+
+**Why This Blocks Everything:**
+- Currently on isolated dev node
+- No way to build production images without CI
+- Can't deploy to prod VPS without images in registry
+
+**Phase 3B: Production Setup (after CI/CD)**
+
+#### 2. Traefik Integration (2-3 hours) ✅ PARTIAL
 
 **Decision:** Use existing Traefik instance (already running UniFi + Vaultwarden)
 
@@ -96,7 +169,7 @@ This document tracks **outstanding work only**. For completed work history, see 
 - [ ] HTTP redirects to HTTPS (if not already configured in Traefik)
 - [ ] No CORS errors in production
 
-#### 2. Docker Secrets (2-3 hours)
+#### 3. Docker Secrets (2-3 hours)
 
 Replace `.env` file with Docker secrets for production:
 
@@ -116,7 +189,7 @@ Replace `.env` file with Docker secrets for production:
 - Secret rotation documented
 - No secrets in logs or error messages
 
-#### 3. Production Tuning (2-3 hours)
+#### 4. Production Tuning (2-3 hours)
 
 Optimize for production workload:
 
@@ -148,7 +221,7 @@ Optimize for production workload:
 - Connection pools sized appropriately
 - No connection exhaustion
 
-#### 4. Deploy & Verify (2-3 hours)
+#### 5. Deploy & Verify (2-3 hours)
 
 Deploy to VPS and verify functionality:
 
@@ -174,28 +247,7 @@ Deploy to VPS and verify functionality:
 
 ---
 
-## Phase 4: Testing & CI (Optional)
-
-**Status:** 🔮 Future
-**Estimated Effort:** 6-8 hours
-**Priority:** Medium - Recommended but not blocking
-
-### Tasks
-
-- [ ] Set up GitHub Actions workflow
-- [ ] Add CI jobs:
-  - Backend tests (pytest)
-  - Frontend tests (vitest)
-  - Linting (ruff, mypy, ESLint)
-  - Security audit (bandit, npm audit)
-  - Migration check (alembic check)
-  - Docker image build
-- [ ] Add branch protection rules
-- [ ] Configure automatic preview deployments (optional)
-
----
-
-## Phase 5: Observability & Operations (Optional)
+## Phase 4: Observability & Operations (Optional)
 
 **Status:** 🔮 Future
 **Estimated Effort:** 8-12 hours
