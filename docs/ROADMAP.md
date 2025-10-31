@@ -19,45 +19,54 @@ You're on an isolated dev node and need CI/CD to build and deploy to production.
    - Add CI workflow for PRs (tests, linting, security scans)
    - Add CD workflow for main branch (build images, push to registry)
    - Configure Docker build and push to GitHub Container Registry
-   - Add environment secrets (DOCKER_USERNAME, etc.)
+   - Add GitHub Actions secrets (Docker registry, etc.)
 
-2. **Build Production Docker Images** (1-2 hours)
+2. **Docker Secrets Management** (1 hour)
+   - Set up Docker secrets in compose.prod.yml
+   - Update backend to read from `/run/secrets/*` files
+   - Document required secrets (JWT_SECRET, DB passwords, etc.)
+   - Test secret injection locally
+
+3. **Build Production Docker Images** (1-2 hours)
    - Create optimized production Dockerfile for frontend
    - Configure Vite production build settings
    - Test image builds in CI
    - Verify images pushed to registry
 
-3. **Deployment Strategy** (1 hour)
+4. **Deployment Strategy** (1 hour)
    - Document manual deployment process (pull images on VPS)
-   - OR set up automated deployment (GitHub Actions → VPS)
-   - Consider: Docker Compose pull + restart vs. SSH deployment
+   - OR set up automated deployment (GitHub Actions → SSH → VPS)
+   - Consider: Watchtower for auto-updates vs. manual control
 
 **Why CI/CD First?**
 - Currently on isolated dev node - can't ship to prod without it
 - Need automated image building for production
+- Secrets management must be in place before deployment
 - Quality gates before deployment
 - Repeatable deployment process
 
 ### Phase 3B: Production Deployment (After CI/CD - 3-4 hours)
 
-Once CI/CD can build and ship images:
+Once CI/CD can build and ship images and secrets are configured:
 
-4. **Configure Production SMTP** (1 hour)
+5. **Configure Production SMTP** (1 hour)
    - Choose email service (SendGrid/AWS SES/Mailgun)
    - Add credentials as Docker secrets
    - Update backend email configuration
    - Test email delivery
 
-5. **Deploy to Production VPS** (1-2 hours)
+6. **Deploy to Production VPS** (1-2 hours)
+   - Create Docker secrets files on VPS
    - Pull production images from registry
    - Deploy using `compose.prod.yml`
    - Configure DNS for production domain
    - Verify TLS certificate issuance
 
-6. **Security Headers & Validation** (1 hour)
+7. **Security Headers & Validation** (1 hour)
    - Configure Traefik middleware for security headers
    - Run smoke tests on production
    - Verify all acceptance criteria met
+   - Test secret rotation process
 
 **After these tasks, Phase 3 will be complete!**
 
@@ -101,6 +110,13 @@ Set up automated build and deployment pipeline:
   - [ ] Build frontend Docker image (production optimized)
   - [ ] Push images to GitHub Container Registry (ghcr.io)
   - [ ] Tag images with commit SHA and 'latest'
+
+- [ ] **Secrets Management:**
+  - [ ] Configure GitHub Actions secrets for sensitive values
+  - [ ] Set up Docker secrets in compose.prod.yml
+  - [ ] Update backend to read from `/run/secrets/*` files
+  - [ ] Document which secrets are needed (JWT_SECRET, DATABASE_PASSWORD, etc.)
+  - [ ] Test secret injection locally
 
 - [ ] **Deployment Strategy:**
   - [ ] Document manual deployment (pull images on VPS)
@@ -169,25 +185,25 @@ Set up automated build and deployment pipeline:
 - [ ] HTTP redirects to HTTPS (if not already configured in Traefik)
 - [ ] No CORS errors in production
 
-#### 3. Docker Secrets (2-3 hours)
+#### 3. Production SMTP Configuration (1 hour)
 
-Replace `.env` file with Docker secrets for production:
+Configure real email service for production:
 
-- [ ] Create secret files for sensitive values:
-  - `db_password`
-  - `redis_password`
-  - `session_secret_key`
-  - `smtp_password` (if using real SMTP)
-- [ ] Update `compose.prod.yml` to use secrets
-- [ ] Update backend to read from `/run/secrets/*`
-- [ ] Document secret creation process in RUNBOOK
-- [ ] Test secret rotation process
+- [ ] Choose email service (SendGrid/AWS SES/Mailgun)
+- [ ] Create account and get API credentials
+- [ ] Add SMTP credentials to Docker secrets
+- [ ] Update backend email configuration for production SMTP
+- [ ] Test email delivery in production
+- [ ] Update compose.prod.yml to remove Mailpit, add SMTP config
 
 **Acceptance Criteria:**
-- No `.env` file needed in production
-- Secrets loaded from Docker secrets
-- Secret rotation documented
-- No secrets in logs or error messages
+- Magic link emails delivered successfully
+- Email verification emails delivered
+- No Mailpit in production
+- SMTP credentials secured via Docker secrets
+- Email delivery monitored/logged
+
+**Note:** Basic secrets management setup happens in Task 1 (CI/CD)
 
 #### 4. Production Tuning (2-3 hours)
 
