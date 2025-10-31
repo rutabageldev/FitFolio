@@ -1,10 +1,10 @@
 # compose.prod.yml
 # Production deployment configuration
-# Uses pre-built images instead of building from source
+# Uses pre-built images from GitHub Container Registry
 
 services:
   backend:
-    image: fitfolio-backend:prod
+    image: ghcr.io/rutabageldev/fitfolio/backend:latest
     container_name: fitfolio-backend-prod
     restart: unless-stopped
     env_file:
@@ -51,7 +51,7 @@ services:
       - default         # For internal service communication
 
   frontend:
-    image: fitfolio-frontend:prod
+    image: ghcr.io/rutabageldev/fitfolio/frontend:latest
     container_name: fitfolio-frontend-prod
     restart: unless-stopped
     # Ports are commented out - Traefik handles routing
