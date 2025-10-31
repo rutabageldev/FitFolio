@@ -387,47 +387,17 @@ Connect external data sources:
 
 ---
 
-## Decision Log
+## Architecture Decision Records (ADRs)
 
-Key architectural decisions and their rationale:
+Key architectural decisions are documented as ADRs in [`docs/adr/`](adr/).
 
-### Traefik Integration Strategy (2025-10-31)
+**Active Decisions:**
+- [ADR-0001: Directory-Based API Versioning](adr/0001-directory-based-api-versioning.md) (2025-10-29)
+- [ADR-0002: Traefik Reverse Proxy Integration](adr/0002-traefik-reverse-proxy-integration.md) (2025-10-31)
+- [ADR-0003: Passwordless Authentication Strategy](adr/0003-passwordless-authentication-strategy.md) (2025-10-26)
+- [ADR-0004: Opaque Server-Side Sessions](adr/0004-opaque-server-side-sessions.md) (2025-10-26)
 
-**Decision:** Use existing Traefik instance for both dev and prod, configure via Docker labels
-**Rationale:**
-- Traefik already running on utility node (UniFi, Vaultwarden)
-- Automatic Let's Encrypt certificate management
-- No need for Nginx reverse proxy layer
-- Declarative configuration via labels
-- Can test exact production routing in dev environment
-
-**Implementation:** Commit `b688b8c`
-
-**Benefits:**
-- Zero-downtime deployments (Traefik handles routing)
-- Automatic SSL certificate renewal
-- Consistent configuration between dev/prod
-- Infrastructure already proven reliable
-
-### API Versioning Strategy (2025-10-29)
-
-**Decision:** Directory-based versioning (`app/api/v1/`)
-**Rationale:**
-- Supports running multiple versions simultaneously
-- Clear separation for backward compatibility
-- Easier deprecation during transitions
-- Better than prefix-based for production
-
-**Implementation:** Commit `b5ebbcb`
-
-### Documentation Consolidation (2025-10-29)
-
-**Decision:** Single ROADMAP.md for outstanding work, CHANGELOG.md for history
-**Rationale:**
-- Three overlapping roadmap documents caused confusion
-- Status misalignment between documents
-- Forward-looking roadmap should only show outstanding work
-- Historical reference separate for context
+See [ADR Index](adr/README.md) for full list and guidelines on creating new ADRs.
 
 ---
 
