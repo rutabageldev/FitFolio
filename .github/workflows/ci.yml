@@ -45,6 +45,12 @@ jobs:
         ports:
           - 6379:6379
 
+      mailhog:
+        image: mailhog/mailhog:latest
+        ports:
+          - 1025:1025
+          - 8025:8025
+
     steps:
       - uses: actions/checkout@v4
 
@@ -60,6 +66,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements-dev.txt
 
+      - name: Run database migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        run: |
+          alembic upgrade head
+
       - name: Run tests with coverage
         working-directory: backend
         env:
@@ -67,6 +80,8 @@ jobs:
           REDIS_URL: redis://localhost:6379/0
           JWT_SECRET: test-secret-key-for-ci-only
           EMAIL_SENDER: test@example.com
+          SMTP_HOST: localhost
+          SMTP_PORT: 1025
         run: |
           pytest --cov=app --cov-report=xml --cov-report=term
 
