@@ -27,9 +27,11 @@ services:
       PYTHONPATH: /workspaces/fitfolio
       LOG_LEVEL: info
       OTEL_SERVICE_NAME: fitfolio-backend
+      # Updated CORS for Traefik domain
+      CORS_ORIGINS: https://fitfolio.dev.rutabagel.com,http://localhost:5173
       # OTEL_EXPORTER_OTLP_ENDPOINT: http://localhost:4318/v1/traces   # enable if you run an OTLP collector (e.g., Tempo/Jaeger/Otel-collector)
     ports:
-      - "8080:8000"
+      - "8080:8000"  # Keep for direct access during dev
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1"]
       interval: 5s
@@ -41,6 +43,19 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    # Traefik integration
+    labels:
+      - "traefik.enable=true"
+      # Router for API endpoints - higher priority to match /api paths first
+      - "traefik.http.routers.fitfolio-backend.rule=Host(`fitfolio.dev.rutabagel.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.fitfolio-backend.entrypoints=websecure"
+      - "traefik.http.routers.fitfolio-backend.tls=true"
+      - "traefik.http.routers.fitfolio-backend.priority=10"
+      # Service config (backend runs on port 8000 internally)
+      - "traefik.http.services.fitfolio-backend.loadbalancer.server.port=8000"
+    networks:
+      - traefik-public  # For Traefik routing
+      - default         # For internal service communication
 
 
   frontend:
@@ -53,12 +68,30 @@ services:
       - ./:/workspaces/fitfolio:cached
       - /workspaces/fitfolio/frontend/node_modules
     ports:
-      - "5173:5173"
+      - "5173:5173"  # Keep for direct access during dev
     environment:
       - NODE_ENV=development
-      # - VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+      # Vite proxy will still work for internal container communication
+      - VITE_API_TARGET=http://backend:8000
+      # Allowed host for Vite dev server
+      - VITE_ALLOWED_HOST=fitfolio.dev.rutabagel.com
     stdin_open: true
     tty: true
+    depends_on:
+      - backend
+    # Traefik integration
+    labels:
+      - "traefik.enable=true"
+      # Router for frontend - lower priority catches all non-API paths
+      - "traefik.http.routers.fitfolio-frontend.rule=Host(`fitfolio.dev.rutabagel.com`)"
+      - "traefik.http.routers.fitfolio-frontend.entrypoints=websecure"
+      - "traefik.http.routers.fitfolio-frontend.tls=true"
+      - "traefik.http.routers.fitfolio-frontend.priority=1"
+      # Service config (Vite dev server runs on port 5173 internally)
+      - "traefik.http.services.fitfolio-frontend.loadbalancer.server.port=5173"
+    networks:
+      - traefik-public  # For Traefik routing
+      - default         # For internal service communication
 
   db:
     image: postgres:16
@@ -101,6 +134,12 @@ services:
       retries: 20
     restart: unless-stopped
 
+
+networks:
+  traefik-public:
+    external: true  # Connects to external Traefik network
+  default:
+    driver: bridge  # Internal network for service-to-service communication
 
 volumes:
   pgdata:

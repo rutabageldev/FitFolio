@@ -10,7 +10,9 @@
       "Bash(ruff format:*)",
       "Bash(cut:*)",
       "Bash(pip index versions:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker compose:*)"
     ],
     "deny": [],
     "ask": []

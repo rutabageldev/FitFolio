@@ -31,6 +31,19 @@ app.add_middleware(RequestIDMiddleware)
 # API v1 routes (all v1 endpoints aggregated in v1 router)
 app.include_router(v1_router, prefix="/api/v1")
 
+
+# API root endpoint for version discovery
+@app.get("/api")
+async def api_root():
+    """API root endpoint - returns available API versions."""
+    return {
+        "message": "FitFolio API",
+        "versions": {"v1": "/api/v1"},
+        "docs": "/docs",
+        "health": "/healthz",
+    }
+
+
 # Dev only! (no versioning - debug endpoints)
 app.include_router(dev_router)
 

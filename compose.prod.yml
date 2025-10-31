@@ -1,36 +1,85 @@
 # compose.prod.yml
+# Production deployment configuration
+# Uses pre-built images instead of building from source
+
 services:
   backend:
     image: fitfolio-backend:prod
     container_name: fitfolio-backend-prod
-    env_file: .env
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      LOG_LEVEL: info
-      OTEL_SERVICE_NAME: fitfolio-backend
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
-    ports:
-      - "8081:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      EMAIL_SENDER: ${EMAIL_SENDER}
+      JWT_SECRET: ${JWT_SECRET}
+      PYTHONPATH: /workspaces/fitfolio
+      LOG_LEVEL: info
+      OTEL_SERVICE_NAME: fitfolio-backend-prod
+      # Production CORS - update with your production domain
+      CORS_ORIGINS: https://fitfolio.rutabagel.com
+      # OTEL_EXPORTER_OTLP_ENDPOINT: http://localhost:4318/v1/traces
+    # Ports are commented out - Traefik handles routing
+    # Uncomment for direct access if needed
+    # ports:
+    #   - "8081:8000"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 12
+      start_period: 10s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    # Traefik integration
+    labels:
+      - "traefik.enable=true"
+      # Router for API endpoints - higher priority to match /api paths first
+      - "traefik.http.routers.fitfolio-backend-prod.rule=Host(`fitfolio.rutabagel.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.fitfolio-backend-prod.entrypoints=websecure"
+      - "traefik.http.routers.fitfolio-backend-prod.tls=true"
+      - "traefik.http.routers.fitfolio-backend-prod.priority=10"
+      # Service config (backend runs on port 8000 internally)
+      - "traefik.http.services.fitfolio-backend-prod.loadbalancer.server.port=8000"
+    networks:
+      - traefik-public  # For Traefik routing
+      - default         # For internal service communication
 
   frontend:
     image: fitfolio-frontend:prod
     container_name: fitfolio-frontend-prod
-    ports:
-      - "8082:80"
+    restart: unless-stopped
+    # Ports are commented out - Traefik handles routing
+    # Uncomment for direct access if needed
+    # ports:
+    #   - "8082:80"
+
+    # Traefik integration
+    labels:
+      - "traefik.enable=true"
+      # Router for frontend - lower priority catches all non-API paths
+      - "traefik.http.routers.fitfolio-frontend-prod.rule=Host(`fitfolio.rutabagel.com`)"
+      - "traefik.http.routers.fitfolio-frontend-prod.entrypoints=websecure"
+      - "traefik.http.routers.fitfolio-frontend-prod.tls=true"
+      - "traefik.http.routers.fitfolio-frontend-prod.priority=1"
+      # Service config (nginx runs on port 80 internally)
+      - "traefik.http.services.fitfolio-frontend-prod.loadbalancer.server.port=80"
+    networks:
+      - traefik-public  # For Traefik routing
+      - default         # For internal service communication
+
+    depends_on:
+      - backend
 
   db:
     image: postgres:16
     container_name: fitfolio-db-prod
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -42,10 +91,31 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+    # DB stays on default network only (not exposed via Traefik)
+    networks:
+      - default
+
+  # Production mail service
+  # Replace with your SMTP service (e.g., SendGrid, AWS SES, etc.)
+  # Or use a managed mail relay service
+  mail:
+    image: axllent/mailpit:latest
+    container_name: fitfolio-mail-prod
+    restart: unless-stopped
+    # In production, you might want to:
+    # 1. Use a real SMTP relay service instead of Mailpit
+    # 2. Configure environment variables for SMTP credentials
+    # 3. Remove the web UI port (8025) for security
+    ports:
+      - "1025:1025"   # SMTP only
+    # Mail service stays on default network (internal only)
+    networks:
+      - default
 
   redis:
     image: redis:7-alpine
     container_name: fitfolio-redis-prod
+    restart: unless-stopped
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
     volumes:
       - redisdata:/data
@@ -54,6 +124,16 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+    # Redis stays on default network (internal only)
+    networks:
+      - default
+
+# Networks
+networks:
+  traefik-public:
+    external: true  # Connects to external Traefik network
+  default:
+    driver: bridge  # Internal network for service-to-service communication
 
 volumes:
   pgdata:
