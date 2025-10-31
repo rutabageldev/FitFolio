@@ -6,6 +6,45 @@ For outstanding work, see [ROADMAP.md](ROADMAP.md).
 
 ---
 
+## 2025-10-31 - Traefik Integration & Production Configuration
+
+### Traefik Integration for Development
+**Commit:** `b688b8c`
+
+Configured Traefik reverse proxy integration for development and production:
+- Added `VITE_ALLOWED_HOST` environment variable support to Vite config
+- Updated `compose.dev.yml` with Traefik labels and networks:
+  - Backend routing: `Host(fitfolio.dev.rutabagel.com) && PathPrefix(/api)`
+  - Frontend routing: `Host(fitfolio.dev.rutabagel.com)` (lower priority)
+  - Connected to external `traefik-public` network
+  - Proper network isolation (traefik-public + default)
+- Completely overhauled `compose.prod.yml` to match dev structure:
+  - Added missing environment variables (EMAIL_SENDER, JWT_SECRET, CORS_ORIGINS)
+  - Added Traefik labels with production domain (fitfolio.rutabagel.com)
+  - Added mail service (Mailpit as placeholder for production SMTP)
+  - Added restart policies (`unless-stopped`)
+  - Added proper healthcheck with `start_period`
+  - Configured network isolation
+  - Commented out direct port exposure (Traefik handles routing)
+- Added `/api` root endpoint for version discovery
+- Archived experimental TRAEFIK-INTEGRATION.md documentation
+- Removed unused compose.dev.traefik.yml file
+
+**Files Updated:**
+- `frontend/vite.config.js` - Dynamic allowed hosts from env
+- `frontend/.env` - VITE_ALLOWED_HOST configuration
+- `compose.dev.yml` - Traefik labels and VITE_ALLOWED_HOST
+- `compose.prod.yml` - Complete production configuration
+- `backend/app/main.py` - API root endpoint
+
+**Impact:**
+- Development accessible at `https://fitfolio.dev.rutabagel.com`
+- Production configuration ready for deployment
+- Automatic SSL via Traefik Let's Encrypt integration
+- Proper separation of concerns (Traefik for routing/TLS, services for application logic)
+
+---
+
 ## 2025-10-29 - API Versioning & Documentation Consolidation
 
 ### Directory-Based API Versioning

@@ -1,59 +1,100 @@
 # FitFolio Roadmap
 
-**Last Updated:** 2025-10-29
+**Last Updated:** 2025-10-31
 **Current Phase:** Phase 3 - Production Deployment
 
 This document tracks **outstanding work only**. For completed work history, see [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
+## 🎯 Immediate Next Steps
+
+**Priority tasks to move toward production deployment:**
+
+1. **Build Production Frontend Image** (1-2 hours)
+   - Create optimized production Dockerfile for frontend
+   - Configure Vite production build settings
+   - Test production build locally
+   - Update `compose.prod.yml` to use production frontend image
+
+2. **Configure Production SMTP** (1-2 hours)
+   - Choose email service (SendGrid/AWS SES/Mailgun)
+   - Configure credentials in production environment
+   - Update backend email configuration
+   - Test email delivery
+
+3. **Production Deployment** (2-3 hours)
+   - Deploy to VPS using `compose.prod.yml`
+   - Configure DNS for production domain
+   - Verify TLS certificate issuance
+   - Run smoke tests on production
+
+4. **Security Headers Middleware** (1 hour)
+   - Configure Traefik middleware for security headers
+   - Test header presence in responses
+   - Document configuration
+
+**After these tasks, Phase 3 will be complete and the system will be production-ready!**
+
+---
+
 ## Phase 3: Production Deployment
 
-**Status:** 🔄 Ready to Start
-**Estimated Effort:** 10-12 hours (reduced from 12-16 by leveraging existing Traefik)
+**Status:** 🔄 In Progress
+**Estimated Effort:** 8-10 hours (reduced from 10-12 by Traefik dev work)
 **Target:** Deploy production-ready system to utility node (existing VPS)
 
 ### Prerequisites
 
 - ✅ All Phase 2B security work complete
-- ✅ 93 tests passing
+- ✅ 138 tests passing (updated from 93)
 - ✅ API versioning implemented
 - ✅ Pre-commit hooks enforcing quality
+- ✅ Traefik integration tested in dev
 
 ### Tasks
 
-#### 1. Traefik Integration (2-3 hours)
+#### 1. Traefik Integration (2-3 hours) ✅ PARTIAL
 
 **Decision:** Use existing Traefik instance (already running UniFi + Vaultwarden)
 
-Add FitFolio to existing Traefik setup via Docker labels:
+**Completed:**
+- ✅ Update `compose.dev.yml` with Traefik labels
+- ✅ Update `compose.prod.yml` with Traefik labels:
+  - Backend routing: `Host(fitfolio.rutabagel.com) && PathPrefix(/api)`
+  - Frontend routing: `Host(fitfolio.rutabagel.com)` (lower priority)
+  - TLS configuration
+- ✅ Connect FitFolio services to `traefik-public` network
+- ✅ Network isolation (traefik-public + default)
+- ✅ Add missing environment variables (EMAIL_SENDER, JWT_SECRET, CORS_ORIGINS)
+- ✅ Add restart policies and healthchecks
+- ✅ Test in development at `https://fitfolio.dev.rutabagel.com`
+- ✅ Verify routing (frontend, backend, health checks)
+- ✅ Add API root endpoint (`/api`) for version discovery
 
-- [ ] Update `compose.prod.yml` with Traefik labels:
-  - Backend routing: `Host(rutabagel.com) && PathPrefix(/api)`
-  - Frontend routing: `Host(rutabagel.com)` (lower priority)
-  - TLS cert resolver: `letsencrypt` (existing)
-  - HTTP → HTTPS redirect
-- [ ] Connect FitFolio services to `traefik-net` network (existing)
-- [ ] Configure security headers middleware:
+**Remaining:**
+- [ ] Configure security headers middleware (if not already in Traefik):
   - HSTS (Strict-Transport-Security)
   - CSP (Content-Security-Policy)
   - X-Frame-Options, X-Content-Type-Options
-- [ ] Test deployment on utility node
-- [ ] Verify automatic TLS certificate issuance
-- [ ] Verify routing (frontend, backend, health checks)
+- [ ] Deploy to production VPS
+- [ ] Verify automatic TLS certificate issuance for production domain
+- [ ] Configure DNS for production domain
+- [ ] Verify no CORS errors in production
 
 **Architecture:** Traefik handles reverse proxy + TLS, Nginx stays in frontend container for static file serving
 
 **Reference:** See [docs/REVERSE_PROXY_ANALYSIS.md](REVERSE_PROXY_ANALYSIS.md) for detailed comparison
 
 **Acceptance Criteria:**
-- HTTPS works on `rutabagel.com`
-- TLS certificate auto-issued via Let's Encrypt
-- Backend accessible at `/api/v1/*`
-- Frontend serves at `/` (all other routes)
-- Security headers present in responses
-- HTTP redirects to HTTPS
-- No CORS errors in production
+- ✅ HTTPS works on dev domain (`fitfolio.dev.rutabagel.com`)
+- ✅ Backend accessible at `/api/v1/*`
+- ✅ Frontend serves at `/` (all other routes)
+- [ ] Production HTTPS works on `fitfolio.rutabagel.com`
+- [ ] TLS certificate auto-issued via Let's Encrypt (production)
+- [ ] Security headers present in responses
+- [ ] HTTP redirects to HTTPS (if not already configured in Traefik)
+- [ ] No CORS errors in production
 
 #### 2. Docker Secrets (2-3 hours)
 
@@ -233,16 +274,38 @@ Connect external data sources:
 
 ### High Priority
 
+- [ ] **Frontend build optimization** - Configure production build settings
+  - [ ] Optimize Vite build configuration
+  - [ ] Add bundle size analysis
+  - [ ] Configure asset optimization (images, fonts)
+  - [ ] Set up production environment variables
+  - [ ] Create production Dockerfile for frontend (currently uses dev server in prod compose)
+- [ ] **Production SMTP configuration** - Replace Mailpit with real email service
+  - [ ] Configure SendGrid/AWS SES/Mailgun credentials
+  - [ ] Update backend email configuration
+  - [ ] Test email delivery in production
+  - [ ] Document email service setup
 - [ ] OpenAPI client generation for frontend (type-safe API calls)
 - [ ] Add integration tests (E2E auth flows)
 - [ ] Performance testing (load testing with Locust/k6)
 
 ### Medium Priority
 
+- [ ] **Deprecate FastAPI `on_event` decorators** - Migrate to lifespan context manager
+  - Current deprecation warnings in tests
+  - See: https://fastapi.tiangolo.com/advanced/events/
+- [ ] **Fix resource warnings in tests** - Unclosed socket/transport warnings
+  - Redis connection cleanup
+  - Test fixture improvements
 - [ ] Add frontend tests (vitest component tests)
 - [ ] Improve error handling (user-friendly messages)
 - [ ] Add API rate limit headers (X-RateLimit-*)
 - [ ] Session device fingerprinting (additional security)
+- [ ] **Frontend authentication state management** - Implement proper auth state
+  - [ ] Context provider for auth state
+  - [ ] Protected route components
+  - [ ] Session persistence across refreshes
+  - [ ] Logout handling
 
 ### Low Priority
 
@@ -250,12 +313,33 @@ Connect external data sources:
 - [ ] Real-time features (WebSocket for live updates)
 - [ ] Admin dashboard UI (currently API-only)
 - [ ] Multi-language support (i18n)
+- [ ] **Staging environment** - Add compose.staging.yml for testing
+  - Similar to prod but with staging domain
+  - Could use for pre-production validation
 
 ---
 
 ## Decision Log
 
 Key architectural decisions and their rationale:
+
+### Traefik Integration Strategy (2025-10-31)
+
+**Decision:** Use existing Traefik instance for both dev and prod, configure via Docker labels
+**Rationale:**
+- Traefik already running on utility node (UniFi, Vaultwarden)
+- Automatic Let's Encrypt certificate management
+- No need for Nginx reverse proxy layer
+- Declarative configuration via labels
+- Can test exact production routing in dev environment
+
+**Implementation:** Commit `b688b8c`
+
+**Benefits:**
+- Zero-downtime deployments (Traefik handles routing)
+- Automatic SSL certificate renewal
+- Consistent configuration between dev/prod
+- Infrastructure already proven reliable
 
 ### API Versioning Strategy (2025-10-29)
 
