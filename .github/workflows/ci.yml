@@ -69,14 +69,14 @@ jobs:
       - name: Run database migrations
         working-directory: backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/test_db
         run: |
           alembic upgrade head
 
       - name: Run tests with coverage
         working-directory: backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379/0
           JWT_SECRET: test-secret-key-for-ci-only
           EMAIL_SENDER: test@example.com
