@@ -27,7 +27,8 @@
       "Bash(git remote:*)",
       "Bash(gh run watch:*)",
       "Bash(mypy:*)",
-      "Bash(alembic check:*)"
+      "Bash(alembic check:*)",
+      "Bash(npm install)"
     ],
     "deny": [],
     "ask": []
