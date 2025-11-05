@@ -152,7 +152,7 @@ class WebAuthnManager:
         expected_origin: str,
         expected_challenge: bytes,
         credential_public_key: bytes,
-        credential_sign_count: int,
+        credential_current_sign_count: int,
     ) -> dict[str, Any]:
         """Verify WebAuthn authentication response."""
 
@@ -163,7 +163,7 @@ class WebAuthnManager:
                 expected_origin=expected_origin,
                 expected_challenge=expected_challenge,
                 credential_public_key=credential_public_key,
-                credential_sign_count=credential_sign_count,
+                credential_current_sign_count=credential_current_sign_count,
             )
 
             return {

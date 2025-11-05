@@ -787,7 +787,7 @@ async def finish_webauthn_authentication(
             expected_origin=webauthn_manager.origin,
             expected_challenge=bytes.fromhex(challenge_hex),
             credential_public_key=credential.public_key,
-            credential_sign_count=credential.sign_count,
+            credential_current_sign_count=credential.sign_count,
         )
     except ValueError as e:
         raise HTTPException(
