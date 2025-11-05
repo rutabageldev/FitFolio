@@ -21,7 +21,12 @@
       "Bash(DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/test_db REDIS_URL=redis://localhost:6379/0 JWT_SECRET=test-secret-key-for-ci-only EMAIL_SENDER=test@example.com SMTP_HOST=localhost SMTP_PORT=1025 pytest -xvs)",
       "Bash(env DATABASE_URL=\"postgresql+psycopg://postgres:postgres@localhost:5432/test_db\" REDIS_URL=\"redis://localhost:6379/0\" JWT_SECRET=\"test-secret-key\" pytest:*)",
       "Bash(python:*)",
-      "Bash(DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/test_db REDIS_URL=redis://localhost:6379/0 JWT_SECRET=test-secret-key pytest:*)"
+      "Bash(DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/test_db REDIS_URL=redis://localhost:6379/0 JWT_SECRET=test-secret-key pytest:*)",
+      "Bash(git push:*)",
+      "Bash(gh auth:*)",
+      "Bash(git remote:*)",
+      "Bash(gh run watch:*)",
+      "Bash(mypy:*)"
     ],
     "deny": [],
     "ask": []
