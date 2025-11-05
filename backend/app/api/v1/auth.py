@@ -153,7 +153,7 @@ class RevokeAllOtherSessionsResponse(BaseModel):
 async def start_magic_link_login(
     request: MagicLinkRequest,
     db: AsyncSession = Depends(get_db),
-    http_request: Request = None,
+    http_request: Request | None = None,
 ):
     """
     Start magic link login process.
@@ -198,7 +198,11 @@ async def start_magic_link_login(
             purpose="email_verification",
             created_at=now,
             expires_at=expires_at,
-            requested_ip=http_request.client.host if http_request else None,
+            requested_ip=(
+                http_request.client.host
+                if http_request and http_request.client
+                else None
+            ),
             user_agent=http_request.headers.get("user-agent") if http_request else None,
         )
         db.add(magic_link_token)
@@ -294,7 +298,7 @@ async def verify_magic_link(
     request: MagicLinkVerifyRequest,
     response: Response,
     db: AsyncSession = Depends(get_db),
-    http_request: Request = None,
+    http_request: Request | None = None,
 ):
     """
     Verify magic link token and create session.
@@ -713,7 +717,7 @@ async def finish_webauthn_authentication(
     request: WebAuthnAuthenticateFinishRequest,
     response: Response,
     db: AsyncSession = Depends(get_db),
-    http_request: Request = None,
+    http_request: Request | None = None,
 ):
     """
     Complete WebAuthn passkey authentication.
@@ -944,7 +948,7 @@ async def verify_email(
     request: EmailVerifyRequest,
     response: Response,
     db: AsyncSession = Depends(get_db),
-    http_request: Request = None,
+    http_request: Request | None = None,
 ):
     """
     Verify email address using verification token.
@@ -1049,7 +1053,7 @@ async def verify_email(
 async def resend_verification_email(
     request: EmailResendVerificationRequest,
     db: AsyncSession = Depends(get_db),
-    http_request: Request = None,
+    http_request: Request | None = None,
 ):
     """
     Resend email verification link.
@@ -1074,7 +1078,11 @@ async def resend_verification_email(
             purpose="email_verification",
             created_at=now,
             expires_at=expires_at,
-            requested_ip=http_request.client.host if http_request else None,
+            requested_ip=(
+                http_request.client.host
+                if http_request and http_request.client
+                else None
+            ),
             user_agent=http_request.headers.get("user-agent") if http_request else None,
         )
         db.add(verification_token)
