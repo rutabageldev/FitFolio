@@ -28,7 +28,9 @@
       "Bash(gh run watch:*)",
       "Bash(mypy:*)",
       "Bash(alembic check:*)",
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "Bash(npx prettier:*)",
+      "Bash(npm audit fix:*)"
     ],
     "deny": [],
     "ask": []
