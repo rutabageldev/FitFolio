@@ -13,6 +13,8 @@ concurrency:
 
 permissions:
   contents: read
+  security-events: write  # Required for CodeQL
+  pull-requests: read     # Required for Dependency Review
 
 jobs:
   backend-tests:
@@ -146,6 +148,94 @@ jobs:
 
       - name: Run pip-audit
         run: pip-audit -r backend/requirements.txt
+
+  codeql-analysis:
+    name: CodeQL Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, javascript-typescript]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: +security-extended,security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+          deny-licenses: GPL-3.0, AGPL-3.0
+
+  commit-verification:
+    name: Commit Signature Verification
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify commit signatures
+        run: |
+          # Get the base and head commits
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          echo "Checking commits from $BASE_SHA to $HEAD_SHA"
+
+          # Get list of commits in the PR
+          COMMITS=$(git rev-list $BASE_SHA..$HEAD_SHA)
+
+          # Check each commit
+          UNSIGNED_COMMITS=""
+          for commit in $COMMITS; do
+            # Check if commit is signed
+            if ! git verify-commit "$commit" 2>/dev/null; then
+              UNSIGNED_COMMITS="$UNSIGNED_COMMITS\n  - $(git log -1 --format='%h %s' $commit)"
+            fi
+          done
+
+          if [ -n "$UNSIGNED_COMMITS" ]; then
+            echo "⚠️  Warning: The following commits are not signed:"
+            echo -e "$UNSIGNED_COMMITS"
+            echo ""
+            echo "While not required, signed commits are recommended for security."
+            echo "Learn more: https://docs.github.com/en/authentication/managing-commit-signature-verification"
+            # Don't fail the build, just warn
+            exit 0
+          else
+            echo "✅ All commits are signed"
+          fi
 
   backend-migrations:
     name: Backend Migration Check
@@ -303,9 +393,11 @@ jobs:
       - backend-lint
       - backend-security
       - backend-migrations
+      - codeql-analysis
       - frontend-lint
       - frontend-build
       - frontend-security
+      # dependency-review and commit-verification only run on PRs
       # frontend-tests is optional (continue-on-error)
     if: always()
 
