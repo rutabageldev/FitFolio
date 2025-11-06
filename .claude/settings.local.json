@@ -32,7 +32,13 @@
       "Bash(npx prettier:*)",
       "Bash(npm audit fix:*)",
       "Bash(cat:*)",
-      "Bash(DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/test_db REDIS_URL=redis://localhost:6379/0 JWT_SECRET=test-secret-key EMAIL_SENDER=test@example.com SMTP_HOST=localhost SMTP_PORT=1025 python -m pytest:*)"
+      "Bash(DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/test_db REDIS_URL=redis://localhost:6379/0 JWT_SECRET=test-secret-key EMAIL_SENDER=test@example.com SMTP_HOST=localhost SMTP_PORT=1025 python -m pytest:*)",
+      "Bash(env DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/test_db REDIS_URL=redis://localhost:6379/0 JWT_SECRET=test-secret-key pytest:*)",
+      "Bash(redis-cli ping:*)",
+      "Bash(systemctl start:*)",
+      "Bash(service docker start:*)",
+      "Bash(pytest:*)",
+      "Bash(pre-commit run:*)"
     ],
     "deny": [],
     "ask": []

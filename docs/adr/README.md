@@ -18,6 +18,7 @@ An ADR is a document that captures an important architectural decision made alon
 | [ADR-0002](0002-traefik-reverse-proxy-integration.md) | ✅ Accepted | 2025-10-31 | Traefik Reverse Proxy Integration | deployment, infrastructure, traefik, security, ssl |
 | [ADR-0003](0003-passwordless-authentication-strategy.md) | ✅ Accepted | 2025-10-26 | Passwordless Authentication Strategy | security, authentication, backend, ux |
 | [ADR-0004](0004-opaque-server-side-sessions.md) | ✅ Accepted | 2025-10-26 | Opaque Server-Side Sessions over JWT | security, authentication, backend, sessions |
+| [ADR-0005](0005-redis-configuration-and-access.md) | ✅ Accepted | 2025-11-06 | Redis Configuration and Access Patterns | infrastructure, redis, docker, testing, devcontainer |
 
 ## ADRs by Topic
 
@@ -26,6 +27,7 @@ An ADR is a document that captures an important architectural decision made alon
 
 ### Deployment & Infrastructure
 - [ADR-0002: Traefik Reverse Proxy Integration](0002-traefik-reverse-proxy-integration.md)
+- [ADR-0005: Redis Configuration and Access Patterns](0005-redis-configuration-and-access.md)
 
 ### Security & Authentication
 - [ADR-0003: Passwordless Authentication Strategy](0003-passwordless-authentication-strategy.md)
