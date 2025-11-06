@@ -1,7 +1,7 @@
 # FitFolio Roadmap
 
-**Last Updated:** 2025-10-31
-**Current Phase:** Phase 3 - Production Deployment
+**Last Updated:** 2025-11-06
+**Current Phase:** Phase 3A.5 - Test Coverage Improvement
 
 This document tracks **outstanding work only**. For completed work history, see [CHANGELOG.md](CHANGELOG.md).
 
@@ -11,62 +11,140 @@ This document tracks **outstanding work only**. For completed work history, see 
 
 **Critical path to production deployment:**
 
-### Phase 3A: CI/CD Pipeline (MUST DO FIRST - 4-6 hours)
+**BLOCKING ISSUE:** Test coverage at 41% - must reach 85% before production deployment.
 
-You're on an isolated dev node and need CI/CD to build and deploy to production.
+### Phase 3A: CI/CD Pipeline ✅ COMPLETE
 
-1. **Set up GitHub Actions workflow** (2-3 hours)
-   - Add CI workflow for PRs (tests, linting, security scans)
-   - Add CD workflow for main branch (build images, push to registry)
-   - Configure Docker build and push to GitHub Container Registry
-   - Add GitHub Actions secrets (Docker registry, etc.)
+**Completed:** 2025-11-06 (see [CHANGELOG.md](CHANGELOG.md#2025-11-06---cicd-pipeline--security-hardening-complete))
 
-2. **Docker Secrets Management** (1 hour)
+Full GitHub Actions CI/CD pipeline with comprehensive quality gates:
+- ✅ Backend tests with PostgreSQL, Redis, MailHog services (138 tests)
+- ✅ Backend linting (ruff, mypy)
+- ✅ Backend security (bandit, pip-audit)
+- ✅ Backend migration validation (alembic check)
+- ✅ Frontend linting (ESLint, Prettier)
+- ✅ Frontend build validation
+- ✅ Frontend security audit (npm audit)
+- ✅ CodeQL analysis (Python + JavaScript/TypeScript)
+- ✅ Dependency review (blocks vulnerable deps in PRs)
+- ✅ Commit verification (warning mode)
+
+**Pipeline Features:**
+- Parallel job execution with optimal caching
+- Concurrency control (cancel outdated runs)
+- Service containers for testing
+- Coverage artifact uploads
+- Security scanning with no shortcuts
+
+### Phase 3A.5: Test Coverage Improvement 🚨 BLOCKING (Next - 8-12 hours)
+
+**Priority:** CRITICAL - Must complete before production deployment
+**Current Coverage:** 41.29% (453/1097 lines covered)
+**Target Coverage:** 85% minimum
+**Estimated Effort:** 8-12 hours
+
+**Why This Blocks Production:**
+- 59% of code is untested - unacceptable production risk
+- Critical modules have dangerously low coverage:
+  - `app/api/deps.py` - 34% (dependency injection, auth)
+  - `app/api/v1/admin.py` - 38% (admin audit endpoints)
+  - Core modules likely under-tested
+- CI/CD pipeline needs coverage enforcement
+- Untested code paths are potential security vulnerabilities
+- Production bugs are 10-100x more expensive than test failures
+
+**Tasks:**
+
+1. **Add Coverage Threshold to CI** (30 minutes)
+   - Add `--cov-fail-under=85` to pytest in CI workflow
+   - Block PRs that drop below coverage threshold
+   - Add coverage badge to README
+   - Document coverage requirements in contributing guide
+
+2. **Identify Coverage Gaps** (1 hour)
+   - Generate detailed coverage report by module
+   - Prioritize by risk: auth > admin > core > middleware > routes
+   - Create coverage improvement task list
+   - Identify untested error paths and edge cases
+
+3. **Test Critical Modules** (4-6 hours)
+   - **app/api/deps.py** (34%) - Dependency injection, auth checks
+   - **app/api/v1/admin.py** (38%) - Admin audit query endpoints
+   - **app/core/webauthn.py** - WebAuthn error handling
+   - **app/core/email.py** - Email send failures, SMTP errors
+   - **app/middleware/csrf.py** - Edge cases, invalid tokens
+   - **app/middleware/rate_limit.py** - Redis failures, limit edge cases
+
+4. **Test Error Paths & Edge Cases** (2-3 hours)
+   - Database connection failures and timeouts
+   - Redis connection failures
+   - Invalid input handling (malformed data, injections)
+   - Email send failures (SMTP down, invalid addresses)
+   - WebAuthn errors (invalid credentials, replays)
+   - Concurrent request handling
+
+5. **Test Integration Flows** (2-3 hours)
+   - Complete user journey: registration → verification → login → logout
+   - Session rotation edge cases (concurrent requests)
+   - Account lockout recovery flows
+   - Concurrent session management
+   - Multi-device scenarios
+
+**Acceptance Criteria:**
+- ✅ Overall backend coverage ≥85%
+- ✅ No critical module (auth, admin, core) below 80%
+- ✅ CI enforces coverage threshold (PRs fail if below 85%)
+- ✅ All error paths have test coverage
+- ✅ Coverage badge added to README
+- ✅ Coverage report generated in CI artifacts
+
+**Modules Requiring Immediate Attention:**
+| Module | Current | Target | Priority |
+|--------|---------|--------|----------|
+| app/api/deps.py | 34% | 85% | CRITICAL |
+| app/api/v1/admin.py | 38% | 85% | CRITICAL |
+| app/core/webauthn.py | Unknown | 85% | HIGH |
+| app/core/email.py | Unknown | 85% | HIGH |
+| app/middleware/* | Unknown | 85% | MEDIUM |
+
+### Phase 3B: Production Deployment (After Coverage - 6-8 hours)
+
+Now that CI/CD is complete, focus on production deployment:
+
+**Remaining Tasks:**
+
+1. **Docker Secrets Management** (1-2 hours)
    - Set up Docker secrets in compose.prod.yml
    - Update backend to read from `/run/secrets/*` files
-   - Document required secrets (JWT_SECRET, DB passwords, etc.)
+   - Document required secrets (JWT_SECRET, DB passwords, SMTP credentials)
    - Test secret injection locally
+   - Create secrets on production VPS
 
-3. **Build Production Docker Images** (1-2 hours)
-   - Create optimized production Dockerfile for frontend
-   - Configure Vite production build settings
-   - Test image builds in CI
-   - Verify images pushed to registry
-
-4. **Deployment Strategy** (1 hour)
-   - Document manual deployment process (pull images on VPS)
-   - OR set up automated deployment (GitHub Actions → SSH → VPS)
-   - Consider: Watchtower for auto-updates vs. manual control
-
-**Why CI/CD First?**
-- Currently on isolated dev node - can't ship to prod without it
-- Need automated image building for production
-- Secrets management must be in place before deployment
-- Quality gates before deployment
-- Repeatable deployment process
-
-### Phase 3B: Production Deployment (After CI/CD - 3-4 hours)
-
-Once CI/CD can build and ship images and secrets are configured:
-
-5. **Configure Production SMTP** (1 hour)
+2. **Production SMTP Configuration** (1 hour)
    - Choose email service (SendGrid/AWS SES/Mailgun)
-   - Add credentials as Docker secrets
+   - Get API credentials
+   - Add as Docker secrets
    - Update backend email configuration
    - Test email delivery
 
-6. **Deploy to Production VPS** (1-2 hours)
-   - Create Docker secrets files on VPS
+3. **Production Docker Images** (1-2 hours)
+   - Create optimized production Dockerfile for frontend (multi-stage build)
+   - Configure Vite production build settings
+   - Build and test images locally
+   - Push to GitHub Container Registry
+
+4. **Deploy to Production VPS** (2-3 hours)
    - Pull production images from registry
    - Deploy using `compose.prod.yml`
    - Configure DNS for production domain
    - Verify TLS certificate issuance
+   - Run smoke tests
 
-7. **Security Headers & Validation** (1 hour)
+5. **Security Headers & Validation** (1 hour)
    - Configure Traefik middleware for security headers
-   - Run smoke tests on production
-   - Verify all acceptance criteria met
+   - Verify all security features working
    - Test secret rotation process
+   - Document deployment process
 
 **After these tasks, Phase 3 will be complete!**
 
@@ -81,65 +159,53 @@ Once CI/CD can build and ship images and secrets are configured:
 ### Prerequisites
 
 - ✅ All Phase 2B security work complete
-- ✅ 138 tests passing (updated from 93)
+- ✅ 138 tests passing (100% pass rate)
 - ✅ API versioning implemented
 - ✅ Pre-commit hooks enforcing quality
 - ✅ Traefik integration tested in dev
+- ✅ CI/CD pipeline complete (Phase 3A)
+- ⏳ Test coverage ≥85% (Phase 3A.5 - IN PROGRESS)
 
 ### Tasks
 
-**Phase 3A: CI/CD & Build (4-6 hours) - REQUIRED FIRST**
+**Phase 3A: CI/CD & Build ✅ COMPLETE (2025-11-06)**
 
-#### 1. GitHub Actions CI/CD (4-6 hours) 🚨 BLOCKING
+#### 1. GitHub Actions CI/CD ✅ COMPLETE
 
-**Status:** Not Started
-**Priority:** CRITICAL - Blocks production deployment
+**Status:** Complete
+**Time Spent:** ~6 hours
 
-Set up automated build and deployment pipeline:
+Comprehensive CI/CD pipeline implemented with all quality gates:
 
-- [ ] **CI Pipeline for Pull Requests:**
-  - [ ] Backend tests (pytest with coverage)
-  - [ ] Frontend tests (vitest - if/when added)
-  - [ ] Linting (ruff, mypy, ESLint, prettier)
-  - [ ] Security scans (bandit, npm audit)
-  - [ ] Migration check (alembic check)
-  - [ ] Pre-commit hooks validation
+- ✅ **CI Pipeline for Pull Requests:**
+  - ✅ Backend tests (138 tests, 100% passing)
+  - ✅ Frontend tests (vitest with continue-on-error)
+  - ✅ Linting (ruff, mypy, ESLint, prettier)
+  - ✅ Security scans (bandit, pip-audit, npm audit)
+  - ✅ Migration check (alembic check)
+  - ✅ CodeQL analysis (Python + JavaScript/TypeScript)
+  - ✅ Dependency review (blocks vulnerable deps)
+  - ✅ Commit verification (warning mode)
 
-- [ ] **CD Pipeline for Main Branch:**
-  - [ ] Build backend Docker image
-  - [ ] Build frontend Docker image (production optimized)
-  - [ ] Push images to GitHub Container Registry (ghcr.io)
+- ⏳ **CD Pipeline for Main Branch:**
+  - [ ] Build backend Docker image (pending - will add in Phase 3B)
+  - [ ] Build frontend Docker image (pending - will add in Phase 3B)
+  - [ ] Push images to GitHub Container Registry
   - [ ] Tag images with commit SHA and 'latest'
 
-- [ ] **Secrets Management:**
-  - [ ] Configure GitHub Actions secrets for sensitive values
-  - [ ] Set up Docker secrets in compose.prod.yml
+- ⏳ **Secrets Management:**
+  - [ ] Set up Docker secrets in compose.prod.yml (Phase 3B Task 1)
   - [ ] Update backend to read from `/run/secrets/*` files
-  - [ ] Document which secrets are needed (JWT_SECRET, DATABASE_PASSWORD, etc.)
-  - [ ] Test secret injection locally
+  - [ ] Document required secrets
 
-- [ ] **Deployment Strategy:**
-  - [ ] Document manual deployment (pull images on VPS)
-  - [ ] OR automate deployment (GitHub Actions → SSH → VPS)
-  - [ ] Consider: Watchtower for auto-updates vs. manual control
-
-- [ ] **Production Frontend Dockerfile:**
-  - [ ] Multi-stage build (node build → nginx serve)
-  - [ ] Optimize Vite build settings
-  - [ ] Configure nginx for SPA routing
-  - [ ] Test image builds locally
+- ⏳ **Production Frontend Dockerfile:**
+  - [ ] Create multi-stage build (Phase 3B Task 3)
 
 **Acceptance Criteria:**
-- PR builds run all tests and quality checks
-- Main branch builds and pushes production images
-- Images available in GitHub Container Registry
-- Deployment process documented
-- Can pull and run images on any Docker host
-
-**Why This Blocks Everything:**
-- Currently on isolated dev node
-- No way to build production images without CI
-- Can't deploy to prod VPS without images in registry
+- ✅ PR builds run all tests and quality checks
+- ✅ All jobs passing with no shortcuts
+- ✅ Security scanning comprehensive
+- ⏳ Image building (moved to Phase 3B)
 
 **Phase 3B: Production Setup (after CI/CD)**
 

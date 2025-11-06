@@ -30,7 +30,8 @@
       "Bash(alembic check:*)",
       "Bash(npm install)",
       "Bash(npx prettier:*)",
-      "Bash(npm audit fix:*)"
+      "Bash(npm audit fix:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
