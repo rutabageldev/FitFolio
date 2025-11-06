@@ -9,7 +9,6 @@ from webauthn import (
 )
 from webauthn.helpers import base64url_to_bytes, bytes_to_base64url
 from webauthn.helpers.structs import (
-    AuthenticationCredential,
     AuthenticatorSelectionCriteria,
     AuthenticatorTransport,
     COSEAlgorithmIdentifier,
@@ -17,7 +16,6 @@ from webauthn.helpers.structs import (
     PublicKeyCredentialDescriptor,
     PublicKeyCredentialRequestOptions,
     PublicKeyCredentialType,
-    RegistrationCredential,
     ResidentKeyRequirement,
     UserVerificationRequirement,
 )
@@ -114,7 +112,7 @@ class WebAuthnManager:
 
     def verify_registration_response(
         self,
-        credential: RegistrationCredential,
+        credential: Any,  # RegistrationCredential or dict from JSON
         expected_rp_id: str,
         expected_origin: str,
         expected_challenge: bytes,
@@ -147,12 +145,12 @@ class WebAuthnManager:
 
     def verify_authentication_response(
         self,
-        credential: AuthenticationCredential,
+        credential: Any,  # AuthenticationCredential or dict from JSON
         expected_rp_id: str,
         expected_origin: str,
         expected_challenge: bytes,
         credential_public_key: bytes,
-        credential_sign_count: int,
+        credential_current_sign_count: int,
     ) -> dict[str, Any]:
         """Verify WebAuthn authentication response."""
 
@@ -163,7 +161,7 @@ class WebAuthnManager:
                 expected_origin=expected_origin,
                 expected_challenge=expected_challenge,
                 credential_public_key=credential_public_key,
-                credential_sign_count=credential_sign_count,
+                credential_current_sign_count=credential_current_sign_count,
             )
 
             return {

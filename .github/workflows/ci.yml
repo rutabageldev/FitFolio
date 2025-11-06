@@ -13,7 +13,6 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write  # For coverage comments
 
 jobs:
   backend-tests:
@@ -45,6 +44,12 @@ jobs:
         ports:
           - 6379:6379
 
+      mailhog:
+        image: mailhog/mailhog:latest
+        ports:
+          - 1025:1025
+          - 8025:8025
+
     steps:
       - uses: actions/checkout@v4
 
@@ -60,29 +65,32 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements-dev.txt
 
+      - name: Run database migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/test_db
+        run: |
+          alembic upgrade head
+
       - name: Run tests with coverage
         working-directory: backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379/0
           JWT_SECRET: test-secret-key-for-ci-only
           EMAIL_SENDER: test@example.com
+          SMTP_HOST: localhost
+          SMTP_PORT: 1025
         run: |
           pytest --cov=app --cov-report=xml --cov-report=term
 
-      - name: Upload coverage to artifacts
+      - name: Upload coverage reports
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
-          path: backend/coverage.xml
-
-      - name: Coverage comment
-        if: github.event_name == 'pull_request'
-        uses: py-cov-action/python-coverage-comment-action@v3
-        with:
-          GITHUB_TOKEN: ${{ github.token }}
-          MINIMUM_GREEN: 60
-          MINIMUM_ORANGE: 40
+          path: |
+            backend/coverage.xml
+            backend/.coverage
 
   backend-lint:
     name: Backend Linting
@@ -143,6 +151,21 @@ jobs:
     name: Backend Migration Check
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
       - uses: actions/checkout@v4
 
@@ -158,8 +181,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
+      - name: Run migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/test_db
+        run: alembic upgrade head
+
       - name: Check migrations
         working-directory: backend
+        env:
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/test_db
         run: alembic check
 
   frontend-lint:

@@ -152,8 +152,8 @@ class RevokeAllOtherSessionsResponse(BaseModel):
 @router.post("/magic-link/start", response_model=MagicLinkResponse)
 async def start_magic_link_login(
     request: MagicLinkRequest,
+    http_request: Request,
     db: AsyncSession = Depends(get_db),
-    http_request: Request = None,
 ):
     """
     Start magic link login process.
@@ -198,8 +198,8 @@ async def start_magic_link_login(
             purpose="email_verification",
             created_at=now,
             expires_at=expires_at,
-            requested_ip=http_request.client.host if http_request else None,
-            user_agent=http_request.headers.get("user-agent") if http_request else None,
+            requested_ip=(http_request.client.host if http_request.client else None),
+            user_agent=http_request.headers.get("user-agent"),
         )
         db.add(magic_link_token)
 
@@ -208,8 +208,8 @@ async def start_magic_link_login(
             user_id=user.id,
             event_type="user_created",
             created_at=now,
-            ip=http_request.client.host if http_request else None,
-            user_agent=http_request.headers.get("user-agent") if http_request else None,
+            ip=http_request.client.host if http_request.client else None,
+            user_agent=http_request.headers.get("user-agent"),
         )
         db.add(login_event)
 
@@ -249,8 +249,8 @@ async def start_magic_link_login(
         purpose="login",
         created_at=now,
         expires_at=expires_at,
-        requested_ip=http_request.client.host if http_request else None,
-        user_agent=http_request.headers.get("user-agent") if http_request else None,
+        requested_ip=http_request.client.host if http_request.client else None,
+        user_agent=http_request.headers.get("user-agent"),
     )
     db.add(magic_link_token)
 
@@ -259,8 +259,8 @@ async def start_magic_link_login(
         user_id=user.id,
         event_type="magic_link_requested",
         created_at=datetime.now(UTC),
-        ip=http_request.client.host if http_request else None,
-        user_agent=http_request.headers.get("user-agent") if http_request else None,
+        ip=http_request.client.host if http_request.client else None,
+        user_agent=http_request.headers.get("user-agent"),
     )
     db.add(login_event)
 
@@ -293,8 +293,8 @@ async def start_magic_link_login(
 async def verify_magic_link(
     request: MagicLinkVerifyRequest,
     response: Response,
+    http_request: Request,
     db: AsyncSession = Depends(get_db),
-    http_request: Request = None,
 ):
     """
     Verify magic link token and create session.
@@ -315,7 +315,7 @@ async def verify_magic_link(
         log.warning(
             "magic_link_verification_failed",
             reason="invalid_or_expired_token",
-            ip=http_request.client.host if http_request else None,
+            ip=http_request.client.host if http_request.client else None,
         )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -338,7 +338,7 @@ async def verify_magic_link(
         log.warning(
             "login_attempt_unverified_email",
             user_id=str(user.id),
-            ip=http_request.client.host if http_request else None,
+            ip=http_request.client.host if http_request.client else None,
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -358,8 +358,8 @@ async def verify_magic_link(
             user_id=user.id,
             event_type="login_attempt_locked",
             created_at=datetime.now(UTC),
-            ip=http_request.client.host if http_request else None,
-            user_agent=http_request.headers.get("user-agent") if http_request else None,
+            ip=http_request.client.host if http_request.client else None,
+            user_agent=http_request.headers.get("user-agent"),
             extra={"seconds_remaining": seconds_remaining},
         )
         db.add(login_event)
@@ -369,7 +369,7 @@ async def verify_magic_link(
             "account_locked_login_attempt",
             user_id=str(user.id),
             seconds_remaining=seconds_remaining,
-            ip=http_request.client.host if http_request else None,
+            ip=http_request.client.host if http_request.client else None,
         )
 
         raise HTTPException(
@@ -383,7 +383,7 @@ async def verify_magic_link(
     # Mark magic link token as used
     now = datetime.now(UTC)
     magic_link_token.used_at = now
-    magic_link_token.used_ip = http_request.client.host if http_request else None
+    magic_link_token.used_ip = http_request.client.host if http_request.client else None
 
     # Create a new session for the user
     session_token = create_session_token()
@@ -394,8 +394,8 @@ async def verify_magic_link(
         token_hash=session_token_hash,
         created_at=now,
         expires_at=now + timedelta(hours=336),  # 14 days
-        ip=http_request.client.host if http_request else None,
-        user_agent=http_request.headers.get("user-agent") if http_request else None,
+        ip=http_request.client.host if http_request.client else None,
+        user_agent=http_request.headers.get("user-agent"),
     )
     db.add(new_session)
 
@@ -411,8 +411,8 @@ async def verify_magic_link(
         user_id=user.id,
         event_type="magic_link_verified_success",
         created_at=now,
-        ip=http_request.client.host if http_request else None,
-        user_agent=http_request.headers.get("user-agent") if http_request else None,
+        ip=http_request.client.host if http_request.client else None,
+        user_agent=http_request.headers.get("user-agent"),
         extra={"magic_link_token_id": str(magic_link_token.id)},
     )
     db.add(login_event)
@@ -422,7 +422,7 @@ async def verify_magic_link(
     log.info(
         "magic_link_login_success",
         user_id=str(user.id),
-        ip=http_request.client.host if http_request else None,
+        ip=http_request.client.host if http_request.client else None,
     )
 
     # Set session cookie
@@ -712,8 +712,8 @@ async def start_webauthn_authentication(
 async def finish_webauthn_authentication(
     request: WebAuthnAuthenticateFinishRequest,
     response: Response,
+    http_request: Request,
     db: AsyncSession = Depends(get_db),
-    http_request: Request = None,
 ):
     """
     Complete WebAuthn passkey authentication.
@@ -783,7 +783,7 @@ async def finish_webauthn_authentication(
             expected_origin=webauthn_manager.origin,
             expected_challenge=bytes.fromhex(challenge_hex),
             credential_public_key=credential.public_key,
-            credential_sign_count=credential.sign_count,
+            credential_current_sign_count=credential.sign_count,
         )
     except ValueError as e:
         raise HTTPException(
@@ -803,8 +803,8 @@ async def finish_webauthn_authentication(
         user_id=user.id,
         token_hash=session_token_hash,
         expires_at=datetime.now(UTC) + timedelta(hours=336),  # 14 days
-        ip=http_request.client.host if http_request else None,
-        user_agent=http_request.headers.get("user-agent") if http_request else None,
+        ip=http_request.client.host if http_request.client else None,
+        user_agent=http_request.headers.get("user-agent"),
     )
     db.add(new_session)
 
@@ -816,8 +816,8 @@ async def finish_webauthn_authentication(
         user_id=user.id,
         event_type="webauthn_login",
         created_at=datetime.now(UTC),
-        ip=http_request.client.host if http_request else None,
-        user_agent=http_request.headers.get("user-agent") if http_request else None,
+        ip=http_request.client.host if http_request.client else None,
+        user_agent=http_request.headers.get("user-agent"),
         extra={"credential_id": credential_id},
     )
     db.add(login_event)
@@ -943,8 +943,8 @@ async def get_current_user(
 async def verify_email(
     request: EmailVerifyRequest,
     response: Response,
+    http_request: Request,
     db: AsyncSession = Depends(get_db),
-    http_request: Request = None,
 ):
     """
     Verify email address using verification token.
@@ -964,7 +964,7 @@ async def verify_email(
         log.warning(
             "email_verification_failed",
             reason="invalid_or_expired_token",
-            ip=http_request.client.host if http_request else None,
+            ip=http_request.client.host if http_request.client else None,
         )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -989,7 +989,9 @@ async def verify_email(
 
     # Mark verification token as used
     verification_token.used_at = now
-    verification_token.used_ip = http_request.client.host if http_request else None
+    verification_token.used_ip = (
+        http_request.client.host if http_request.client else None
+    )
 
     # Create a new session for the user (auto-login after verification)
     session_token = create_session_token()
@@ -1000,8 +1002,8 @@ async def verify_email(
         token_hash=session_token_hash,
         created_at=now,
         expires_at=now + timedelta(hours=336),  # 14 days
-        ip=http_request.client.host if http_request else None,
-        user_agent=http_request.headers.get("user-agent") if http_request else None,
+        ip=http_request.client.host if http_request.client else None,
+        user_agent=http_request.headers.get("user-agent"),
     )
     db.add(new_session)
 
@@ -1013,8 +1015,8 @@ async def verify_email(
         user_id=user.id,
         event_type="email_verified",
         created_at=now,
-        ip=http_request.client.host if http_request else None,
-        user_agent=http_request.headers.get("user-agent") if http_request else None,
+        ip=http_request.client.host if http_request.client else None,
+        user_agent=http_request.headers.get("user-agent"),
         extra={"verification_token_id": str(verification_token.id)},
     )
     db.add(login_event)
@@ -1024,7 +1026,7 @@ async def verify_email(
     log.info(
         "email_verification_success",
         user_id=str(user.id),
-        ip=http_request.client.host if http_request else None,
+        ip=http_request.client.host if http_request.client else None,
     )
 
     # Set session cookie
@@ -1048,8 +1050,8 @@ async def verify_email(
 )
 async def resend_verification_email(
     request: EmailResendVerificationRequest,
+    http_request: Request,
     db: AsyncSession = Depends(get_db),
-    http_request: Request = None,
 ):
     """
     Resend email verification link.
@@ -1074,8 +1076,8 @@ async def resend_verification_email(
             purpose="email_verification",
             created_at=now,
             expires_at=expires_at,
-            requested_ip=http_request.client.host if http_request else None,
-            user_agent=http_request.headers.get("user-agent") if http_request else None,
+            requested_ip=(http_request.client.host if http_request.client else None),
+            user_agent=http_request.headers.get("user-agent"),
         )
         db.add(verification_token)
 
@@ -1084,8 +1086,8 @@ async def resend_verification_email(
             user_id=user.id,
             event_type="email_verification_resent",
             created_at=now,
-            ip=http_request.client.host if http_request else None,
-            user_agent=http_request.headers.get("user-agent") if http_request else None,
+            ip=http_request.client.host if http_request.client else None,
+            user_agent=http_request.headers.get("user-agent"),
         )
         db.add(login_event)
 
@@ -1114,7 +1116,7 @@ async def resend_verification_email(
         log.info(
             "email_verification_resent",
             user_id=str(user.id),
-            ip=http_request.client.host if http_request else None,
+            ip=http_request.client.host if http_request.client else None,
         )
 
     return EmailResendVerificationResponse()

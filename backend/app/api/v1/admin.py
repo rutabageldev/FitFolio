@@ -52,6 +52,17 @@ async def get_audit_events(
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     page_size: int = Query(50, ge=1, le=1000, description="Items per page"),
 ):
+    import uuid as uuid_lib
+
+    # Parse user_id string to UUID object if provided
+    user_uuid: uuid_lib.UUID | None = None
+    if user_id:
+        try:
+            user_uuid = uuid_lib.UUID(user_id)
+        except ValueError as err:
+            raise HTTPException(
+                status_code=400, detail="Invalid user_id format"
+            ) from err
     """
     Get audit log events with filtering and pagination.
 
@@ -78,8 +89,8 @@ async def get_audit_events(
     # Build query with filters
     stmt = select(LoginEvent, User.email).outerjoin(User, LoginEvent.user_id == User.id)
 
-    if user_id:
-        stmt = stmt.where(LoginEvent.user_id == user_id)
+    if user_uuid:
+        stmt = stmt.where(LoginEvent.user_id == user_uuid)
     if event_type:
         stmt = stmt.where(LoginEvent.event_type == event_type)
     if start_date:
@@ -92,8 +103,8 @@ async def get_audit_events(
 
     # Get total count (before pagination)
     count_stmt = select(LoginEvent)
-    if user_id:
-        count_stmt = count_stmt.where(LoginEvent.user_id == user_id)
+    if user_uuid:
+        count_stmt = count_stmt.where(LoginEvent.user_id == user_uuid)
     if event_type:
         count_stmt = count_stmt.where(LoginEvent.event_type == event_type)
     if start_date:

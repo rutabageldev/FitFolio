@@ -8,15 +8,15 @@ from structlog.contextvars import bind_contextvars, clear_contextvars
 
 # Try orjson; fall back to stdlib json
 try:
-    import orjson as _jsonlib
+    import orjson
 
     def _json_dumps(d):
-        return _jsonlib.dumps(d).decode()
-except Exception:
-    import json as _jsonlib
+        return orjson.dumps(d).decode()
+except ImportError:
+    import json
 
     def _json_dumps(d):
-        return _jsonlib.dumps(d, default=str)
+        return json.dumps(d, default=str)
 
 
 def _add_trace_ids(_, __, event):
