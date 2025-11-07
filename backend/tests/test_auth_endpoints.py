@@ -5,10 +5,12 @@ that are not covered by existing test files.
 """
 
 from datetime import UTC, datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+from sqlalchemy import select
 
 from app.core.security import create_session_token, hash_token
 from app.db.models.auth import (
@@ -1011,11 +1013,14 @@ class TestMagicLinkStartHappyPaths:
     """Test happy paths for magic link start endpoint."""
 
     @pytest.mark.asyncio
+    @patch("app.api.v1.auth.send_email")
     async def test_magic_link_start_new_user_creates_user_and_sends_verification(
-        self, client: AsyncClient, db_session, csrf_token
+        self, mock_send_email, client: AsyncClient, db_session, csrf_token
     ):
         """New user should be created and receive verification email."""
         from sqlalchemy import select
+
+        mock_send_email.return_value = None
 
         response = await client.post(
             "/api/v1/auth/magic-link/start",
@@ -1045,11 +1050,14 @@ class TestMagicLinkStartHappyPaths:
         assert token is not None
 
     @pytest.mark.asyncio
+    @patch("app.api.v1.auth.send_email")
     async def test_magic_link_start_existing_verified_user_sends_login_link(
-        self, client: AsyncClient, db_session, csrf_token
+        self, mock_send_email, client: AsyncClient, db_session, csrf_token
     ):
         """Existing verified user should receive login magic link."""
         from sqlalchemy import select
+
+        mock_send_email.return_value = None
 
         # Create verified user
         now = datetime.now(UTC)
@@ -1205,11 +1213,14 @@ class TestEmailResendVerification:
     """Test resend verification email endpoint."""
 
     @pytest.mark.asyncio
+    @patch("app.api.v1.auth.send_email")
     async def test_resend_verification_for_unverified_user(
-        self, client: AsyncClient, db_session, csrf_token
+        self, mock_send_email, client: AsyncClient, db_session, csrf_token
     ):
         """Unverified user should receive new verification email."""
         from sqlalchemy import select
+
+        mock_send_email.return_value = None
 
         # Create unverified user
         now = datetime.now(UTC)
@@ -1401,3 +1412,344 @@ class TestRevokeAllOtherSessions:
         # Verify current session not revoked
         await db_session.refresh(current_session)
         assert current_session.revoked_at is None
+
+
+class TestMagicLinkStartWithEmailMock:
+    """Test magic link start endpoint with mocked email service."""
+
+    @pytest.mark.asyncio
+    @patch("app.api.v1.auth.send_email")
+    async def test_new_user_creates_verification_email(
+        self, mock_send_email, client: AsyncClient, db_session, csrf_token
+    ):
+        """New user should create account and send verification email."""
+        mock_send_email.return_value = None
+
+        response = await client.post(
+            "/api/v1/auth/magic-link/start",
+            json={"email": "brandnew@example.com"},
+            cookies={"csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        assert response.status_code == 200
+        assert "magic link has been sent" in response.json()["message"].lower()
+
+        # Verify user was created
+        stmt = select(User).where(User.email == "brandnew@example.com")
+        result = await db_session.execute(stmt)
+        user = result.scalar_one_or_none()
+        assert user is not None
+        assert user.is_email_verified is False
+        assert user.is_active is True
+
+        # Verify email_verification token was created (not login)
+        token_stmt = select(MagicLinkToken).where(
+            MagicLinkToken.user_id == user.id,
+            MagicLinkToken.purpose == "email_verification",
+        )
+        token_result = await db_session.execute(token_stmt)
+        token = token_result.scalar_one_or_none()
+        assert token is not None
+
+        # Verify email was sent
+        mock_send_email.assert_called_once()
+        call_kwargs = mock_send_email.call_args.kwargs
+        assert call_kwargs["to"] == "brandnew@example.com"
+        assert "verify" in call_kwargs["subject"].lower()
+        assert "token=" in call_kwargs["body"]
+
+    @pytest.mark.asyncio
+    @patch("app.api.v1.auth.send_email")
+    async def test_existing_verified_user_gets_login_email(
+        self, mock_send_email, client: AsyncClient, db_session, csrf_token
+    ):
+        """Existing verified user should get login magic link."""
+        mock_send_email.return_value = None
+
+        # Create verified user
+        now = datetime.now(UTC)
+        user = User(
+            email="existing@example.com",
+            is_active=True,
+            is_email_verified=True,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        response = await client.post(
+            "/api/v1/auth/magic-link/start",
+            json={"email": "existing@example.com"},
+            cookies={"csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        assert response.status_code == 200
+
+        # Verify login token was created (not email_verification)
+        token_stmt = select(MagicLinkToken).where(
+            MagicLinkToken.user_id == user.id,
+            MagicLinkToken.purpose == "login",
+        )
+        token_result = await db_session.execute(token_stmt)
+        token = token_result.scalar_one_or_none()
+        assert token is not None
+
+        # Verify email was sent
+        mock_send_email.assert_called_once()
+        call_kwargs = mock_send_email.call_args.kwargs
+        assert call_kwargs["to"] == "existing@example.com"
+        assert "sign in" in call_kwargs["subject"].lower()
+        assert "token=" in call_kwargs["body"]
+
+    @pytest.mark.asyncio
+    @patch("app.api.v1.auth.send_email")
+    async def test_existing_unverified_user_gets_login_link(
+        self, mock_send_email, client: AsyncClient, db_session, csrf_token
+    ):
+        """Existing unverified user gets login link (not verification)."""
+        mock_send_email.return_value = None
+
+        # Create unverified user (already exists in DB)
+        now = datetime.now(UTC)
+        user = User(
+            email="unverified@example.com",
+            is_active=True,
+            is_email_verified=False,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        response = await client.post(
+            "/api/v1/auth/magic-link/start",
+            json={"email": "unverified@example.com"},
+            cookies={"csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        assert response.status_code == 200
+
+        # Existing users (even unverified) get login tokens
+        token_stmt = select(MagicLinkToken).where(
+            MagicLinkToken.user_id == user.id,
+            MagicLinkToken.purpose == "login",
+        )
+        token_result = await db_session.execute(token_stmt)
+        token = token_result.scalar_one_or_none()
+        assert token is not None
+
+        # Verify email was sent with sign in subject
+        mock_send_email.assert_called_once()
+        call_kwargs = mock_send_email.call_args.kwargs
+        assert call_kwargs["to"] == "unverified@example.com"
+        assert "sign in" in call_kwargs["subject"].lower()
+
+
+class TestEmailVerificationWithMock:
+    """Test email verification endpoint with mocked email service."""
+
+    @pytest.mark.asyncio
+    @patch("app.api.v1.auth.send_email")
+    async def test_verify_email_with_valid_token(
+        self, mock_send_email, client: AsyncClient, db_session, csrf_token
+    ):
+        """Valid verification token should verify email and create session."""
+        # First create a new user which triggers email send
+        mock_send_email.return_value = None
+
+        # Create new user via magic link start
+        await client.post(
+            "/api/v1/auth/magic-link/start",
+            json={"email": "toverify@example.com"},
+            cookies={"csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        # Get the user and token
+        stmt = select(User).where(User.email == "toverify@example.com")
+        result = await db_session.execute(stmt)
+        user = result.scalar_one()
+
+        token_stmt = select(MagicLinkToken).where(
+            MagicLinkToken.user_id == user.id,
+            MagicLinkToken.purpose == "email_verification",
+        )
+        token_result = await db_session.execute(token_stmt)
+        token_result.scalar_one()  # Verify token exists
+
+        # Get the raw token from the email call
+        email_body = mock_send_email.call_args.kwargs["body"]
+        # Extract token from body (format: ...token=TOKEN_VALUE...)
+        token_start = email_body.find("token=") + 6
+        token_end = email_body.find("\n", token_start)
+        if token_end == -1:
+            token_end = len(email_body)
+        raw_token = email_body[token_start:token_end].strip()
+
+        # Verify the email
+        response = await client.post(
+            "/api/v1/auth/email/verify",
+            json={"token": raw_token},
+            cookies={"csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        assert response.status_code == 200
+        assert "Email verified successfully" in response.json()["message"]
+        assert "ff_sess" in response.cookies
+
+        # Verify user email is now verified
+        await db_session.refresh(user)
+        assert user.is_email_verified is True
+
+    @pytest.mark.asyncio
+    async def test_verify_email_invalid_token(self, client: AsyncClient, csrf_token):
+        """Invalid token should return error."""
+        response = await client.post(
+            "/api/v1/auth/email/verify",
+            json={"token": "invalid_token_123"},
+            cookies={"csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        assert response.status_code == 400
+        assert "Invalid or expired verification token" in response.json()["detail"]
+
+    @pytest.mark.asyncio
+    async def test_verify_email_wrong_purpose_token(
+        self, client: AsyncClient, db_session, csrf_token
+    ):
+        """Token with wrong purpose should fail."""
+        # Create user with login token instead of verification token
+        now = datetime.now(UTC)
+        user = User(
+            email="wrongpurpose@example.com",
+            is_active=True,
+            is_email_verified=False,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        # Create login token (wrong purpose)
+        token = "wrong_purpose_token"
+        magic_token = MagicLinkToken(
+            user_id=user.id,
+            token_hash=hash_token(token),
+            purpose="login",  # Should be email_verification
+            created_at=now,
+            expires_at=now + timedelta(minutes=15),
+        )
+        db_session.add(magic_token)
+        await db_session.commit()
+
+        response = await client.post(
+            "/api/v1/auth/email/verify",
+            json={"token": token},
+            cookies={"csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        assert response.status_code == 400
+        assert "Invalid or expired verification token" in response.json()["detail"]
+
+
+class TestResendVerificationWithMock:
+    """Test resend verification endpoint with mocked email."""
+
+    @pytest.mark.asyncio
+    @patch("app.api.v1.auth.send_email")
+    async def test_resend_verification_unverified_user(
+        self, mock_send_email, client: AsyncClient, db_session, csrf_token
+    ):
+        """Unverified user should receive new verification email."""
+        mock_send_email.return_value = None
+
+        # Create unverified user
+        now = datetime.now(UTC)
+        user = User(
+            email="needsverify@example.com",
+            is_active=True,
+            is_email_verified=False,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+
+        response = await client.post(
+            "/api/v1/auth/email/resend-verification",
+            json={"email": "needsverify@example.com"},
+            cookies={"csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        assert response.status_code == 200
+        assert "verification email" in response.json()["message"].lower()
+
+        # Verify email was sent
+        mock_send_email.assert_called_once()
+        call_kwargs = mock_send_email.call_args.kwargs
+        assert call_kwargs["to"] == "needsverify@example.com"
+        assert "verify" in call_kwargs["subject"].lower()
+
+    @pytest.mark.asyncio
+    @patch("app.api.v1.auth.send_email")
+    async def test_resend_verification_already_verified(
+        self, mock_send_email, client: AsyncClient, db_session, csrf_token
+    ):
+        """Already verified user should get success without sending email."""
+        mock_send_email.return_value = None
+
+        # Create verified user
+        now = datetime.now(UTC)
+        user = User(
+            email="alreadyverified@example.com",
+            is_active=True,
+            is_email_verified=True,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+
+        response = await client.post(
+            "/api/v1/auth/email/resend-verification",
+            json={"email": "alreadyverified@example.com"},
+            cookies={"csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        assert response.status_code == 200
+
+        # Email should NOT be sent for already verified users
+        mock_send_email.assert_not_called()
+
+    @pytest.mark.asyncio
+    @patch("app.api.v1.auth.send_email")
+    async def test_resend_verification_nonexistent_user(
+        self, mock_send_email, client: AsyncClient, csrf_token
+    ):
+        """Nonexistent user should get success response (security)."""
+        mock_send_email.return_value = None
+
+        response = await client.post(
+            "/api/v1/auth/email/resend-verification",
+            json={"email": "nonexistent@example.com"},
+            cookies={"csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        # Should return success to prevent email enumeration
+        assert response.status_code == 200
+
+        # No email should be sent
+        mock_send_email.assert_not_called()
