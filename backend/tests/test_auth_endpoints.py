@@ -4,6 +4,7 @@ This file focuses on error paths, edge cases, and integration scenarios
 that are not covered by existing test files.
 """
 
+import uuid
 from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
@@ -1753,3 +1754,225 @@ class TestResendVerificationWithMock:
 
         # No email should be sent
         mock_send_email.assert_not_called()
+
+
+class TestListSessions:
+    """Test GET /api/v1/auth/sessions endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_list_sessions_unauthorized(self, client: AsyncClient):
+        """Should require authentication."""
+        response = await client.get("/api/v1/auth/sessions")
+
+        assert response.status_code == 401
+        assert "Not authenticated" in response.json()["detail"]
+
+    @pytest.mark.asyncio
+    async def test_list_sessions_single_session(self, client: AsyncClient, db_session):
+        """Should list current session."""
+        # Get CSRF token
+        csrf_response = await client.get("/healthz")
+        csrf_token = csrf_response.cookies["csrf_token"]
+
+        # Create user and session
+        now = datetime.now(UTC)
+        user = User(
+            email="listsessions@test.com",
+            is_active=True,
+            is_email_verified=True,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        # Create session
+        token = create_session_token()
+        session = Session(
+            id=uuid.uuid4(),
+            user_id=user.id,
+            token_hash=hash_token(token),
+            created_at=now,
+            expires_at=now + timedelta(days=7),
+            ip="127.0.0.1",
+            user_agent="test-agent",
+        )
+        db_session.add(session)
+        await db_session.commit()
+
+        # List sessions
+        response = await client.get(
+            "/api/v1/auth/sessions",
+            cookies={"ff_sess": token, "csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 1
+        assert len(data["sessions"]) == 1
+        assert data["sessions"][0]["is_current"] is True
+        assert data["sessions"][0]["ip"] == "127.0.0.1"
+        assert data["sessions"][0]["user_agent"] == "test-agent"
+
+    @pytest.mark.asyncio
+    async def test_list_sessions_multiple_sessions(
+        self, client: AsyncClient, db_session
+    ):
+        """Should list all active sessions."""
+        # Get CSRF token
+        csrf_response = await client.get("/healthz")
+        csrf_token = csrf_response.cookies["csrf_token"]
+
+        # Create user
+        now = datetime.now(UTC)
+        user = User(
+            email="multisessions@test.com",
+            is_active=True,
+            is_email_verified=True,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        # Create current session
+        token = create_session_token()
+        current_session = Session(
+            id=uuid.uuid4(),
+            user_id=user.id,
+            token_hash=hash_token(token),
+            created_at=now,
+            expires_at=now + timedelta(days=7),
+            ip="127.0.0.1",
+            user_agent="current-agent",
+        )
+        db_session.add(current_session)
+
+        # Create other active sessions
+        other_session1 = Session(
+            id=uuid.uuid4(),
+            user_id=user.id,
+            token_hash=hash_token(create_session_token()),
+            created_at=now - timedelta(days=1),
+            expires_at=now + timedelta(days=6),
+            ip="192.168.1.1",
+            user_agent="mobile-agent",
+        )
+        db_session.add(other_session1)
+
+        other_session2 = Session(
+            id=uuid.uuid4(),
+            user_id=user.id,
+            token_hash=hash_token(create_session_token()),
+            created_at=now - timedelta(days=2),
+            expires_at=now + timedelta(days=5),
+            ip="10.0.0.1",
+            user_agent="desktop-agent",
+        )
+        db_session.add(other_session2)
+
+        # Create revoked session (should not appear)
+        revoked_session = Session(
+            id=uuid.uuid4(),
+            user_id=user.id,
+            token_hash=hash_token(create_session_token()),
+            created_at=now - timedelta(days=3),
+            expires_at=now + timedelta(days=4),
+            revoked_at=now,
+        )
+        db_session.add(revoked_session)
+
+        # Create expired session (should not appear)
+        expired_session = Session(
+            id=uuid.uuid4(),
+            user_id=user.id,
+            token_hash=hash_token(create_session_token()),
+            created_at=now - timedelta(days=8),
+            expires_at=now - timedelta(days=1),
+        )
+        db_session.add(expired_session)
+
+        await db_session.commit()
+
+        # List sessions
+        response = await client.get(
+            "/api/v1/auth/sessions",
+            cookies={"ff_sess": token, "csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 3  # Only active, non-revoked sessions
+        assert len(data["sessions"]) == 3
+
+        # Verify current session is marked
+        current_sessions = [s for s in data["sessions"] if s["is_current"]]
+        assert len(current_sessions) == 1
+        assert current_sessions[0]["user_agent"] == "current-agent"
+
+        # Verify sessions are ordered by creation date (newest first)
+        assert data["sessions"][0]["user_agent"] == "current-agent"
+        assert data["sessions"][1]["user_agent"] == "mobile-agent"
+        assert data["sessions"][2]["user_agent"] == "desktop-agent"
+
+    @pytest.mark.asyncio
+    async def test_list_sessions_excludes_rotated(
+        self, client: AsyncClient, db_session
+    ):
+        """Should exclude rotated sessions."""
+        # Get CSRF token
+        csrf_response = await client.get("/healthz")
+        csrf_token = csrf_response.cookies["csrf_token"]
+
+        # Create user
+        now = datetime.now(UTC)
+        user = User(
+            email="rotatedsessions@test.com",
+            is_active=True,
+            is_email_verified=True,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        # Create current session
+        token = create_session_token()
+        current_session = Session(
+            id=uuid.uuid4(),
+            user_id=user.id,
+            token_hash=hash_token(token),
+            created_at=now,
+            expires_at=now + timedelta(days=7),
+        )
+        db_session.add(current_session)
+
+        # Create rotated session (should not appear)
+        rotated_session = Session(
+            id=uuid.uuid4(),
+            user_id=user.id,
+            token_hash=hash_token(create_session_token()),
+            created_at=now - timedelta(days=1),
+            expires_at=now + timedelta(days=6),
+            rotated_at=now,
+        )
+        db_session.add(rotated_session)
+
+        await db_session.commit()
+
+        # List sessions
+        response = await client.get(
+            "/api/v1/auth/sessions",
+            cookies={"ff_sess": token, "csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 1  # Only non-rotated session
+        assert data["sessions"][0]["is_current"] is True
