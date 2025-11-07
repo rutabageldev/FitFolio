@@ -1,6 +1,6 @@
 // Vitest setup file
 // Add global test configuration and mocks here
-// eslint-disable-next-line import/no-unresolved
+
 import { vi } from 'vitest';
 
 // Example: Mock window.matchMedia

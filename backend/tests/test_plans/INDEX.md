@@ -11,40 +11,43 @@
 
 ### 🚨 CRITICAL Priority (Must reach 85%+)
 
-| Module | Current | Target | Test Plan | Status |
-|--------|---------|--------|-----------|--------|
-| [auth.py](auth.md) | 41.03% | 85% | auth.md | ⏳ Planning Complete |
-| [deps.py](deps.md) | 45.71% | 85% | deps.md | 🚧 12 tests implemented |
+| Module                                        | Current | Target | Test Plan            | Status                  |
+| --------------------------------------------- | ------- | ------ | -------------------- | ----------------------- |
+| [auth.py](auth.md)                            | 41.03%  | 85%    | auth.md              | ⏳ Planning Complete    |
+| [deps.py](deps.md)                            | 45.71%  | 85%    | deps.md              | 🚧 12 tests implemented |
+| [rate_limit (middleware+core)](rate_limit.md) | TBD     | 90%    | rate_limit.md        | ⏳ Planning Added       |
+| [challenge_storage.py](challenge_storage.md)  | TBD     | 90%    | challenge_storage.md | ⏳ Planning Added       |
 
 ### 🔥 HIGH Priority (Should reach 85%+)
 
-| Module | Current | Target | Test Plan | Status |
-|--------|---------|--------|-----------|--------|
-| [webauthn.py](webauthn.md) | 58.14% | 85% | webauthn.md | ⏳ Planning Complete |
+| Module                     | Current | Target | Test Plan   | Status               |
+| -------------------------- | ------- | ------ | ----------- | -------------------- |
+| [webauthn.py](webauthn.md) | 58.14%  | 85%    | webauthn.md | ⏳ Planning Complete |
 
 ### 📊 MEDIUM Priority (Need improvement to 85%+)
 
-| Module | Current | Target | Test Plan | Status |
-|--------|---------|--------|-----------|--------|
-| [admin.py](admin.md) | 75.68% | 85% | admin.md | ⏳ Planning Complete |
+| Module                            | Current | Target | Test Plan   | Status               |
+| --------------------------------- | ------- | ------ | ----------- | -------------------- |
+| [admin.py](admin.md)              | 75.68%  | 85%    | admin.md    | ⏳ Planning Complete |
+| [database lifecycle](database.md) | TBD     | 85%    | database.md | ⏳ Planning Added    |
 
 ### ✅ Already Meeting Target (≥85%)
 
-| Module | Current | Notes |
-|--------|---------|-------|
-| email.py | 100.00% | ✅ Complete |
-| session_rotation.py | 100.00% | ✅ Complete |
-| csrf.py | 100.00% | ✅ Complete |
-| request_id.py | 100.00% | ✅ Complete |
-| otel.py | 100.00% | ✅ Complete |
-| dev.py | 100.00% | ✅ Complete |
-| health.py | 100.00% | ✅ Complete |
-| base.py | 100.00% | ✅ Complete |
-| auth.py (models) | 100.00% | ✅ Complete |
-| security.py | 97.78% | ✅ Nearly complete |
-| rate_limit.py | 95.00% | ✅ Nearly complete |
-| logging.py | 88.24% | ✅ Acceptable |
-| rate_limiter.py | 84.75% | ✅ Acceptable |
+| Module              | Current | Notes                    |
+| ------------------- | ------- | ------------------------ |
+| email.py            | 100.00% | ✅ Complete              |
+| session_rotation.py | 100.00% | ✅ Complete              |
+| csrf.py             | 100.00% | ✅ Complete              |
+| request_id.py       | 100.00% | ✅ Complete (plan added) |
+| otel.py             | 100.00% | ✅ Complete              |
+| dev.py              | 100.00% | ✅ Complete              |
+| health.py           | 100.00% | ✅ Complete              |
+| base.py             | 100.00% | ✅ Complete              |
+| auth.py (models)    | 100.00% | ✅ Complete              |
+| security.py         | 97.78%  | ✅ Nearly complete       |
+| rate_limit.py       | 95.00%  | ✅ Nearly complete       |
+| logging.py          | 88.24%  | ✅ Acceptable            |
+| rate_limiter.py     | 84.75%  | ✅ Acceptable            |
 
 ---
 
@@ -73,24 +76,35 @@
 - [admin.md](admin.md) - Admin audit log endpoints
 - [webauthn.md](webauthn.md) - WebAuthn manager (passkey operations)
 - [auth.md](auth.md) - Authentication endpoints (magic link, WebAuthn, sessions)
+- [rate_limit.md](rate_limit.md) - Rate limiting middleware and core algorithm
+- [challenge_storage.md](challenge_storage.md) - WebAuthn challenge storage
+- [database.md](database.md) - DB lifecycle, URL handling, engine disposal
+- [request_id.md](request_id.md) - Request correlation ID middleware
 
 ---
 
 ## Implementation Progress Tracking
 
-### Completed Test Plans (4/4)
+### Completed Test Plans (8/8)
+
 - ✅ deps.py - 12/27 test cases identified
 - ✅ admin.py - 31 test cases identified
 - ✅ webauthn.py - 35 test cases identified
 - ✅ auth.py - 76 test cases identified
+- ✅ rate_limit - 17 test cases identified
+- ✅ challenge_storage - 12 test cases identified
+- ✅ database - 9 test cases identified
+- ✅ request_id - 3 test cases identified
 
 ### Implemented Tests
+
 - ✅ deps.py - 12 tests created (ready to run)
 - ⏳ admin.py - 0 tests (pending)
 - ⏳ webauthn.py - 0 tests (pending)
 - ⏳ auth.py - Partially covered in existing test files
 
 ### Next Steps
+
 1. **Run deps.py tests** - Verify 12 tests pass, check coverage improvement
 2. **Implement auth.py tests** - Largest gap, 240 missing lines
 3. **Implement webauthn.py tests** - Security-critical, error path focus
@@ -101,27 +115,29 @@
 
 ## Estimated Effort
 
-| Task | Effort | Status |
-|------|--------|--------|
-| Test Planning | 2 hours | ✅ Complete |
-| deps.py implementation | 30 minutes | 🚧 Tests written, needs verification |
-| auth.py implementation | 4-5 hours | ⏳ Pending (76 test cases) |
-| webauthn.py implementation | 2-3 hours | ⏳ Pending (35 test cases) |
-| admin.py implementation | 2-3 hours | ⏳ Pending (31 test cases) |
-| CI integration | 30 minutes | ⏳ Pending |
-| **Total** | **11-14 hours** | **15% complete** |
+| Task                       | Effort          | Status                               |
+| -------------------------- | --------------- | ------------------------------------ |
+| Test Planning              | 2 hours         | ✅ Complete                          |
+| deps.py implementation     | 30 minutes      | 🚧 Tests written, needs verification |
+| auth.py implementation     | 4-5 hours       | ⏳ Pending (76 test cases)           |
+| webauthn.py implementation | 2-3 hours       | ⏳ Pending (35 test cases)           |
+| admin.py implementation    | 2-3 hours       | ⏳ Pending (31 test cases)           |
+| CI integration             | 30 minutes      | ⏳ Pending                           |
+| **Total**                  | **11-14 hours** | **15% complete**                     |
 
 ---
 
 ## Coverage Enforcement
 
 ### CI Integration Plan
+
 - Add `--cov-fail-under=85` to pytest command in `.github/workflows/ci.yml`
 - Block PRs that drop coverage below 85%
 - Generate coverage report as CI artifact
 - Add coverage badge to README.md
 
 ### Per-Module Targets
+
 - Critical modules (auth, security): ≥85%
 - Core modules (middleware, utilities): ≥85%
 - Integration tests: ≥80%

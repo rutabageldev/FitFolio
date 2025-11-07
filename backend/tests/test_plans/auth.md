@@ -16,7 +16,9 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 ### Endpoint: POST /api/v1/auth/magic-link/start
 
 #### Happy Path
+
 - [x] **Valid email sends magic link** - ✅ Partial (test_magic_link.py)
+
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, email sent, token stored
@@ -27,23 +29,28 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Expected:** 200, magic link sent
 
 #### Rate Limiting
+
 - [ ] **Respects rate limit decorator** - ⏳ Pending
   - **Type:** error_path
   - **Priority:** high
   - **Expected:** 429 after exceeding limit
 
 #### Error Handling
+
 - [ ] **Invalid email format** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** high
   - **Expected:** 422 validation error
 
 - [ ] **Empty email** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** high
   - **Expected:** 422 validation error
 
 - [ ] **SMTP failure (email can't send)** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 500 or handle gracefully
@@ -53,15 +60,31 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Priority:** high
   - **Expected:** 500 internal server error
 
+#### Security/Privacy
+
+- [ ] **Unknown email returns generic success (no enumeration)** - ⏳ Pending
+
+  - **Type:** happy_path
+  - **Priority:** critical
+  - **Expected:** 200 with generic message, no disclosure whether user exists
+
+- [ ] **New email triggers verification flow (not login)** - ⏳ Pending
+  - **Type:** happy_path
+  - **Priority:** high
+  - **Expected:** `magic_link_tokens.purpose="email_verification"`, email content points to verification URL
+
 ### Endpoint: POST /api/v1/auth/magic-link/verify
 
 #### Happy Path
+
 - [x] **Valid token creates session** - ✅ Partial (test_magic_link.py)
+
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, session cookie set
 
 - [ ] **Token used for new user creates account** - ⏳ Pending
+
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** User created, session set
@@ -72,28 +95,34 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Expected:** Session created, no duplicate user
 
 #### Rate Limiting
+
 - [ ] **Respects rate limit decorator** - ⏳ Pending
   - **Type:** error_path
   - **Priority:** high
   - **Expected:** 429 after exceeding limit
 
 #### Error Handling
+
 - [ ] **Invalid token format** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Invalid or expired token"
 
 - [ ] **Expired token** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Invalid or expired token"
 
 - [ ] **Token not found in Redis** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Invalid or expired token"
 
 - [ ] **Used/consumed token** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Invalid or expired token"
@@ -103,10 +132,25 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Priority:** critical
   - **Expected:** 403 "Account temporarily locked"
 
+#### Security
+
+- [ ] **Unverified user cannot login** - ⏳ Pending
+
+  - **Type:** error_path
+  - **Priority:** critical
+  - **Expected:** 403 with verification-required message
+
+- [ ] **Sets cookie with correct flags** - ⏳ Pending
+  - **Type:** happy_path
+  - **Priority:** high
+  - **Expected:** `HttpOnly` set; `Secure` depends on env; `SameSite=Lax`
+
 ### Endpoint: POST /api/v1/auth/webauthn/register/start
 
 #### Happy Path
+
 - [ ] **Authenticated user starts registration** - ⏳ Pending
+
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, registration options with challenge
@@ -116,13 +160,23 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Priority:** high
   - **Expected:** Options include existing credential IDs in excludeCredentials
 
+#### Additional Behavior
+
+- [ ] **Non-existent user email creates user record** - ⏳ Pending
+  - **Type:** happy_path
+  - **Priority:** medium
+  - **Expected:** User auto-created prior to registration flow
+
 #### Error Handling
+
 - [ ] **Unauthenticated request** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 401 unauthorized
 
 - [ ] **Inactive user** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 401 or 403
@@ -135,12 +189,15 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 ### Endpoint: POST /api/v1/auth/webauthn/register/finish
 
 #### Happy Path
+
 - [ ] **Valid credential registration** - ⏳ Pending
+
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, credential stored in database
 
 - [ ] **First credential for user** - ⏳ Pending
+
   - **Type:** happy_path
   - **Priority:** high
   - **Expected:** Credential created with is_primary=true
@@ -151,22 +208,27 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Expected:** Credential created, is_primary=false
 
 #### Error Handling
+
 - [ ] **Unauthenticated request** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 401 unauthorized
 
 - [ ] **Challenge not found (expired or missing)** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Challenge expired"
 
 - [ ] **Challenge mismatch** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Invalid credential"
 
 - [ ] **WebAuthn verification fails** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Invalid credential"
@@ -179,7 +241,9 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 ### Endpoint: POST /api/v1/auth/webauthn/authenticate/start
 
 #### Happy Path
+
 - [ ] **User with credentials starts authentication** - ⏳ Pending
+
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, authentication options with allowCredentials
@@ -190,21 +254,31 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Expected:** 200, empty allowCredentials (platform authenticator)
 
 #### Rate Limiting
+
 - [ ] **Respects rate limit decorator** - ⏳ Pending
   - **Type:** error_path
   - **Priority:** high
   - **Expected:** 429 after exceeding limit
 
 #### Error Handling
+
 - [ ] **Invalid email format** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** high
   - **Expected:** 422 validation error
 
 - [ ] **User not found** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** high
-  - **Expected:** 200 (same as success to prevent enumeration)
+  - **Expected:** 404 not found (current behavior)
+
+- [ ] **Enumeration-resistant response (future)** - ⏳ Pending (future functionality)
+
+  - **Type:** error_path
+  - **Priority:** medium
+  - **Expected:** Return generic 200 without disclosing existence (to be implemented)
 
 - [ ] **Redis challenge storage failure** - ⏳ Pending
   - **Type:** error_path
@@ -214,7 +288,9 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 ### Endpoint: POST /api/v1/auth/webauthn/authenticate/finish
 
 #### Happy Path
+
 - [ ] **Valid authentication creates session** - ⏳ Pending
+
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, session cookie set
@@ -225,33 +301,40 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Expected:** Credential sign_count incremented
 
 #### Rate Limiting
+
 - [ ] **Respects rate limit decorator** - ⏳ Pending
   - **Type:** error_path
   - **Priority:** high
   - **Expected:** 429 after exceeding limit
 
 #### Error Handling
+
 - [ ] **Challenge not found** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Challenge expired"
 
 - [ ] **Challenge mismatch** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Invalid credential"
 
 - [ ] **Credential not found** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Invalid credential"
 
 - [ ] **WebAuthn verification fails** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Invalid credential"
 
 - [ ] **Account locked** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 403 "Account temporarily locked"
@@ -261,10 +344,25 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Priority:** critical
   - **Expected:** 401 or 403
 
+#### Cookies & Headers
+
+- [ ] **Cookie flags set correctly** - ⏳ Pending
+
+  - **Type:** happy_path
+  - **Priority:** high
+  - **Expected:** `HttpOnly` set; `Secure` based on env; `SameSite=Lax`
+
+- [ ] **Rate limit headers present on success** - ⏳ Pending
+  - **Type:** integration
+  - **Priority:** medium
+  - **Expected:** X-RateLimit-\* headers included when limiter applies
+
 ### Endpoint: GET /api/v1/auth/webauthn/credentials
 
 #### Happy Path
+
 - [ ] **List user's credentials** - ⏳ Pending
+
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, list of credentials (no public key exposed)
@@ -275,6 +373,7 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Expected:** 200, empty array
 
 #### Error Handling
+
 - [ ] **Unauthenticated request** - ⏳ Pending
   - **Type:** error_path
   - **Priority:** critical
@@ -283,13 +382,16 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 ### Endpoint: POST /api/v1/auth/logout
 
 #### Happy Path
+
 - [ ] **Authenticated logout revokes session** - ⏳ Pending
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, session revoked, cookie cleared
 
 #### Error Handling
+
 - [ ] **Unauthenticated request still returns 200** - ⏳ Pending
+
   - **Type:** happy_path
   - **Priority:** high
   - **Expected:** 200, no-op (idempotent)
@@ -302,13 +404,22 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 ### Endpoint: GET /api/v1/auth/me
 
 #### Happy Path
+
 - [ ] **Authenticated user gets info** - ⏳ Pending
+
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, user object
 
+- [ ] **Auto session rotation after 7 days** - ⏳ Pending
+  - **Type:** integration
+  - **Priority:** high
+  - **Expected:** New session created; cookie updated; old marked rotated
+
 #### Error Handling
+
 - [ ] **Unauthenticated request** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 401 unauthorized
@@ -321,23 +432,28 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 ### Endpoint: POST /api/v1/auth/email/verify
 
 #### Happy Path
+
 - [ ] **Valid verification token verifies email** - ⏳ Pending
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, is_email_verified=true
 
 #### Error Handling
+
 - [ ] **Unauthenticated request** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 401 unauthorized
 
 - [ ] **Invalid token** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Invalid or expired token"
 
 - [ ] **Expired token** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Invalid or expired token"
@@ -350,24 +466,29 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 ### Endpoint: POST /api/v1/auth/email/resend-verification
 
 #### Happy Path
+
 - [ ] **Resend verification email** - ⏳ Pending
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, new email sent
 
 #### Rate Limiting
+
 - [ ] **Respects rate limit decorator** - ⏳ Pending
   - **Type:** error_path
   - **Priority:** high
   - **Expected:** 429 after exceeding limit
 
 #### Error Handling
+
 - [ ] **Unauthenticated request** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 401 unauthorized
 
 - [ ] **Already verified email** - ⏳ Pending
+
   - **Type:** edge_case
   - **Priority:** medium
   - **Expected:** 400 "Email already verified"
@@ -377,15 +498,24 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Priority:** high
   - **Expected:** 500 or handle gracefully
 
+#### Privacy
+
+- [ ] **No enumeration leakage in resend** - ⏳ Pending
+  - **Type:** happy_path
+  - **Priority:** high
+  - **Expected:** Generic 200 response whether email exists or not
+
 ### Endpoint: GET /api/v1/auth/sessions
 
 #### Happy Path
+
 - [ ] **List active sessions** - ⏳ Pending
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, list of sessions with current session marked
 
 #### Error Handling
+
 - [ ] **Unauthenticated request** - ⏳ Pending
   - **Type:** error_path
   - **Priority:** critical
@@ -394,23 +524,28 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 ### Endpoint: DELETE /api/v1/auth/sessions/{session_id}
 
 #### Happy Path
+
 - [ ] **Revoke specific session** - ⏳ Pending
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, session revoked
 
 #### Error Handling
+
 - [ ] **Unauthenticated request** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 401 unauthorized
 
 - [ ] **Revoke own current session** - ⏳ Pending
+
   - **Type:** edge_case
   - **Priority:** high
   - **Expected:** 400 "Cannot revoke current session"
 
 - [ ] **Revoke session belonging to another user** - ⏳ Pending
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 404 not found (security: don't reveal existence)
@@ -423,7 +558,9 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 ### Endpoint: DELETE /api/v1/auth/sessions/others
 
 #### Happy Path
+
 - [ ] **Revoke all other sessions** - ⏳ Pending
+
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, count of revoked sessions
@@ -434,6 +571,7 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Expected:** 200, revoked_count=0
 
 #### Error Handling
+
 - [ ] **Unauthenticated request** - ⏳ Pending
   - **Type:** error_path
   - **Priority:** critical
@@ -442,12 +580,14 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 ## Coverage Goals
 
 ### Current State (41.03%)
+
 - Basic happy paths partially covered in separate test files
 - Most error paths untested
 - Rate limiting not tested
 - Edge cases not covered
 
 ### To Reach 85%+
+
 - [ ] Add comprehensive error path testing for all endpoints
 - [ ] Add rate limiting tests for protected endpoints
 - [ ] Add edge case tests (double logout, already verified, etc.)
@@ -459,6 +599,7 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 ## Implementation Notes
 
 ### Fixtures Needed
+
 - `client` - HTTP client for endpoint testing
 - `db_session` - Database session
 - `test_user` - Authenticated user
@@ -468,12 +609,14 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 - `redis_client` - For challenge storage tests
 
 ### Test Data Setup
+
 - Create test users with various states (active, inactive, verified, unverified)
 - Create WebAuthn credentials for users
 - Store challenges in Redis for WebAuthn flows
 - Create magic link tokens
 
 ### Test Patterns
+
 - Use `client.post()` / `client.get()` / `client.delete()`
 - Verify response status codes
 - Verify response JSON matches Pydantic models
@@ -482,11 +625,13 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 - Mock external dependencies (email sending)
 
 ### Related Modules
+
 - Tests already exist: test_magic_link.py, test_webauthn.py, test_email_verification.py, test_session_management.py
 - Need to consolidate or add endpoint-level tests in test_auth_endpoints.py
 - Consider refactoring to avoid duplication
 
 ### Critical Security Tests
+
 - Account lockout enforcement
 - Rate limiting effectiveness
 - Session security (HTTPOnly, Secure flags)

@@ -222,6 +222,18 @@ WebAuthn manager for passkey registration and authentication operations. Wraps t
   - **Priority:** medium
   - **Expected:** Respect RP_NAME, RP_ID, RP_ORIGIN env vars
 
+### Integration with Endpoints (Notes)
+
+- [ ] **Registration start creates user if not exists** - ⏳ Pending
+  - **Type:** integration
+  - **Priority:** medium
+  - **Expected:** When called via endpoint with unknown email, user is created (matches current implementation)
+
+- [ ] **Enumeration-resistant auth start (future)** - ⏳ Pending (future functionality)
+  - **Type:** error_path
+  - **Priority:** medium
+  - **Expected:** Return generic success even if user not found (will require endpoint changes)
+
 ## Coverage Goals
 
 ### Current State (58.14%)
