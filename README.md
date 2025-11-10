@@ -11,12 +11,21 @@
 ### Prerequisites
 
 - Docker & Docker Compose
-- Dev Container support (VS Code recommended)
+- Dev Container support (VS Code or Cursor recommended)
+
+### First-Time Dev Container Setup
+
+1. **Open the project** in VS Code or Cursor
+2. **Reopen in Container** when prompted (or use Command Palette: "Dev Containers: Reopen in Container")
+3. **One-time**: Accept the prompt to install the Claude Code extension (if using Claude)
+4. **All other tools install automatically**: Python dependencies, Docker CLI, Node.js, Claude CLI, Git configuration, SSH setup, and pre-commit hooks
+
+After the initial setup, all subsequent container rebuilds will preserve your Claude conversation history and settings.
 
 ### Run Locally
 
 ```bash
-# Open in dev container (VS Code)
+# Open in dev container (VS Code/Cursor) - RECOMMENDED
 # Or manually:
 docker compose -f compose.dev.yml up
 

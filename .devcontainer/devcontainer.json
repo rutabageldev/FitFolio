@@ -14,7 +14,8 @@
       "extensions": [
         "ms-python.python",
         "ms-azuretools.vscode-docker",
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "anthropic.claude-code"
       ]
     }
   },
@@ -28,7 +29,8 @@
   },
   "mounts": [
     "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=${localEnv:HOME}/.claude-devcontainer,target=/root/.claude,type=bind,consistency=cached"
   ],
   "postCreateCommand": "bash -c 'python -m pip install -r backend/requirements-dev.txt && (command -v docker || (curl -fsSL https://get.docker.com | sh)) && (command -v npm && npm install -g @anthropic-ai/claude-code || echo \"npm not available yet\")'",
   "postStartCommand": "bash -c 'git config --global --add safe.directory /workspaces/fitfolio 2>/dev/null || true && mkdir -p ~/.ssh && chmod 700 ~/.ssh && test -f /root/.ssh/known_hosts && cp /root/.ssh/known_hosts ~/.ssh/known_hosts || true && ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null || true && .devcontainer/scripts/configure-git.sh && pre-commit install --install-hooks --hook-type pre-commit --hook-type pre-push'"
