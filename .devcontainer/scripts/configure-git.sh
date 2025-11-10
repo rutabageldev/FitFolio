@@ -1,13 +1,20 @@
 set -euo pipefail
 
+# First, add safe.directory for the current directory before any git commands
+# This prevents "dubious ownership" errors when workspace is mounted from host
+ROOT="${PWD}"
+git config --global --add safe.directory "$ROOT" 2>/dev/null || true
+
+# Now we can safely use git commands to find the repo root
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$ROOT"
 
-CONF="$ROOT/.devcontainer/.gitconfig.dev"
-
-if ! git config --global --get-all safe.directory | grep -qx "$ROOT"; then
+# Add safe.directory again for the repo root (in case it's different from PWD)
+if ! git config --global --get-all safe.directory 2>/dev/null | grep -qx "$ROOT"; then
   git config --global --add safe.directory "$ROOT" || true
 fi
+
+CONF="$ROOT/.devcontainer/.gitconfig.dev"
 
 if [[ -f "$CONF" ]]; then
   # shellcheck disable=SC1090

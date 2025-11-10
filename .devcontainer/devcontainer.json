@@ -30,6 +30,6 @@
     "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
-  "postCreateCommand": "bash -c 'python -m pip install -r backend/requirements-dev.txt && npm install -g @anthropic-ai/claude-code'",
-  "postStartCommand": "bash -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && test -f /root/.ssh/known_hosts && cp /root/.ssh/known_hosts ~/.ssh/known_hosts || true && ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null || true && .devcontainer/scripts/configure-git.sh && pre-commit install --install-hooks --hook-type pre-commit --hook-type pre-push'"
+  "postCreateCommand": "bash -c 'python -m pip install -r backend/requirements-dev.txt && (command -v docker || (curl -fsSL https://get.docker.com | sh)) && (command -v npm && npm install -g @anthropic-ai/claude-code || echo \"npm not available yet\")'",
+  "postStartCommand": "bash -c 'git config --global --add safe.directory /workspaces/fitfolio 2>/dev/null || true && mkdir -p ~/.ssh && chmod 700 ~/.ssh && test -f /root/.ssh/known_hosts && cp /root/.ssh/known_hosts ~/.ssh/known_hosts || true && ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null || true && .devcontainer/scripts/configure-git.sh && pre-commit install --install-hooks --hook-type pre-commit --hook-type pre-push'"
 }
