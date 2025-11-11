@@ -692,7 +692,9 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 
 ## Recent Progress (2025-11-11)
 
-### Completed Tests (26 new tests in test_auth_error_paths.py)
+### Session 1: Error Path Tests (26 tests in test_auth_error_paths.py)
+
+#### Completed Tests
 
 **WebAuthn Registration Errors (5 tests):**
 - ✅ Redis challenge storage failure
@@ -729,14 +731,63 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 - ✅ Already verified (no email sent)
 - ✅ Non-existent user (enumeration protection)
 
-### Error Handling Improvements Added to auth.py
+#### Error Handling Improvements Added to auth.py
 
 - Added try-catch for Redis challenge storage failures (2 locations)
 - Added try-catch for email send failures (3 locations)
 - Fixed bug: user creation missing timestamps
 
-### Coverage Impact
+#### Coverage Impact
 
 - **auth.py:** 41.03% → 48.13% (+7.1 percentage points)
 - **Lines covered:** 167 → 206 (+39 lines)
 - **Lines remaining:** 240 → 222 (-18 lines)
+
+---
+
+### Session 2: Authorization Tests (14 tests in test_auth_authorization.py)
+
+#### Completed Tests
+
+**WebAuthn Authorization (4 tests):**
+- ✅ Registration start CSRF protection
+- ✅ Registration finish CSRF protection
+- ✅ Authentication start CSRF protection
+- ✅ Authentication finish CSRF protection
+
+**Credential Management Authorization (2 tests):**
+- ✅ List credentials requires authentication
+- ✅ Delete credential requires authentication
+
+**Session Management Authorization (3 tests):**
+- ✅ List sessions requires authentication
+- ✅ Revoke session requires authentication
+- ✅ Revoke all other sessions requires authentication
+
+**User Endpoints Authorization (1 test):**
+- ✅ /me endpoint requires authentication
+
+**Public Endpoints Verification (4 tests):**
+- ✅ Magic link start is public (no CSRF required)
+- ✅ Magic link verify has CSRF protection
+- ✅ Email verify has CSRF protection
+- ✅ Resend verification is public (no CSRF required)
+
+#### Coverage Impact
+
+- **Overall backend:** 72.08% (no change - authorization tests cover existing code paths)
+- **auth.py:** 48.13% (no change - validates existing security controls)
+
+---
+
+### Combined Progress Summary
+
+**Total Tests Added:** 40 tests (26 error paths + 14 authorization)
+**Coverage Achieved:**
+- Overall: 70.78% → 72.08% (+1.3%)
+- auth.py: 41.03% → 48.13% (+7.1%)
+
+**Remaining Work to 85%:**
+- Need +36.87% more coverage in auth.py
+- Estimated ~158 more lines to cover
+- Focus areas: happy paths, session management, WebAuthn success flows
