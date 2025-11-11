@@ -231,11 +231,20 @@ async def start_magic_link_login(
         If you didn't create this account, you can safely ignore this email.
         """
 
-        await send_email(
-            to=request.email,
-            subject="Welcome to FitFolio - Verify your email",
-            body=email_body.strip(),
-        )
+        try:
+            await send_email(
+                to=request.email,
+                subject="Welcome to FitFolio - Verify your email",
+                body=email_body.strip(),
+            )
+        except Exception as e:
+            log.error(
+                "Failed to send verification email", error=str(e), email=request.email
+            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send verification email. Please try again later.",
+            ) from e
 
         return MagicLinkResponse()
 
@@ -280,11 +289,18 @@ async def start_magic_link_login(
     If you didn't request this link, you can safely ignore this email.
     """
 
-    await send_email(
-        to=request.email,
-        subject="Sign in to FitFolio",
-        body=email_body.strip(),
-    )
+    try:
+        await send_email(
+            to=request.email,
+            subject="Sign in to FitFolio",
+            body=email_body.strip(),
+        )
+    except Exception as e:
+        log.error("Failed to send magic link email", error=str(e), email=request.email)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send magic link email. Please try again later.",
+        ) from e
 
     return MagicLinkResponse()
 
@@ -457,9 +473,13 @@ async def start_webauthn_registration(
 
     if not user:
         # Create new user
+        now_utc = datetime.now(UTC)
         user = User(
             email=request.email.lower(),
             is_active=True,
+            is_email_verified=False,
+            created_at=now_utc,
+            updated_at=now_utc,
         )
         db.add(user)
         await db.commit()
@@ -490,11 +510,18 @@ async def start_webauthn_registration(
 
     # Store challenge in Redis (server-side, secure)
     challenge_hex = options.challenge.hex()
-    challenge_id = await store_challenge(
-        user_email=request.email.lower(),
-        challenge_hex=challenge_hex,
-        challenge_type="registration",
-    )
+    try:
+        challenge_id = await store_challenge(
+            user_email=request.email.lower(),
+            challenge_hex=challenge_hex,
+            challenge_type="registration",
+        )
+    except RuntimeError as e:
+        log.error("Failed to store WebAuthn challenge", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to initiate registration. Please try again.",
+        ) from e
 
     # Log registration attempt
     login_event = LoginEvent(
@@ -684,11 +711,18 @@ async def start_webauthn_authentication(
 
     # Store challenge in Redis (server-side, secure)
     challenge_hex = options.challenge.hex()
-    challenge_id = await store_challenge(
-        user_email=request.email.lower(),
-        challenge_hex=challenge_hex,
-        challenge_type="authentication",
-    )
+    try:
+        challenge_id = await store_challenge(
+            user_email=request.email.lower(),
+            challenge_hex=challenge_hex,
+            challenge_type="authentication",
+        )
+    except RuntimeError as e:
+        log.error("Failed to store WebAuthn challenge", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to initiate authentication. Please try again.",
+        ) from e
 
     # Log authentication attempt
     login_event = LoginEvent(
@@ -1107,11 +1141,20 @@ async def resend_verification_email(
         If you didn't create this account, you can safely ignore this email.
         """
 
-        await send_email(
-            to=request.email,
-            subject="Verify your FitFolio email address",
-            body=email_body.strip(),
-        )
+        try:
+            await send_email(
+                to=request.email,
+                subject="Verify your FitFolio email address",
+                body=email_body.strip(),
+            )
+        except Exception as e:
+            log.error(
+                "Failed to resend verification email", error=str(e), email=request.email
+            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send verification email. Please try again later.",
+            ) from e
 
         log.info(
             "email_verification_resent",
