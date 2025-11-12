@@ -564,73 +564,88 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 
 #### Happy Path
 
-- [ ] **List active sessions** - ⏳ Pending
+- [x] **List active sessions** - ✅ Complete (test_auth_session_management.py)
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, list of sessions with current session marked
+  - **Test:** `test_list_sessions_single`, `test_list_sessions_multiple`
+
+- [x] **Exclude revoked sessions** - ✅ Complete (test_auth_session_management.py)
+  - **Type:** happy_path
+  - **Priority:** high
+  - **Expected:** Only active sessions returned
+  - **Test:** `test_list_sessions_excludes_revoked`
 
 #### Error Handling
 
-- [ ] **Unauthenticated request** - ⏳ Pending
+- [x] **Unauthenticated request** - ✅ Complete (test_auth_session_management.py)
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 401 unauthorized
+  - **Test:** `test_list_sessions_unauthenticated`
 
 ### Endpoint: DELETE /api/v1/auth/sessions/{session_id}
 
 #### Happy Path
 
-- [ ] **Revoke specific session** - ⏳ Pending
+- [x] **Revoke specific session** - ✅ Complete (test_auth_session_management.py)
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, session revoked
+  - **Test:** `test_revoke_other_session`
 
 #### Error Handling
 
-- [ ] **Unauthenticated request** - ⏳ Pending
-
-  - **Type:** error_path
-  - **Priority:** critical
-  - **Expected:** 401 unauthorized
-
-- [ ] **Revoke own current session** - ⏳ Pending
+- [x] **Revoke own current session** - ✅ Complete (test_auth_session_management.py)
 
   - **Type:** edge_case
   - **Priority:** high
   - **Expected:** 400 "Cannot revoke current session"
+  - **Test:** `test_revoke_current_session_rejected`
 
-- [ ] **Revoke session belonging to another user** - ⏳ Pending
+- [x] **Revoke session belonging to another user** - ✅ Complete (test_auth_session_management.py)
 
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 404 not found (security: don't reveal existence)
+  - **Test:** `test_revoke_session_of_other_user`
 
-- [ ] **Session already revoked** - ⏳ Pending
+- [x] **Session already revoked** - ✅ Complete (test_auth_session_management.py)
   - **Type:** edge_case
   - **Priority:** medium
-  - **Expected:** 404 or 200 idempotent
+  - **Expected:** 404 idempotent
+  - **Test:** `test_revoke_already_revoked_session`
 
-### Endpoint: DELETE /api/v1/auth/sessions/others
+- [x] **Nonexistent session** - ✅ Complete (test_auth_session_management.py)
+  - **Type:** error_path
+  - **Priority:** high
+  - **Expected:** 404 not found
+  - **Test:** `test_revoke_nonexistent_session`
+
+### Endpoint: POST /api/v1/auth/sessions/revoke-all-others
 
 #### Happy Path
 
-- [ ] **Revoke all other sessions** - ⏳ Pending
+- [x] **Revoke all other sessions** - ✅ Complete (test_auth_session_management.py)
 
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, count of revoked sessions
+  - **Test:** `test_revoke_all_others_success`
 
-- [ ] **No other sessions to revoke** - ⏳ Pending
+- [x] **No other sessions to revoke** - ✅ Complete (test_auth_session_management.py)
   - **Type:** edge_case
   - **Priority:** medium
   - **Expected:** 200, revoked_count=0
+  - **Test:** `test_revoke_all_others_no_other_sessions`
 
 #### Error Handling
 
-- [ ] **Unauthenticated request** - ⏳ Pending
+- [x] **Unauthenticated request** - ✅ Complete (test_auth_session_management.py)
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 401 unauthorized
+  - **Test:** `test_revoke_all_others_unauthenticated`
 
 ## Coverage Goals
 
@@ -718,3 +733,9 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 - Tests for /me, /logout, /webauthn/credentials, /email/verify
 - Validated authentication methods (cookie-based vs Bearer token)
 - Coverage: 52% (maintained, ~45 total auth tests implemented)
+
+### Session 5: Session Management (2025-11-12)
+- Created test_auth_session_management.py with 12 session management tests
+- Tests for GET /sessions, DELETE /sessions/{id}, POST /sessions/revoke-all-others
+- Validated security boundaries (no cross-user enumeration, current session protection)
+- Coverage: 52% (maintained, ~57 total auth tests implemented)
