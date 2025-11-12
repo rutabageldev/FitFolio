@@ -130,6 +130,7 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Expected:** 400 "Invalid or expired token"
 
 - [x] **Inactive user** - ✅ Complete (test_auth_error_paths.py)
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Account is inactive"
@@ -221,6 +222,7 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 #### Error Handling
 
 - [x] **User not found** - ✅ Complete (test_auth_error_paths.py)
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 404 "User not found"
@@ -302,6 +304,7 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Expected:** Return generic 200 without disclosing existence (to be implemented)
 
 - [x] **User with no credentials** - ✅ Complete (test_auth_error_paths.py)
+
   - **Type:** error_path
   - **Priority:** high
   - **Expected:** 400 "No passkeys registered"
@@ -338,6 +341,7 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 #### Error Handling
 
 - [x] **User not found** - ✅ Complete (test_auth_error_paths.py)
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 404 "User not found"
@@ -690,104 +694,15 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 - User enumeration prevention
 - CSRF protection (covered by middleware)
 
-## Recent Progress (2025-11-11)
+## Recent Progress
 
-### Session 1: Error Path Tests (26 tests in test_auth_error_paths.py)
+### Session 1: Error Paths (2025-11-11)
+- Created test_auth_error_paths.py with 26 comprehensive error tests
+- Added infrastructure failure handling in auth.py endpoints
+- Fixed bug: missing timestamps in user creation
+- Coverage: 41.03% → 48.13%
 
-#### Completed Tests
-
-**WebAuthn Registration Errors (5 tests):**
-- ✅ Redis challenge storage failure
-- ✅ Malformed credential data
-- ✅ User not found during registration
-- ✅ Invalid/expired challenge
-- ✅ Challenge email mismatch
-
-**WebAuthn Authentication Errors (8 tests):**
-- ✅ User not found
-- ✅ No passkeys registered
-- ✅ Redis challenge storage failure
-- ✅ Invalid challenge
-- ✅ Missing credential ID
-- ✅ Credential not found
-- ✅ Malformed credential
-
-**Magic Link Errors (6 tests):**
-- ✅ Email send failure (SMTP)
-- ✅ New user verification flow
-- ✅ Existing verified user login flow
-- ✅ Inactive user rejection
-- ✅ Unverified email rejection
-- ✅ Account lockout enforcement
-
-**Email Verification Errors (3 tests):**
-- ✅ Invalid token
-- ✅ Inactive user
-- ✅ Wrong token purpose
-
-**Resend Verification Errors (4 tests):**
-- ✅ Email send failure
-- ✅ Successful resend
-- ✅ Already verified (no email sent)
-- ✅ Non-existent user (enumeration protection)
-
-#### Error Handling Improvements Added to auth.py
-
-- Added try-catch for Redis challenge storage failures (2 locations)
-- Added try-catch for email send failures (3 locations)
-- Fixed bug: user creation missing timestamps
-
-#### Coverage Impact
-
-- **auth.py:** 41.03% → 48.13% (+7.1 percentage points)
-- **Lines covered:** 167 → 206 (+39 lines)
-- **Lines remaining:** 240 → 222 (-18 lines)
-
----
-
-### Session 2: Authorization Tests (14 tests in test_auth_authorization.py)
-
-#### Completed Tests
-
-**WebAuthn Authorization (4 tests):**
-- ✅ Registration start CSRF protection
-- ✅ Registration finish CSRF protection
-- ✅ Authentication start CSRF protection
-- ✅ Authentication finish CSRF protection
-
-**Credential Management Authorization (2 tests):**
-- ✅ List credentials requires authentication
-- ✅ Delete credential requires authentication
-
-**Session Management Authorization (3 tests):**
-- ✅ List sessions requires authentication
-- ✅ Revoke session requires authentication
-- ✅ Revoke all other sessions requires authentication
-
-**User Endpoints Authorization (1 test):**
-- ✅ /me endpoint requires authentication
-
-**Public Endpoints Verification (4 tests):**
-- ✅ Magic link start is public (no CSRF required)
-- ✅ Magic link verify has CSRF protection
-- ✅ Email verify has CSRF protection
-- ✅ Resend verification is public (no CSRF required)
-
-#### Coverage Impact
-
-- **Overall backend:** 72.08% (no change - authorization tests cover existing code paths)
-- **auth.py:** 48.13% (no change - validates existing security controls)
-
----
-
-### Combined Progress Summary
-
-**Total Tests Added:** 40 tests (26 error paths + 14 authorization)
-**Coverage Achieved:**
-- Overall: 70.78% → 72.08% (+1.3%)
-- auth.py: 41.03% → 48.13% (+7.1%)
-
-**Remaining Work to 85%:**
-- Need +36.87% more coverage in auth.py
-- Estimated ~158 more lines to cover
-- Focus areas: happy paths, session management, WebAuthn success flows
+### Session 2: Authorization (2025-11-11)
+- Created test_auth_authorization.py with 14 CSRF and authentication tests
+- Validated security boundaries across all endpoints
+- Coverage: 48.13% (maintained)

@@ -606,6 +606,7 @@ async def finish_webauthn_registration(
         ) from e
 
     # Create the credential record
+    now_utc = datetime.now(UTC)
     credential = WebAuthnCredential(
         user_id=user.id,
         credential_id=bytes.fromhex(verification_result["credential_id"]),
@@ -614,6 +615,8 @@ async def finish_webauthn_registration(
         transports=verification_result.get("transports"),
         backed_up=verification_result.get("backed_up"),
         uv_available=verification_result.get("uv_available"),
+        created_at=now_utc,
+        updated_at=now_utc,
     )
     db.add(credential)
 
@@ -832,18 +835,22 @@ async def finish_webauthn_authentication(
     # Create a new session for the user
     session_token = create_session_token()
     session_token_hash = hash_token(session_token)
+    session_now = datetime.now(UTC)
 
     new_session = Session(
         user_id=user.id,
         token_hash=session_token_hash,
-        expires_at=datetime.now(UTC) + timedelta(hours=336),  # 14 days
+        created_at=session_now,
+        expires_at=session_now + timedelta(hours=336),  # 14 days
         ip=http_request.client.host if http_request.client else None,
         user_agent=http_request.headers.get("user-agent"),
     )
     db.add(new_session)
 
     # Update user's last login
-    user.last_login_at = datetime.now(UTC)
+    now_utc = datetime.now(UTC)
+    user.last_login_at = now_utc
+    user.updated_at = now_utc
 
     # Log the successful login
     login_event = LoginEvent(
