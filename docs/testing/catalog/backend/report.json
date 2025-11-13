@@ -3,10 +3,10 @@
     "admin": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/admin.yaml",
       "total": 32,
-      "implemented": 1,
-      "planned": 31,
+      "implemented": 31,
+      "planned": 1,
       "deprecated": 0,
-      "implementation_rate": 0.0312
+      "implementation_rate": 0.9688
     },
     "auth": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth.yaml",
@@ -84,10 +84,10 @@
   "totals": {
     "areas": 10,
     "items_total": 131,
-    "items_implemented": 61,
-    "items_planned": 70,
+    "items_implemented": 91,
+    "items_planned": 40,
     "items_deprecated": 0,
-    "overall_implementation_rate": 0.4656
+    "overall_implementation_rate": 0.6947
   },
   "duplicate_ids": {},
   "unreferenced_test_files": [
