@@ -52,8 +52,11 @@ items:
 - id: AUTH-EMAIL-101
   title: Email verify already verified is idempotent (200)
   level: integration
-  markers: []
+  markers:
+  - integration
+  - security
   risk: low
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/email/test_email_verification.py
+  last_verified: 2025-11-13

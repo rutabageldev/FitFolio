@@ -19,10 +19,10 @@
     "auth.email": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_email.yaml",
       "total": 5,
-      "implemented": 4,
-      "planned": 1,
+      "implemented": 5,
+      "planned": 0,
       "deprecated": 0,
-      "implementation_rate": 0.8
+      "implementation_rate": 1.0
     },
     "auth.magic_link": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_magic_link.yaml",
@@ -84,10 +84,10 @@
   "totals": {
     "areas": 10,
     "items_total": 131,
-    "items_implemented": 91,
-    "items_planned": 40,
+    "items_implemented": 92,
+    "items_planned": 39,
     "items_deprecated": 0,
-    "overall_implementation_rate": 0.6947
+    "overall_implementation_rate": 0.7023
   },
   "duplicate_ids": {},
   "unreferenced_test_files": [
