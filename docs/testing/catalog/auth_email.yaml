@@ -1,0 +1,13 @@
+schema: 1
+area: auth.email
+updated: 2025-11-13
+owners: ['backend-auth', 'qa']
+items:
+  - id: AUTH-EMAIL-101
+    title: Email verify already verified is idempotent (200)
+    level: integration
+    markers: []
+    risk: low
+    status: planned
+    tests: []
+    last_verified: null
