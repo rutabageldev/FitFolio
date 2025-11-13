@@ -374,7 +374,7 @@ async def verify_magic_link(
             user_id=user.id,
             event_type="login_attempt_locked",
             created_at=datetime.now(UTC),
-            ip=http_request.client.host if http_request.client else None,
+            ip=None,
             user_agent=http_request.headers.get("user-agent"),
             extra={"seconds_remaining": seconds_remaining},
         )
@@ -399,7 +399,7 @@ async def verify_magic_link(
     # Mark magic link token as used
     now = datetime.now(UTC)
     magic_link_token.used_at = now
-    magic_link_token.used_ip = http_request.client.host if http_request.client else None
+    magic_link_token.used_ip = None
 
     # Create a new session for the user
     session_token = create_session_token()
@@ -410,7 +410,7 @@ async def verify_magic_link(
         token_hash=session_token_hash,
         created_at=now,
         expires_at=now + timedelta(hours=336),  # 14 days
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
         user_agent=http_request.headers.get("user-agent"),
     )
     db.add(new_session)
@@ -427,7 +427,7 @@ async def verify_magic_link(
         user_id=user.id,
         event_type="magic_link_verified_success",
         created_at=now,
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
         user_agent=http_request.headers.get("user-agent"),
         extra={"magic_link_token_id": str(magic_link_token.id)},
     )
@@ -438,7 +438,7 @@ async def verify_magic_link(
     log.info(
         "magic_link_login_success",
         user_id=str(user.id),
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
     )
 
     # Set session cookie
@@ -842,7 +842,7 @@ async def finish_webauthn_authentication(
         token_hash=session_token_hash,
         created_at=session_now,
         expires_at=session_now + timedelta(hours=336),  # 14 days
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
         user_agent=http_request.headers.get("user-agent"),
     )
     db.add(new_session)
@@ -857,7 +857,7 @@ async def finish_webauthn_authentication(
         user_id=user.id,
         event_type="webauthn_login",
         created_at=datetime.now(UTC),
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
         user_agent=http_request.headers.get("user-agent"),
         extra={"credential_id": credential_id},
     )
@@ -1043,7 +1043,7 @@ async def verify_email(
         token_hash=session_token_hash,
         created_at=now,
         expires_at=now + timedelta(hours=336),  # 14 days
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
         user_agent=http_request.headers.get("user-agent"),
     )
     db.add(new_session)
@@ -1056,7 +1056,7 @@ async def verify_email(
         user_id=user.id,
         event_type="email_verified",
         created_at=now,
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
         user_agent=http_request.headers.get("user-agent"),
         extra={"verification_token_id": str(verification_token.id)},
     )
@@ -1067,7 +1067,7 @@ async def verify_email(
     log.info(
         "email_verification_success",
         user_id=str(user.id),
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
     )
 
     # Set session cookie

@@ -42,11 +42,11 @@
     },
     "auth.webauthn": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_webauthn.yaml",
-      "total": 32,
+      "total": 36,
       "implemented": 30,
-      "planned": 2,
+      "planned": 6,
       "deprecated": 0,
-      "implementation_rate": 0.9375
+      "implementation_rate": 0.8333
     },
     "contract": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/contract.yaml",
@@ -58,11 +58,11 @@
     },
     "deps": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/deps.yaml",
-      "total": 8,
+      "total": 9,
       "implemented": 8,
-      "planned": 0,
+      "planned": 1,
       "deprecated": 0,
-      "implementation_rate": 1.0
+      "implementation_rate": 0.8889
     },
     "security": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/security.yaml",
@@ -83,11 +83,11 @@
   },
   "totals": {
     "areas": 10,
-    "items_total": 129,
+    "items_total": 134,
     "items_implemented": 126,
-    "items_planned": 3,
+    "items_planned": 8,
     "items_deprecated": 2,
-    "overall_implementation_rate": 0.9767
+    "overall_implementation_rate": 0.9403
   },
   "duplicate_ids": {},
   "unreferenced_test_files": [

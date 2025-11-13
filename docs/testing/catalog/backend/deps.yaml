@@ -37,6 +37,15 @@ items:
     tests:
       - backend/tests/deps/test_db_lifecycle.py
     last_verified: 2025-11-13
+  - id: DEPS-REDIS-010
+    title: close_redis closes client connection
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: planned
+    tests: []
+    last_verified: null
   - id: DEPS-DB-002
     title: get_db closes session on normal exit
     level: integration
