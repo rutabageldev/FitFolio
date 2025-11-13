@@ -4,25 +4,52 @@ from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # Get database URL from environment
-DATABASE_URL = os.getenv(
+_env_test = os.getenv("TEST_DATABASE_URL")
+_env_main = os.getenv(
     "DATABASE_URL", "postgresql+psycopg://fitfolio_user:supersecret@db:5432/fitfolio"
 )
+DATABASE_URL: str = _env_test if _env_test is not None else _env_main
 
 # Convert to async URL if needed
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+elif DATABASE_URL.startswith("sqlite://"):
+    # Ensure async driver for SQLite when used under tests
+    # e.g., sqlite:// -> sqlite+aiosqlite://
+    if not DATABASE_URL.startswith("sqlite+aiosqlite://"):
+        DATABASE_URL = DATABASE_URL.replace("sqlite://", "sqlite+aiosqlite://", 1)
 
 # Create async engine
-engine = create_async_engine(
+_base_engine = create_async_engine(
     DATABASE_URL,
     echo=False,  # Set to True for SQL debugging
     pool_pre_ping=True,
     pool_recycle=300,
 )
 
+
+class _EngineWrapper:
+    """Lightweight wrapper to allow test monkeypatching of dispose()."""
+
+    def __init__(self, inner):
+        self._inner = inner
+
+    async def dispose(self):
+        await self._inner.dispose()
+
+    def begin(self):
+        return self._inner.begin()
+
+    def __getattr__(self, name):
+        return getattr(self._inner, name)
+
+
+# Public engine reference used by init/close code and tests
+engine = _EngineWrapper(_base_engine)
+
 # Create async session factory
 AsyncSessionLocal = async_sessionmaker(
-    engine,
+    _base_engine,
     class_=AsyncSession,
     expire_on_commit=False,
 )

@@ -42,6 +42,24 @@ make test
 # Or: cd backend && pytest
 ```
 
+### Test Database (Postgres)
+
+For representative testing (INET/JSONB/TZ), prefer Postgres for tests. Create a dedicated test DB once per environment, then point tests at it:
+
+```bash
+# 1) Create the test database (idempotent)
+bash scripts/setup_test_db.sh
+
+# 2) Run tests against Postgres
+export TEST_DATABASE_URL=postgresql+psycopg://fitfolio_user:supersecret@db:5432/fitfolio_test
+cd backend && pytest -q -ra
+```
+
+Notes:
+
+- Tests isolate state using a per-session schema; the database persists between runs for speed.
+- If running outside devcontainer/compose, set PGHOST/PGPORT/PGUSER/PGPASSWORD before running the setup script.
+
 ---
 
 ## Features
@@ -67,7 +85,8 @@ make test
 
 ### Core Fitness Features 🔮
 
-*Coming after Phase 3 deployment:*
+_Coming after Phase 3 deployment:_
+
 - Workout program management
 - Exercise logging with metrics
 - Progress analytics and insights
@@ -78,6 +97,7 @@ make test
 ## Technology Stack
 
 ### Backend
+
 - **Python 3.12** - Modern async Python
 - **FastAPI 0.120** - High-performance async web framework
 - **SQLAlchemy 2.0** - Async ORM with type hints
@@ -86,17 +106,20 @@ make test
 - **Alembic** - Database migrations
 
 ### Frontend
+
 - **React 19** - Latest React with modern features
 - **Vite 7** - Fast build tool and dev server
 - **TypeScript** - Type-safe frontend code
 
 ### Infrastructure
+
 - **Docker + Compose** - Containerized development and deployment
 - **Nginx** - Production frontend serving
 - **Gunicorn + Uvicorn** - Production WSGI/ASGI server
-- **Traefik** *(coming in Phase 3)* - Reverse proxy with automatic TLS
+- **Traefik** _(coming in Phase 3)_ - Reverse proxy with automatic TLS
 
 ### Quality & Observability
+
 - **pytest** - 93 tests with 100% pass rate
 - **Pre-commit hooks** - Automated quality gates (ruff, mypy, bandit)
 - **structlog** - Structured JSON logging
@@ -110,6 +133,7 @@ make test
 **Next Phase:** Phase 3 - Production Deployment
 
 ### Completed ✅
+
 - ✅ Phase 0: Local development environment
 - ✅ Phase 1: Database schema & migrations
 - ✅ Phase 2A: Core security (CSRF, rate limiting, session rotation)
@@ -118,6 +142,7 @@ make test
 - ✅ 93 comprehensive tests
 
 ### Up Next 🔄
+
 - [ ] Phase 3: Production deployment (Traefik, TLS, Docker Secrets)
 - [ ] Phase 4: CI/CD pipeline (GitHub Actions)
 - [ ] Phase 5: Observability & operations (backups, monitoring)
@@ -128,12 +153,12 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for detailed planning.
 
 ## Documentation
 
-| Document | Purpose |
-|----------|---------|
-| [ROADMAP.md](docs/ROADMAP.md) | Outstanding work and next steps |
-| [CHANGELOG.md](docs/CHANGELOG.md) | Historical record of completed work |
-| [RUNBOOK.md](docs/RUNBOOK.md) | Operational procedures and commands |
-| [backend/CSRF_INTEGRATION.md](docs/backend/CSRF_INTEGRATION.md) | CSRF implementation details |
+| Document                                                        | Purpose                             |
+| --------------------------------------------------------------- | ----------------------------------- |
+| [ROADMAP.md](docs/ROADMAP.md)                                   | Outstanding work and next steps     |
+| [CHANGELOG.md](docs/CHANGELOG.md)                               | Historical record of completed work |
+| [RUNBOOK.md](docs/RUNBOOK.md)                                   | Operational procedures and commands |
+| [backend/CSRF_INTEGRATION.md](docs/backend/CSRF_INTEGRATION.md) | CSRF implementation details         |
 
 ---
 
@@ -142,6 +167,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for detailed planning.
 ### Authentication Flow
 
 1. **Magic Link (Primary)**
+
    - User enters email → receives magic link
    - Link valid for 15 minutes, single-use
    - Email verification required before first login
@@ -165,6 +191,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for detailed planning.
 ### Database Schema
 
 5 core tables:
+
 - `users` - User accounts with email verification
 - `sessions` - Server-side session storage with rotation
 - `magic_link_tokens` - Single-use email tokens (login + verification)
@@ -177,39 +204,39 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for detailed planning.
 
 ### Authentication (`/api/v1/auth`)
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/magic-link/start` | Request magic link via email |
-| POST | `/magic-link/verify` | Verify magic link token |
-| POST | `/webauthn/register/start` | Start passkey registration |
-| POST | `/webauthn/register/finish` | Complete passkey registration |
-| POST | `/webauthn/authenticate/start` | Start passkey authentication |
-| POST | `/webauthn/authenticate/finish` | Complete passkey authentication |
-| GET | `/webauthn/credentials` | List user's passkeys |
-| POST | `/logout` | End current session |
-| GET | `/me` | Get current user info |
+| Method | Endpoint                        | Purpose                         |
+| ------ | ------------------------------- | ------------------------------- |
+| POST   | `/magic-link/start`             | Request magic link via email    |
+| POST   | `/magic-link/verify`            | Verify magic link token         |
+| POST   | `/webauthn/register/start`      | Start passkey registration      |
+| POST   | `/webauthn/register/finish`     | Complete passkey registration   |
+| POST   | `/webauthn/authenticate/start`  | Start passkey authentication    |
+| POST   | `/webauthn/authenticate/finish` | Complete passkey authentication |
+| GET    | `/webauthn/credentials`         | List user's passkeys            |
+| POST   | `/logout`                       | End current session             |
+| GET    | `/me`                           | Get current user info           |
 
 ### Email Verification (`/api/v1/auth/email`)
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| POST | `/verify` | Verify email with token |
-| POST | `/resend-verification` | Resend verification email |
+| Method | Endpoint               | Purpose                   |
+| ------ | ---------------------- | ------------------------- |
+| POST   | `/verify`              | Verify email with token   |
+| POST   | `/resend-verification` | Resend verification email |
 
 ### Session Management (`/api/v1/auth/sessions`)
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET | `/` | List active sessions |
-| DELETE | `/{id}` | Revoke specific session |
-| POST | `/revoke-all-others` | Revoke all other sessions |
+| Method | Endpoint             | Purpose                   |
+| ------ | -------------------- | ------------------------- |
+| GET    | `/`                  | List active sessions      |
+| DELETE | `/{id}`              | Revoke specific session   |
+| POST   | `/revoke-all-others` | Revoke all other sessions |
 
 ### Admin (`/api/v1/admin`)
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET | `/audit/events` | Query audit logs (filtered) |
-| GET | `/audit/event-types` | List available event types |
+| Method | Endpoint             | Purpose                     |
+| ------ | -------------------- | --------------------------- |
+| GET    | `/audit/events`      | Query audit logs (filtered) |
+| GET    | `/audit/event-types` | List available event types  |
 
 **Full API Documentation:** http://localhost:8080/docs (when running locally)
 
@@ -266,6 +293,7 @@ pre-commit run --all-files  # Run all checks
 ### Test Coverage
 
 **93 tests across 8 test suites:**
+
 - `test_security.py` (14) - Token generation, hashing, validation
 - `test_csrf.py` (14) - CSRF protection middleware
 - `test_session_rotation.py` (16) - Session rotation logic
@@ -284,6 +312,7 @@ pre-commit run --all-files  # Run all checks
 ### Threat Model
 
 **Protected Against:**
+
 - ✅ Brute force attacks (rate limiting + account lockout)
 - ✅ CSRF attacks (double-submit cookie pattern)
 - ✅ Session hijacking (rotation + secure cookies)
@@ -305,19 +334,20 @@ Please report security vulnerabilities privately (details TBD after public deplo
 
 ## License
 
-*License TBD*
+_License TBD_
 
 ---
 
 ## Contributing
 
-*Contributing guidelines TBD*
+_Contributing guidelines TBD_
 
 ---
 
 ## Acknowledgments
 
 Built with:
+
 - Modern Python async patterns
 - FastAPI best practices
 - Industry-standard security controls
@@ -325,6 +355,7 @@ Built with:
 - Comprehensive pre-commit quality gates
 
 **Development Approach:**
+
 - Security-first mindset
 - 100% test coverage for security-critical code
 - Continuous quality enforcement
