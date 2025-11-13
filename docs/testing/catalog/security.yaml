@@ -1,0 +1,32 @@
+schema: 1
+area: security
+updated: 2025-11-13
+owners: ['backend-security', 'qa']
+items:
+  - id: SEC-CSRF-001
+    title: CSRF token required on state-changing requests
+    level: integration
+    markers: [security]
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/security/test_csrf.py
+    last_verified: 2025-11-13
+  - id: SEC-ROT-001
+    title: Old sessions rotate; recent sessions do not
+    level: integration
+    markers: [security]
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/security/test_session_rotation.py
+    last_verified: 2025-11-13
+  - id: SEC-RATE-001
+    title: Rate limiting enforced on sensitive endpoints
+    level: integration
+    markers: [security]
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/security/test_rate_limiting.py
+    last_verified: 2025-11-13

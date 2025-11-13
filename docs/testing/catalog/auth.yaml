@@ -1,0 +1,50 @@
+schema: 1
+area: auth
+updated: 2025-11-13
+owners: ['backend-auth', 'qa']
+items:
+  - id: AUTH-ML-001
+    title: Magic link start returns 200 for known email with CSRF
+    level: integration
+    markers: [security]
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/magic_link/test_magic_link_start.py
+    last_verified: 2025-11-13
+  - id: AUTH-ML-002
+    title: Magic link verify rejects invalid or expired token
+    level: integration
+    markers: [security]
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/magic_link/test_magic_link_verify_error_paths.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-001
+    title: /me requires authentication by default
+    level: integration
+    markers: [security]
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_me_endpoint.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-002
+    title: Sessions authorization rules enforced
+    level: integration
+    markers: [security]
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_sessions_authorization.py
+    last_verified: 2025-11-13
+  - id: AUTH-WA-010
+    title: WebAuthn registration finish persists credential and attributes
+    level: integration
+    markers: [security]
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_registration_happy_paths.py
+    last_verified: 2025-11-13

@@ -1,0 +1,23 @@
+schema: 1
+area: deps
+updated: 2025-11-13
+owners: ['backend', 'qa']
+items:
+  - id: DEPS-SESS-ATTR-001
+    title: Cookie flags include HttpOnly and SameSite=Lax by default
+    level: integration
+    markers: [security]
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_deps.py
+    last_verified: 2025-11-13
+  - id: DEPS-SESS-ROT-001
+    title: Optional session dependency rotates old sessions
+    level: integration
+    markers: [security]
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_deps.py
+    last_verified: 2025-11-13

@@ -1,47 +1,15 @@
-# Test Plan: Authentication Endpoints (auth.py)
+# Test plan migrated: Auth
 
-**Module Path:** `app/api/v1/auth.py`
-**Test File:** `tests/test_auth_endpoints.py`, `tests/test_auth_error_paths.py`
-**Current Coverage:** 48.13% (206/428 lines) - Updated 2025-11-11
-**Target Coverage:** 85%+
+Auth test planning has moved to:
 
-## Overview
+- Domain doc: `docs/testing/domains/auth.md`
+- Catalog: `docs/testing/catalog/auth.yaml`
 
-Complete authentication flow endpoints for magic link, WebAuthn, email verification, and session management. This is the largest untested module with **222 missing lines** (down from 240).
+Add or update behaviors in the catalog; implement tests under `backend/tests/auth/**`.
 
-**Note:** Some auth flows are already tested in existing test files (test_magic_link.py, test_webauthn.py, etc.), but endpoint-level testing is insufficient.
-
-## Test Cases
-
-### Endpoint: POST /api/v1/auth/magic-link/start
-
-#### Happy Path
-
-- [x] **Valid email sends magic link** - ✅ Partial (test_magic_link.py)
-
-  - **Type:** happy_path
-  - **Priority:** critical
-  - **Expected:** 200, email sent, token stored
-
-- [ ] **Unverified user can request magic link** - ⏳ Pending
-  - **Type:** happy_path
-  - **Priority:** high
-  - **Expected:** 200, magic link sent
-
-#### Rate Limiting
-
-- [ ] **Respects rate limit decorator** - ⏳ Pending
-  - **Type:** error_path
-  - **Priority:** high
-  - **Expected:** 429 after exceeding limit
-
-#### Error Handling
-
-- [ ] **Invalid email format** - ⏳ Pending
-
-  - **Type:** error_path
-  - **Priority:** high
-  - **Expected:** 422 validation error
+- **Type:** error_path
+- **Priority:** high
+- **Expected:** 422 validation error
 
 - [ ] **Empty email** - ⏳ Pending
 
@@ -184,12 +152,14 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 #### Error Handling
 
 - [x] **Invalid email format** - ✅ Complete (test_auth_webauthn_registration.py)
+
   - **Type:** error_path
   - **Priority:** high
   - **Expected:** 422 validation error
   - **Test:** `test_register_start_invalid_email_format`
 
 - [ ] **Inactive user** - ⏳ N/A (Public endpoint, no auth check)
+
   - **Note:** Registration start is a public endpoint and doesn't check user status
 
 - [x] **Redis challenge storage failure** - ✅ Complete (test_auth_error_paths.py)
@@ -232,12 +202,14 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Test:** `test_register_finish_user_not_found`
 
 - [x] **Invalid credential format** - ✅ Complete (test_auth_webauthn_registration.py)
+
   - **Type:** error_path
   - **Priority:** high
   - **Expected:** 400 validation error
   - **Test:** `test_register_finish_requires_valid_credential_format`
 
 - [x] **Challenge not found** - ✅ Complete (test_auth_webauthn_registration.py)
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Challenge expired"
@@ -495,6 +467,7 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 #### Happy Path
 
 - [x] **Valid verification token verifies email** - ✅ Complete (test_auth_user_endpoints.py)
+
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, is_email_verified=true
@@ -509,6 +482,7 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 #### Error Handling
 
 - [x] **Inactive user email verification** - ✅ Complete (test_auth_edge_cases.py)
+
   - **Type:** error_path
   - **Priority:** critical
   - **Expected:** 400 "Account is inactive"
@@ -591,6 +565,7 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 #### Happy Path
 
 - [x] **List active sessions** - ✅ Complete (test_auth_session_management.py)
+
   - **Type:** happy_path
   - **Priority:** critical
   - **Expected:** 200, list of sessions with current session marked
@@ -637,6 +612,7 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
   - **Test:** `test_revoke_session_of_other_user`
 
 - [x] **Session already revoked** - ✅ Complete (test_auth_session_management.py)
+
   - **Type:** edge_case
   - **Priority:** medium
   - **Expected:** 404 idempotent
@@ -738,41 +714,48 @@ Complete authentication flow endpoints for magic link, WebAuthn, email verificat
 ## Recent Progress
 
 ### Session 1: Error Paths (2025-11-11)
+
 - Created test_auth_error_paths.py with 26 comprehensive error tests
 - Added infrastructure failure handling in auth.py endpoints
 - Fixed bug: missing timestamps in user creation
 - Coverage: 41.03% → 48.13%
 
 ### Session 2: Authorization (2025-11-11)
+
 - Created test_auth_authorization.py with 14 CSRF and authentication tests
 - Validated security boundaries across all endpoints
 - Coverage: 48.13% (maintained)
 
 ### Session 3: Happy Paths (2025-11-12)
+
 - Created test_auth_webauthn_happy_paths.py with 7 WebAuthn happy path tests
 - Created test_auth_magic_link_happy_paths.py with 11 magic link happy path tests
 - Fixed 3 production bugs discovered during testing
 - Coverage: 48.13% → 52%
 
 ### Session 4: User-Facing Endpoints (2025-11-12)
+
 - Created test_auth_user_endpoints.py with 9 user-facing endpoint tests
 - Tests for /me, /logout, /webauthn/credentials, /email/verify
 - Validated authentication methods (cookie-based vs Bearer token)
 - Coverage: 52% (maintained, ~45 total auth tests implemented)
 
 ### Session 5: Session Management (2025-11-12)
+
 - Created test_auth_session_management.py with 12 session management tests
 - Tests for GET /sessions, DELETE /sessions/{id}, POST /sessions/revoke-all-others
 - Validated security boundaries (no cross-user enumeration, current session protection)
 - Coverage: 52% (maintained, ~57 total auth tests implemented)
 
 ### Session 6: Edge Cases (2025-11-12)
+
 - Created test_auth_edge_cases.py with 3 edge case tests
 - Tests for inactive user rejection, already verified idempotent behavior
 - Improved edge case coverage for /me and /email/verify endpoints
 - Coverage: 50% (slight decrease due to running only edge case tests, ~60 total auth tests)
 
 ### Session 7: WebAuthn Registration (2025-11-12)
+
 - Created test_auth_webauthn_registration.py with 9 tests
 - Tests for registration start (public endpoint), user creation, challenge storage
 - Tests for registration finish error handling (invalid format, missing challenge)

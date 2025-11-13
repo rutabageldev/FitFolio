@@ -1,0 +1,15 @@
+schema: 1
+area: admin
+updated: 2025-11-13
+owners: ['backend-admin', 'qa']
+items:
+  - id: ADMIN-AUDIT-001
+    title: Audit endpoints exist and require authentication
+    level: integration
+    markers: [contract]
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/admin/test_audit_logging.py
+      - backend/tests/contract/test_admin_contract.py
+    last_verified: 2025-11-13
