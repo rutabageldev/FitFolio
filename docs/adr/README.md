@@ -22,6 +22,7 @@ its context and consequences. ADRs are lightweight documentation that help teams
 | [ADR-0003](0003-passwordless-authentication-strategy.md) | ✅ Accepted | 2025-10-26 | Passwordless Authentication Strategy    | security, authentication, backend, ux                |
 | [ADR-0004](0004-opaque-server-side-sessions.md)          | ✅ Accepted | 2025-10-26 | Opaque Server-Side Sessions over JWT    | security, authentication, backend, sessions          |
 | [ADR-0005](0005-redis-configuration-and-access.md)       | ✅ Accepted | 2025-11-06 | Redis Configuration and Access Patterns | infrastructure, redis, docker, testing, devcontainer |
+| [ADR-0006](0006-adopt-api-contract-tests.md)             | ✅ Accepted | 2025-11-13 | Adopt API Contract Tests                | testing, api, backend, ci                            |
 
 ## ADRs by Topic
 
@@ -38,6 +39,10 @@ its context and consequences. ADRs are lightweight documentation that help teams
 
 - [ADR-0003: Passwordless Authentication Strategy](0003-passwordless-authentication-strategy.md)
 - [ADR-0004: Opaque Server-Side Sessions over JWT](0004-opaque-server-side-sessions.md)
+
+### Testing & QA
+
+- [ADR-0006: Adopt API Contract Tests](0006-adopt-api-contract-tests.md)
 
 ## Status Definitions
 
