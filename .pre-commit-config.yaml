@@ -58,13 +58,18 @@ repos:
   # --- Frontend lint & format (run in devcontainer) ---
   - repo: local
     hooks:
+      - id: catalog-sync-markers
+        name: sync catalog markers
+        language: system
+        entry: bash -lc 'python3 scripts/sync_catalog_markers.py'
+        pass_filenames: false
+        files: ^(docs/testing/catalog/backend/|scripts/sync_catalog_markers\.py).*
       - id: catalog-report
         name: generate catalog report
         language: system
         entry: bash -lc 'python3 scripts/build_catalog_report.py'
         pass_filenames: false
-        always_run: true
-        files: ^(backend/tests/|docs/testing/catalog/backend/|scripts/build_catalog_report\.py).*
+        files: ^(docs/testing/catalog/backend/|scripts/build_catalog_report\.py).*
       - id: catalog-check
         name: backend catalog check
         language: system
