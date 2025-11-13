@@ -25,7 +25,7 @@ def compute_report(catalogs):
     per_area = {}
     totals = {
         "areas": 0,
-        "items_total": 0,
+        "items_total": 0,  # excludes deprecated
         "items_implemented": 0,
         "items_planned": 0,
         "items_deprecated": 0,
@@ -34,10 +34,13 @@ def compute_report(catalogs):
     for c in catalogs:
         area = c.get("area", "unknown")
         items = c.get("items", []) or []
-        impl = sum(1 for it in items if (it.get("status") or "").lower() == "implemented")
-        planned = sum(1 for it in items if (it.get("status") or "").lower() == "planned")
-        deprecated = sum(1 for it in items if (it.get("status") or "").lower() == "deprecated")
-        total = len(items)
+        statuses = [(it.get("status") or "").lower() for it in items]
+        # Active items exclude deprecated
+        active_items = [it for it, st in zip(items, statuses, strict=False) if st != "deprecated"]
+        impl = sum(1 for it in active_items if (it.get("status") or "").lower() == "implemented")
+        planned = sum(1 for it in active_items if (it.get("status") or "").lower() == "planned")
+        deprecated = sum(1 for st in statuses if st == "deprecated")
+        total = len(active_items)
         rate = (impl / total) if total else 0.0
         per_area[area] = {
             "file": c.get("_filepath"),
