@@ -5,14 +5,18 @@
 The backend uses a three-tier dependency structure:
 
 - **`requirements.txt`**: Core runtime dependencies (production + development)
-- **`requirements-dev.txt`**: Development & testing dependencies (includes requirements.txt)
-- **`requirements-prod.txt`**: Production-specific dependencies (includes requirements.txt + gunicorn)
+- **`requirements-dev.txt`**: Development & testing dependencies (includes
+  requirements.txt)
+- **`requirements-prod.txt`**: Production-specific dependencies (includes
+  requirements.txt + gunicorn)
 
 **Docker builds:**
+
 - Dev (`backend/Dockerfile`): Uses `requirements-dev.txt`
 - Prod (`backend/Dockerfile.prod`): Uses `requirements-prod.txt`
 
 **Local installation (if not using Docker):**
+
 ```bash
 # Development
 pip install -r backend/requirements-dev.txt
@@ -24,10 +28,12 @@ pip install -r backend/requirements-prod.txt
 ### Frontend Node Dependencies
 
 All frontend dependencies are managed in `frontend/package.json`:
+
 - `dependencies`: Runtime dependencies (React, etc.)
 - `devDependencies`: Build tools, linters, formatters
 
 **Install:**
+
 ```bash
 cd frontend
 npm install
@@ -64,12 +70,10 @@ npm install
 
 ## DB Migrations
 
-- Generate migration (autogenerate):
-  `make autogen MSG="description"`
+- Generate migration (autogenerate): `make autogen MSG="description"`
 
-- Apply latest:
-  `make migrate` (or `docker compose exec backend alembic upgrade head`)
+- Apply latest: `make migrate` (or `docker compose exec backend alembic upgrade head`)
 
-- Clean tree check:
-  After applying, run `docker compose exec backend alembic revision --autogenerate -m "noop check"`
-  → It should produce no operations (delete the noop file if empty).
+- Clean tree check: After applying, run
+  `docker compose exec backend alembic revision --autogenerate -m "noop check"` → It
+  should produce no operations (delete the noop file if empty).

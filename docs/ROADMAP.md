@@ -1,9 +1,9 @@
 # FitFolio Roadmap
 
-**Last Updated:** 2025-11-06
-**Current Phase:** Phase 3A.5 - Test Coverage Improvement
+**Last Updated:** 2025-11-06 **Current Phase:** Phase 3A.5 - Test Coverage Improvement
 
-This document tracks **outstanding work only**. For completed work history, see [CHANGELOG.md](CHANGELOG.md).
+This document tracks **outstanding work only**. For completed work history, see
+[CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -15,9 +15,11 @@ This document tracks **outstanding work only**. For completed work history, see 
 
 ### Phase 3A: CI/CD Pipeline ✅ COMPLETE
 
-**Completed:** 2025-11-06 (see [CHANGELOG.md](CHANGELOG.md#2025-11-06---cicd-pipeline--security-hardening-complete))
+**Completed:** 2025-11-06 (see
+[CHANGELOG.md](CHANGELOG.md#2025-11-06---cicd-pipeline--security-hardening-complete))
 
 Full GitHub Actions CI/CD pipeline with comprehensive quality gates:
+
 - ✅ Backend tests with PostgreSQL, Redis, MailHog services (138 tests)
 - ✅ Backend linting (ruff, mypy)
 - ✅ Backend security (bandit, pip-audit)
@@ -30,6 +32,7 @@ Full GitHub Actions CI/CD pipeline with comprehensive quality gates:
 - ✅ Commit verification (warning mode)
 
 **Pipeline Features:**
+
 - Parallel job execution with optimal caching
 - Concurrency control (cancel outdated runs)
 - Service containers for testing
@@ -38,12 +41,12 @@ Full GitHub Actions CI/CD pipeline with comprehensive quality gates:
 
 ### Phase 3A.5: Test Coverage Improvement 🚨 BLOCKING (Next - 8-12 hours)
 
-**Priority:** CRITICAL - Must complete before production deployment
-**Current Coverage:** 41.29% (453/1097 lines covered)
-**Target Coverage:** 85% minimum
-**Estimated Effort:** 8-12 hours
+**Priority:** CRITICAL - Must complete before production deployment **Current
+Coverage:** 41.29% (453/1097 lines covered) **Target Coverage:** 85% minimum **Estimated
+Effort:** 8-12 hours
 
 **Why This Blocks Production:**
+
 - 59% of code is untested - unacceptable production risk
 - Critical modules have dangerously low coverage:
   - `app/api/deps.py` - 34% (dependency injection, auth)
@@ -91,6 +94,7 @@ Full GitHub Actions CI/CD pipeline with comprehensive quality gates:
    - Multi-device scenarios
 
 **Acceptance Criteria:**
+
 - ✅ Overall backend coverage ≥85%
 - ✅ No critical module (auth, admin, core) below 80%
 - ✅ CI enforces coverage threshold (PRs fail if below 85%)
@@ -98,14 +102,11 @@ Full GitHub Actions CI/CD pipeline with comprehensive quality gates:
 - ✅ Coverage badge added to README
 - ✅ Coverage report generated in CI artifacts
 
-**Modules Requiring Immediate Attention:**
-| Module | Current | Target | Priority |
-|--------|---------|--------|----------|
-| app/api/deps.py | 34% | 85% | CRITICAL |
-| app/api/v1/admin.py | 38% | 85% | CRITICAL |
-| app/core/webauthn.py | Unknown | 85% | HIGH |
-| app/core/email.py | Unknown | 85% | HIGH |
-| app/middleware/* | Unknown | 85% | MEDIUM |
+**Modules Requiring Immediate Attention:** | Module | Current | Target | Priority |
+|--------|---------|--------|----------| | app/api/deps.py | 34% | 85% | CRITICAL | |
+app/api/v1/admin.py | 38% | 85% | CRITICAL | | app/core/webauthn.py | Unknown | 85% |
+HIGH | | app/core/email.py | Unknown | 85% | HIGH | | app/middleware/\* | Unknown | 85%
+| MEDIUM |
 
 ### Phase 3B: Production Deployment (After Coverage - 6-8 hours)
 
@@ -152,8 +153,7 @@ Now that CI/CD is complete, focus on production deployment:
 
 ## Phase 3: Production Deployment
 
-**Status:** 🔄 In Progress
-**Estimated Effort:** 12-16 hours (includes CI/CD setup)
+**Status:** 🔄 In Progress **Estimated Effort:** 12-16 hours (includes CI/CD setup)
 **Target:** Deploy production-ready system to utility node (existing VPS)
 
 ### Prerequisites
@@ -172,8 +172,7 @@ Now that CI/CD is complete, focus on production deployment:
 
 #### 1. GitHub Actions CI/CD ✅ COMPLETE
 
-**Status:** Complete
-**Time Spent:** ~6 hours
+**Status:** Complete **Time Spent:** ~6 hours
 
 Comprehensive CI/CD pipeline implemented with all quality gates:
 
@@ -202,6 +201,7 @@ Comprehensive CI/CD pipeline implemented with all quality gates:
   - [ ] Create multi-stage build (Phase 3B Task 3)
 
 **Acceptance Criteria:**
+
 - ✅ PR builds run all tests and quality checks
 - ✅ All jobs passing with no shortcuts
 - ✅ Security scanning comprehensive
@@ -214,6 +214,7 @@ Comprehensive CI/CD pipeline implemented with all quality gates:
 **Decision:** Use existing Traefik instance (already running UniFi + Vaultwarden)
 
 **Completed:**
+
 - ✅ Update `compose.dev.yml` with Traefik labels
 - ✅ Update `compose.prod.yml` with Traefik labels:
   - Backend routing: `Host(fitfolio.rutabagel.com) && PathPrefix(/api)`
@@ -228,6 +229,7 @@ Comprehensive CI/CD pipeline implemented with all quality gates:
 - ✅ Add API root endpoint (`/api`) for version discovery
 
 **Remaining:**
+
 - [ ] Configure security headers middleware (if not already in Traefik):
   - HSTS (Strict-Transport-Security)
   - CSP (Content-Security-Policy)
@@ -237,11 +239,14 @@ Comprehensive CI/CD pipeline implemented with all quality gates:
 - [ ] Configure DNS for production domain
 - [ ] Verify no CORS errors in production
 
-**Architecture:** Traefik handles reverse proxy + TLS, Nginx stays in frontend container for static file serving
+**Architecture:** Traefik handles reverse proxy + TLS, Nginx stays in frontend container
+for static file serving
 
-**Reference:** See [docs/REVERSE_PROXY_ANALYSIS.md](REVERSE_PROXY_ANALYSIS.md) for detailed comparison
+**Reference:** See [docs/REVERSE_PROXY_ANALYSIS.md](REVERSE_PROXY_ANALYSIS.md) for
+detailed comparison
 
 **Acceptance Criteria:**
+
 - ✅ HTTPS works on dev domain (`fitfolio.dev.rutabagel.com`)
 - ✅ Backend accessible at `/api/v1/*`
 - ✅ Frontend serves at `/` (all other routes)
@@ -263,6 +268,7 @@ Configure real email service for production:
 - [ ] Update compose.prod.yml to remove Mailpit, add SMTP config
 
 **Acceptance Criteria:**
+
 - Magic link emails delivered successfully
 - Email verification emails delivered
 - No Mailpit in production
@@ -298,6 +304,7 @@ Optimize for production workload:
 - [ ] Test under load (basic smoke test)
 
 **Acceptance Criteria:**
+
 - System stable under basic load
 - Resource limits configured
 - Connection pools sized appropriately
@@ -321,6 +328,7 @@ Deploy to VPS and verify functionality:
 - [ ] Document deployment process
 
 **Acceptance Criteria:**
+
 - Production system accessible at `https://rutabagel.com`
 - All smoke tests pass
 - TLS certificate valid
@@ -331,9 +339,7 @@ Deploy to VPS and verify functionality:
 
 ## Phase 4: Observability & Operations (Optional)
 
-**Status:** 🔮 Future
-**Estimated Effort:** 8-12 hours
-**Priority:** Low - Nice to have
+**Status:** 🔮 Future **Estimated Effort:** 8-12 hours **Priority:** Low - Nice to have
 
 ### Tasks
 
@@ -352,8 +358,7 @@ Deploy to VPS and verify functionality:
 
 ## Feature Development Roadmap
 
-**Status:** 🔮 After Phase 3
-**Priority:** Blocked by production deployment
+**Status:** 🔮 After Phase 3 **Priority:** Blocked by production deployment
 
 Once production infrastructure is deployed, begin feature development:
 
@@ -413,7 +418,8 @@ Connect external data sources:
   - [ ] Add bundle size analysis
   - [ ] Configure asset optimization (images, fonts)
   - [ ] Set up production environment variables
-  - [ ] Create production Dockerfile for frontend (currently uses dev server in prod compose)
+  - [ ] Create production Dockerfile for frontend (currently uses dev server in prod
+        compose)
 - [ ] **Production SMTP configuration** - Replace Mailpit with real email service
   - [ ] Configure SendGrid/AWS SES/Mailgun credentials
   - [ ] Update backend email configuration
@@ -433,7 +439,7 @@ Connect external data sources:
   - Test fixture improvements
 - [ ] Add frontend tests (vitest component tests)
 - [ ] Improve error handling (user-friendly messages)
-- [ ] Add API rate limit headers (X-RateLimit-*)
+- [ ] Add API rate limit headers (X-RateLimit-\*)
 - [ ] Session device fingerprinting (additional security)
 - [ ] **Frontend authentication state management** - Implement proper auth state
   - [ ] Context provider for auth state
@@ -458,10 +464,15 @@ Connect external data sources:
 Key architectural decisions are documented as ADRs in [`docs/adr/`](adr/).
 
 **Active Decisions:**
-- [ADR-0001: Directory-Based API Versioning](adr/0001-directory-based-api-versioning.md) (2025-10-29)
-- [ADR-0002: Traefik Reverse Proxy Integration](adr/0002-traefik-reverse-proxy-integration.md) (2025-10-31)
-- [ADR-0003: Passwordless Authentication Strategy](adr/0003-passwordless-authentication-strategy.md) (2025-10-26)
-- [ADR-0004: Opaque Server-Side Sessions](adr/0004-opaque-server-side-sessions.md) (2025-10-26)
+
+- [ADR-0001: Directory-Based API Versioning](adr/0001-directory-based-api-versioning.md)
+  (2025-10-29)
+- [ADR-0002: Traefik Reverse Proxy Integration](adr/0002-traefik-reverse-proxy-integration.md)
+  (2025-10-31)
+- [ADR-0003: Passwordless Authentication Strategy](adr/0003-passwordless-authentication-strategy.md)
+  (2025-10-26)
+- [ADR-0004: Opaque Server-Side Sessions](adr/0004-opaque-server-side-sessions.md)
+  (2025-10-26)
 
 See [ADR Index](adr/README.md) for full list and guidelines on creating new ADRs.
 
@@ -470,6 +481,7 @@ See [ADR Index](adr/README.md) for full list and guidelines on creating new ADRs
 ## How to Use This Document
 
 **For Contributors:**
+
 1. Check current phase tasks
 2. Pick an unassigned task
 3. Mark task as started (comment on task or PR)
@@ -477,12 +489,14 @@ See [ADR Index](adr/README.md) for full list and guidelines on creating new ADRs
 5. Update this document when done
 
 **For Project Planning:**
+
 1. Review current phase progress
 2. Estimate remaining effort
 3. Plan next phase start date
 4. Add new tasks as needed
 
 **For Updates:**
+
 - ✅ Complete tasks by checking the checkbox
 - 🔄 Update status when starting new phase
 - 📝 Add new tasks as requirements emerge
@@ -490,5 +504,5 @@ See [ADR Index](adr/README.md) for full list and guidelines on creating new ADRs
 
 ---
 
-**Next Milestone:** Deploy to production (Phase 3 completion)
-**Next Review:** After Phase 3 deployment
+**Next Milestone:** Deploy to production (Phase 3 completion) **Next Review:** After
+Phase 3 deployment

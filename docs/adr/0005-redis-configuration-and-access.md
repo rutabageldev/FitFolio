@@ -1,37 +1,41 @@
 # ADR-0005: Redis Configuration and Access Patterns
 
-**Status:** Accepted
-**Date:** 2025-11-06
-**Author:** Development Team
-**Related:** [ADR-0004: Opaque Server-Side Sessions](0004-opaque-server-side-sessions.md)
+**Status:** Accepted **Date:** 2025-11-06 **Author:** Development Team **Related:**
+[ADR-0004: Opaque Server-Side Sessions](0004-opaque-server-side-sessions.md)
 
 ## Context
 
 FitFolio uses Redis for ephemeral data storage including:
+
 - Rate limiting state (sliding window counters)
 - WebAuthn challenge storage (temporary cryptographic challenges)
 - Session rotation management
 - Magic link token storage
 
 The application runs in multiple environments:
+
 1. **Development**: Docker Compose with services on a shared network
 2. **Testing**: Within a devcontainer accessing Docker Compose services
 3. **Production**: Docker Compose on VPS with external Traefik
 
-Different environments require different Redis connection strategies, which has caused confusion and connectivity issues during development.
+Different environments require different Redis connection strategies, which has caused
+confusion and connectivity issues during development.
 
 ## Decision
 
 ### Redis Connection Strategy by Environment
 
-We will use **Docker service name-based connections** across all environments, leveraging Docker's built-in DNS resolution:
+We will use **Docker service name-based connections** across all environments,
+leveraging Docker's built-in DNS resolution:
 
 **Connection URL Format:**
+
 ```
 redis://redis:6379/{db_number}
 ```
 
 **Database Allocation:**
+
 - `db=0` - Production data
 - `db=1` - Test data (isolated from development)
 - `db=2+` - Reserved for future use
@@ -46,14 +50,15 @@ services:
     image: redis:7-alpine
     container_name: fitfolio-redis
     ports:
-      - "6379:6379"  # Exposed for external tools (RedisInsight, etc.)
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+      - '6379:6379' # Exposed for external tools (RedisInsight, etc.)
+    command:
+      redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
     networks:
-      - default  # Shared with backend/frontend
+      - default # Shared with backend/frontend
 ```
 
-**Backend connection:** `redis://redis:6379/0`
-**Test connection:** `redis://redis:6379/1`
+**Backend connection:** `redis://redis:6379/0` **Test connection:**
+`redis://redis:6379/1`
 
 #### 2. Testing (pytest in devcontainer)
 
@@ -65,18 +70,22 @@ os.environ.setdefault("REDIS_URL", "redis://redis:6379/1")
 ```
 
 **Why `redis` hostname works:**
+
 - Devcontainer is configured to use `compose.dev.yml` as its Docker Compose file
 - Backend service and Redis service share the same Docker network
 - Docker's internal DNS resolves `redis` to the Redis container's IP
 
 **Why NOT to use `localhost`:**
+
 - `localhost` inside a devcontainer refers to the devcontainer itself, not the host
 - Redis is running in a separate Docker container, not on the devcontainer's localhost
-- Port forwarding (6379:6379) only makes Redis accessible from the **host** machine, not from other containers
+- Port forwarding (6379:6379) only makes Redis accessible from the **host** machine, not
+  from other containers
 
 #### 3. Production (`compose.prod.yml`)
 
-**Architecture:** Single shared Redis instance serving multiple applications on the same Docker network.
+**Architecture:** Single shared Redis instance serving multiple applications on the same
+Docker network.
 
 ```yaml
 services:
@@ -84,22 +93,25 @@ services:
     image: redis:7-alpine
     container_name: fitfolio-redis-prod
     # NO external port mapping (security best practice)
-    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru --appendonly yes
+    command:
+      redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru --appendonly yes
     volumes:
-      - redis-prod-data:/data  # Persistent storage for AOF
+      - redis-prod-data:/data # Persistent storage for AOF
     networks:
-      - default  # Shared network with backend, other apps
+      - default # Shared network with backend, other apps
     restart: unless-stopped
 ```
 
 **Backend connection:** `redis://redis:6379/0`
 
 **Multi-Application Support:**
+
 - `db=0` - FitFolio production data
 - `db=1` - Reserved for future FitFolio features
 - `db=2+` - Available for other applications on the same VPS
 
 **Why a shared Redis instance:**
+
 1. **Resource efficiency** - Single Redis process for multiple apps
 2. **Simplified management** - One Redis instance to monitor/backup
 3. **Cost effective** - No need for separate Redis containers per app
@@ -133,8 +145,10 @@ pytest tests/test_deps.py::test_get_current_session_no_token -v
 
 ### Negative
 
-1. **Local debugging complexity** - Cannot connect to Redis from host machine using localhost
-   - **Mitigation**: Use port forwarding (6379:6379) in dev only, connect via `localhost` from **host** tools
+1. **Local debugging complexity** - Cannot connect to Redis from host machine using
+   localhost
+   - **Mitigation**: Use port forwarding (6379:6379) in dev only, connect via
+     `localhost` from **host** tools
 2. **Requires Docker networking knowledge** - Developers must understand container DNS
    - **Mitigation**: This ADR documents the behavior
 
@@ -209,6 +223,7 @@ async def cleanup_redis():
 ### "Connection refused" errors in tests
 
 **Symptoms:**
+
 ```
 redis.exceptions.ConnectionError: Error ... connecting to localhost:6379
 ```
@@ -216,6 +231,7 @@ redis.exceptions.ConnectionError: Error ... connecting to localhost:6379
 **Cause:** Test configuration using `localhost` instead of `redis` hostname
 
 **Fix:** Update `backend/tests/conftest.py`:
+
 ```python
 os.environ.setdefault("REDIS_URL", "redis://redis:6379/1")
 ```
@@ -223,19 +239,23 @@ os.environ.setdefault("REDIS_URL", "redis://redis:6379/1")
 ### "Cannot connect to Docker daemon" errors
 
 **Symptoms:**
+
 ```
 Cannot connect to the Docker daemon at unix:///var/run/docker.sock
 ```
 
-**Cause:** This is expected - the devcontainer cannot manage Docker (Docker-outside-of-Docker)
+**Cause:** This is expected - the devcontainer cannot manage Docker
+(Docker-outside-of-Docker)
 
-**Not a problem:** Redis is still accessible via the `redis` hostname on the Docker network
+**Not a problem:** Redis is still accessible via the `redis` hostname on the Docker
+network
 
 ### Redis not accessible from host machine tools
 
 **Symptoms:** RedisInsight or redis-cli on host cannot connect to `localhost:6379`
 
 **Solution:**
+
 1. Ensure port mapping exists in `compose.dev.yml`: `- "6379:6379"`
 2. Connect to `localhost:6379` from host machine
 3. Connect to `redis:6379` from inside containers
@@ -252,6 +272,7 @@ Cannot connect to the Docker daemon at unix:///var/run/docker.sock
 ### Alternative 1: Use `localhost` everywhere
 
 **Rejected because:**
+
 - Doesn't work inside devcontainer (localhost is the container, not the Redis container)
 - Requires different configuration per environment
 - Breaks Docker Compose service discovery
@@ -259,6 +280,7 @@ Cannot connect to the Docker daemon at unix:///var/run/docker.sock
 ### Alternative 2: Use `host.docker.internal`
 
 **Rejected because:**
+
 - Only works on Docker Desktop (Mac/Windows), not Linux
 - Adds unnecessary complexity
 - Doesn't work in all devcontainer configurations
@@ -266,18 +288,22 @@ Cannot connect to the Docker daemon at unix:///var/run/docker.sock
 ### Alternative 3: Dynamic hostname resolution
 
 **Rejected because:**
+
 - Overcomplicates a simple problem
 - Docker service discovery already solves this
 - Adds runtime overhead
 
 ## Future Considerations
 
-1. **Redis Sentinel** - If we need high availability, use Redis Sentinel with service discovery
+1. **Redis Sentinel** - If we need high availability, use Redis Sentinel with service
+   discovery
 2. **Redis Cluster** - If we need horizontal scaling, multiple `redis-node-{n}` services
-3. **External Redis** - If moving to managed Redis (AWS ElastiCache, etc.), update connection URLs accordingly
-4. **TLS connections** - If adding encryption, use `rediss://` scheme with TLS configuration
+3. **External Redis** - If moving to managed Redis (AWS ElastiCache, etc.), update
+   connection URLs accordingly
+4. **TLS connections** - If adding encryption, use `rediss://` scheme with TLS
+   configuration
 
 ---
 
-**Last Updated:** 2025-11-06
-**Next Review:** When adding new environments or Redis use cases
+**Last Updated:** 2025-11-06 **Next Review:** When adding new environments or Redis use
+cases

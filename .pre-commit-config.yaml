@@ -68,6 +68,11 @@ repos:
         language: system
         entry: bash -lc 'npx --yes prettier -w --config frontend/.prettierrc --ignore-path frontend/.prettierignore -- "$@"' --
         files: ^frontend/.*\.(ts|tsx|js|jsx|json|css|scss|md|markdown|ya?ml|html)$
+      - id: prettier-docs
+        name: docs prettier write
+        language: system
+        entry: bash -lc 'npx --yes prettier -w --prose-wrap always -- "$@"' --
+        files: ^docs/.*\.md$
 
   # --- Backend security tests ---
   - repo: local

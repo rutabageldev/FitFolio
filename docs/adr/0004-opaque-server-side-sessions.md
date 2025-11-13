@@ -1,18 +1,18 @@
 # ADR-0004: Opaque Server-Side Sessions over JWT
 
-**Status:** Accepted
-**Date:** 2025-10-26
-**Deciders:** Development Team
-**Tags:** security, authentication, backend, sessions
+**Status:** Accepted **Date:** 2025-10-26 **Deciders:** Development Team **Tags:**
+security, authentication, backend, sessions
 
 ## Context
 
-After deciding on passwordless authentication (ADR-0003), we needed to choose a session management strategy. The two primary approaches are:
+After deciding on passwordless authentication (ADR-0003), we needed to choose a session
+management strategy. The two primary approaches are:
 
 1. **JWT (JSON Web Tokens)** - Stateless, client-side storage
 2. **Server-side sessions** - Stateful, opaque session tokens
 
 **Requirements:**
+
 - Secure session management
 - Ability to revoke sessions
 - Session rotation capability
@@ -22,6 +22,7 @@ After deciding on passwordless authentication (ADR-0003), we needed to choose a 
 ## Decision
 
 Use **opaque server-side sessions** with the following characteristics:
+
 - Sessions stored in PostgreSQL database
 - Opaque session tokens (random, reveal nothing)
 - HttpOnly, Secure, SameSite=Lax cookies
@@ -33,6 +34,7 @@ Use **opaque server-side sessions** with the following characteristics:
 ## Rationale
 
 **Why Server-Side Sessions:**
+
 - **Instant revocation:** Can immediately invalidate sessions
 - **Session management:** Users can view and revoke active sessions
 - **Rotation:** Can rotate session tokens for enhanced security
@@ -41,14 +43,17 @@ Use **opaque server-side sessions** with the following characteristics:
 - **Secrets safe:** No secrets embedded in tokens
 
 **Why Not JWT:**
+
 - **Cannot revoke:** JWTs valid until expiry (without complex infrastructure)
 - **No rotation:** Rotating JWTs requires additional state anyway
 - **Token size:** JWTs larger than opaque tokens
-- **Secret exposure risk:** Signing secrets in application, if leaked all tokens compromised
+- **Secret exposure risk:** Signing secrets in application, if leaked all tokens
+  compromised
 - **Complexity:** Need to handle expiry, refresh tokens, etc.
 - **Stateless myth:** Most JWT implementations add state anyway (blacklists, etc.)
 
 **Security Considerations:**
+
 - Tokens hashed with SHA-256 before storage (protect against DB compromise)
 - HttpOnly cookies (JavaScript cannot access)
 - Secure flag (HTTPS only)
@@ -57,6 +62,7 @@ Use **opaque server-side sessions** with the following characteristics:
 - IP address and User-Agent tracking
 
 **Trade-offs:**
+
 - Database lookup on every request (acceptable, PostgreSQL is fast)
 - Slightly more complex than JWT (worth it for security)
 - Harder to use with microservices (not a concern for monolith)
@@ -64,6 +70,7 @@ Use **opaque server-side sessions** with the following characteristics:
 ## Consequences
 
 ### Positive
+
 - Sessions can be revoked instantly (security, user control)
 - Full audit trail of authentication activity
 - Session rotation for enhanced security
@@ -72,17 +79,20 @@ Use **opaque server-side sessions** with the following characteristics:
 - No JWT complexity (refresh tokens, etc.)
 
 ### Negative
+
 - Database query on every authenticated request
 - Server-side state (not "stateless")
 - Harder to scale horizontally (mitigated: PostgreSQL handles this fine)
 
 ### Neutral
+
 - Session table grows over time (mitigated: cleanup job)
 - Need to handle session expiry and cleanup
 
 ## Implementation
 
 **Database Schema:**
+
 ```sql
 CREATE TABLE sessions (
     id UUID PRIMARY KEY,
@@ -97,6 +107,7 @@ CREATE TABLE sessions (
 ```
 
 **Session Creation:**
+
 ```python
 def create_session(user_id: UUID) -> str:
     token = secrets.token_urlsafe(32)  # 256 bits
@@ -107,6 +118,7 @@ def create_session(user_id: UUID) -> str:
 ```
 
 **Cookie Configuration:**
+
 ```python
 response.set_cookie(
     "session_token",
@@ -119,6 +131,7 @@ response.set_cookie(
 ```
 
 **Session Features:**
+
 - List active sessions: `GET /api/v1/auth/sessions`
 - Revoke session: `DELETE /api/v1/auth/sessions/{id}`
 - Revoke all others: `POST /api/v1/auth/sessions/revoke-all-others`
@@ -126,6 +139,7 @@ response.set_cookie(
 - Automatic cleanup (expired + 90-day-old rotated)
 
 **Related Commits:**
+
 - Initial sessions: Phase 1 (2025-10-26)
 - Session rotation: `4f879ea`
 - Session management: `fccb223`
@@ -133,6 +147,8 @@ response.set_cookie(
 ## References
 
 - Related ADR: ADR-0003 (Passwordless Authentication)
-- OWASP Session Management: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+- OWASP Session Management:
+  https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
 - JWT vs Sessions: https://float-middle.com/json-web-tokens-jwt-vs-sessions/
-- Stop Using JWT for Sessions: http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/
+- Stop Using JWT for Sessions:
+  http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/

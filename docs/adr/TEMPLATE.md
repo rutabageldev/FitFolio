@@ -1,15 +1,15 @@
 # ADR-XXXX: [Short Title]
 
-**Status:** [Proposed | Accepted | Deprecated | Superseded by ADR-YYYY]
-**Date:** YYYY-MM-DD
-**Deciders:** [List of people involved in decision]
-**Tags:** [architecture, security, deployment, frontend, backend, etc.]
+**Status:** [Proposed | Accepted | Deprecated | Superseded by ADR-YYYY] **Date:**
+YYYY-MM-DD **Deciders:** [List of people involved in decision] **Tags:** [architecture,
+security, deployment, frontend, backend, etc.]
 
 ## Context
 
 What is the issue that we're seeing that is motivating this decision or change?
 
 Include:
+
 - Current situation
 - Problem statement
 - Constraints
@@ -26,6 +26,7 @@ Be specific and concise. State the decision clearly.
 Why are we making this decision? What are the reasons?
 
 Include:
+
 - Key factors that influenced the decision
 - Trade-offs considered
 - Alternatives evaluated and why they were rejected
@@ -35,14 +36,17 @@ Include:
 What becomes easier or more difficult to do because of this change?
 
 ### Positive
+
 - Benefit 1
 - Benefit 2
 
 ### Negative
+
 - Trade-off 1
 - Trade-off 2
 
 ### Neutral
+
 - Change 1 (neither good nor bad, just different)
 
 ## Implementation
@@ -50,6 +54,7 @@ What becomes easier or more difficult to do because of this change?
 How will this decision be implemented?
 
 Include:
+
 - Key implementation details
 - Related commits or PRs
 - Configuration changes needed
@@ -65,6 +70,7 @@ Include:
 ---
 
 **Notes:**
+
 - Keep ADRs immutable once accepted (don't edit, supersede instead)
 - Use clear, simple language
 - Focus on "why" not just "what"
