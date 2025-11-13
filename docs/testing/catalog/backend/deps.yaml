@@ -2,76 +2,88 @@ schema: 1
 area: deps
 updated: 2025-11-13
 owners:
-- backend
-- qa
+  - backend
+  - qa
 items:
-- id: DEPS-SESS-ATTR-001
-  title: Cookie flags include HttpOnly and SameSite=Lax by default
-  level: integration
-  markers:
-  - security
-  - unit
-  risk: medium
-  status: implemented
-  tests:
-  - backend/tests/deps/test_deps.py
-  last_verified: 2025-11-13
-- id: DEPS-SESS-ROT-001
-  title: Optional session dependency rotates old sessions
-  level: integration
-  markers:
-  - security
-  - unit
-  risk: medium
-  status: implemented
-  tests:
-  - backend/tests/deps/test_deps.py
-  last_verified: 2025-11-13
-- id: DEPS-DB-001
-  title: get_db yields AsyncSession
-  level: integration
-  markers: []
-  risk: critical
-  status: planned
-  tests: []
-  last_verified: null
-- id: DEPS-DB-002
-  title: get_db closes session on normal exit
-  level: integration
-  markers: []
-  risk: high
-  status: planned
-  tests: []
-  last_verified: null
-- id: DEPS-DB-003
-  title: get_db closes session on exception
-  level: integration
-  markers: []
-  risk: high
-  status: planned
-  tests: []
-  last_verified: null
-- id: DEPS-DB-004
-  title: init_db creates tables without error
-  level: integration
-  markers: []
-  risk: medium
-  status: planned
-  tests: []
-  last_verified: null
-- id: DEPS-DB-005
-  title: close_db disposes engine
-  level: integration
-  markers: []
-  risk: medium
-  status: planned
-  tests: []
-  last_verified: null
-- id: DEPS-DB-006
-  title: Converts postgresql:// to postgresql+psycopg://
-  level: integration
-  markers: []
-  risk: high
-  status: planned
-  tests: []
-  last_verified: null
+  - id: DEPS-SESS-ATTR-001
+    title: Cookie flags include HttpOnly and SameSite=Lax by default
+    level: integration
+    markers:
+      - security
+      - unit
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_deps.py
+    last_verified: 2025-11-13
+  - id: DEPS-SESS-ROT-001
+    title: Optional session dependency rotates old sessions
+    level: integration
+    markers:
+      - security
+      - unit
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_deps.py
+    last_verified: 2025-11-13
+  - id: DEPS-DB-001
+    title: get_db yields AsyncSession
+    level: integration
+    markers:
+      - integration
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/deps/test_db_lifecycle.py
+    last_verified: 2025-11-13
+  - id: DEPS-DB-002
+    title: get_db closes session on normal exit
+    level: integration
+    markers:
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/deps/test_db_lifecycle.py
+    last_verified: 2025-11-13
+  - id: DEPS-DB-003
+    title: get_db closes session on exception
+    level: integration
+    markers:
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/deps/test_db_lifecycle.py
+    last_verified: 2025-11-13
+  - id: DEPS-DB-004
+    title: init_db creates tables without error
+    level: integration
+    markers:
+      - integration
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_db_lifecycle.py
+    last_verified: 2025-11-13
+  - id: DEPS-DB-005
+    title: close_db disposes engine
+    level: integration
+    markers:
+      - integration
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_db_lifecycle.py
+    last_verified: 2025-11-13
+  - id: DEPS-DB-006
+    title: Converts postgresql:// to postgresql+psycopg://
+    level: integration
+    markers:
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/deps/test_db_lifecycle.py
+    last_verified: 2025-11-13
