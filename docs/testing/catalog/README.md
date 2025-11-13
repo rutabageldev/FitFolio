@@ -32,3 +32,16 @@ Layout
 
 - Backend catalogs live under `docs/testing/catalog/backend/`.
 - Frontend catalogs will live under `docs/testing/catalog/frontend/` when added.
+
+Running the report
+
+- Prerequisites: Python 3 and `pyyaml` (install once with
+  `python3 -m pip install pyyaml`).
+- Generate the report:
+
+```bash
+python3 scripts/build_catalog_report.py
+```
+
+- Output: `docs/testing/catalog/backend/report.json` with per-bucket implementation
+  rates, totals, duplicate ID check, and unreferenced backend test files to backfill.

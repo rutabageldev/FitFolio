@@ -78,6 +78,27 @@ def main():
     out_file = backend_dir / "report.json"
     catalogs = load_catalogs(backend_dir)
     report = compute_report(catalogs)
+    # referenced tests from catalogs (strip node ids)
+    referenced = set()
+    for c in catalogs:
+        for it in c.get("items", []) or []:
+            for t in it.get("tests", []) or []:
+                if not isinstance(t, str):
+                    continue
+                p = t.split("::", 1)[0]
+                if p.endswith(".py"):
+                    referenced.add(str(Path(p).as_posix()))
+    # scan backend tests for python files excluding conftest.py
+    all_tests = []
+    tests_root = repo_root / "backend" / "tests"
+    if tests_root.exists():
+        for p in tests_root.rglob("*.py"):
+            if p.name == "conftest.py":
+                continue
+            rel = p.relative_to(repo_root).as_posix()
+            all_tests.append(rel)
+    unreferenced = sorted(sorted(set(all_tests) - referenced))
+    report["unreferenced_test_files"] = unreferenced
     out_file.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote report to {out_file}")
 
