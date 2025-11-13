@@ -121,6 +121,27 @@ class TestRateLimiter:
         assert result.reset_at > before
         assert result.reset_at.timestamp() >= before.timestamp() + limit.window
 
+    @pytest.mark.asyncio
+    async def test_pipeline_atomicity_under_concurrency(self):
+        """Concurrent checks should not allow more than limit."""
+        from app.core.redis_client import get_redis
+
+        redis_client = await get_redis()
+        limiter = RateLimiter(redis_client)
+        limit = RateLimit(requests=5, window=5, key_prefix="test:atomic")
+        identifier = "ip:9.9.9.9"
+
+        # Clear any prior state
+        await redis_client.delete(f"{limit.key_prefix}:{identifier}")
+
+        async def attempt():
+            return await limiter.check_rate_limit(identifier, limit)
+
+        # Launch 10 concurrent attempts
+        results = await asyncio.gather(*[attempt() for _ in range(10)])
+        allowed_count = sum(1 for r in results if r.allowed)
+        assert allowed_count <= limit.requests
+
 
 class TestRateLimitMiddleware:
     """Test rate limit middleware integration."""
@@ -132,6 +153,16 @@ class TestRateLimitMiddleware:
         for _ in range(10):
             response = await client.get("/healthz")
             assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_fallback_limit_applies(self, client: AsyncClient):
+        """Global fallback limit should apply to endpoints without explicit config."""
+        # /api/v1/auth/me is not explicitly configured; fallback should apply
+        response = await client.get("/api/v1/auth/me")
+        # Should not be 404; we accept 401 when unauthenticated
+        assert response.status_code in (200, 401)
+        # Header should reflect fallback budget (1000 per minute)
+        assert response.headers.get("X-RateLimit-Limit") == "1000"
 
     @pytest.mark.asyncio
     async def test_rate_limit_headers_present(self, client: AsyncClient, db_session):
@@ -161,6 +192,41 @@ class TestRateLimitMiddleware:
         assert "X-RateLimit-Limit" in response.headers
         assert "X-RateLimit-Remaining" in response.headers
         assert "X-RateLimit-Reset" in response.headers
+
+    @pytest.mark.asyncio
+    async def test_headers_remaining_and_reset_progress(
+        self, client: AsyncClient, db_session
+    ):
+        """Remaining should decrement and reset should be a valid epoch second."""
+        from datetime import UTC, datetime
+
+        from app.db.models.auth import User
+
+        now = datetime.now(UTC)
+        user = User(
+            email="ratelimit3@test.com",
+            is_active=True,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+
+        r1 = await client.post(
+            "/api/v1/auth/magic-link/start",
+            json={"email": "ratelimit3@test.com"},
+        )
+        r2 = await client.post(
+            "/api/v1/auth/magic-link/start",
+            json={"email": "ratelimit3@test.com"},
+        )
+        assert r1.status_code in (200, 400, 403)
+        assert r2.status_code in (200, 400, 403)
+        rem1 = int(r1.headers["X-RateLimit-Remaining"])
+        rem2 = int(r2.headers["X-RateLimit-Remaining"])
+        assert rem2 <= rem1
+        reset_epoch = int(r2.headers["X-RateLimit-Reset"])
+        assert reset_epoch > 0
 
     @pytest.mark.asyncio
     async def test_rate_limit_enforced_on_magic_link(
@@ -242,3 +308,28 @@ class TestRateLimitMiddleware:
         # Verify 429 includes headers
         assert "Retry-After" in r6.headers
         assert r6.headers.get("X-RateLimit-Remaining") == "0"
+
+    @pytest.mark.asyncio
+    async def test_rate_limit_disabled_via_env(self, client: AsyncClient, monkeypatch):
+        """RATE_LIMIT_ENABLED=false disables checks and headers."""
+        monkeypatch.setenv("RATE_LIMIT_ENABLED", "false")
+        r = await client.get("/api/v1/auth/me")
+        # Should not include rate limit headers when disabled
+        assert "X-RateLimit-Limit" not in r.headers
+        assert "X-RateLimit-Remaining" not in r.headers
+        assert "X-RateLimit-Reset" not in r.headers
+
+    @pytest.mark.asyncio
+    async def test_exempt_paths_bypass_limiter(self, client: AsyncClient):
+        """Docs/openapi endpoints are exempt from rate limiting."""
+        # /docs is exempt
+        r_docs = await client.get("/docs")
+        assert r_docs.status_code in (200, 307, 308)  # ASGI may redirect to /docs/
+        # /openapi.json is exempt
+        r_openapi = await client.get("/openapi.json")
+        assert r_openapi.status_code == 200
+        # Headers should not be present on exempt responses
+        for r in (r_docs, r_openapi):
+            assert "X-RateLimit-Limit" not in r.headers
+            assert "X-RateLimit-Remaining" not in r.headers
+            assert "X-RateLimit-Reset" not in r.headers
