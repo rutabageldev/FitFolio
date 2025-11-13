@@ -147,6 +147,25 @@ class TestRateLimitMiddleware:
     """Test rate limit middleware integration."""
 
     @pytest.mark.asyncio
+    async def test_magic_link_verify_rate_limit_enforced(self, client: AsyncClient):
+        """Verify endpoint should be rate limited (10/min)."""
+        # First 10 requests should not return 429 (may be 400/403 due to CSRF/invalid)
+        for _ in range(10):
+            r = await client.post(
+                "/api/v1/auth/magic-link/verify",
+                json={"token": "invalid-or-fake"},
+            )
+            assert r.status_code in (400, 403)
+
+        # 11th request within window should be rate limited
+        r11 = await client.post(
+            "/api/v1/auth/magic-link/verify",
+            json={"token": "invalid-or-fake"},
+        )
+        assert r11.status_code == 429
+        assert "Retry-After" in r11.headers
+
+    @pytest.mark.asyncio
     async def test_health_check_not_rate_limited(self, client: AsyncClient):
         """Health check endpoints should not be rate limited."""
         # Make many requests to health check

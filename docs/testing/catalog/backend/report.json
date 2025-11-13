@@ -27,10 +27,10 @@
     "auth.magic_link": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_magic_link.yaml",
       "total": 22,
-      "implemented": 6,
-      "planned": 16,
-      "deprecated": 0,
-      "implementation_rate": 0.2727
+      "implemented": 20,
+      "planned": 0,
+      "deprecated": 2,
+      "implementation_rate": 0.9091
     },
     "auth.sessions": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_sessions.yaml",
@@ -84,10 +84,10 @@
   "totals": {
     "areas": 10,
     "items_total": 131,
-    "items_implemented": 92,
-    "items_planned": 39,
-    "items_deprecated": 0,
-    "overall_implementation_rate": 0.7023
+    "items_implemented": 106,
+    "items_planned": 23,
+    "items_deprecated": 2,
+    "overall_implementation_rate": 0.8092
   },
   "duplicate_ids": {},
   "unreferenced_test_files": [

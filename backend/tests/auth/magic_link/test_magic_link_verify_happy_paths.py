@@ -104,6 +104,12 @@ class TestMagicLinkVerifyHappyPaths:
 
         # Verify session cookie was set
         assert "ff_sess" in response.cookies
+        # Validate cookie flags on Set-Cookie header
+        set_cookie = response.headers.get("set-cookie", "")
+        assert "HttpOnly" in set_cookie
+        assert "SameSite=Lax" in set_cookie
+        # In dev config, Secure is False
+        assert "Secure" not in set_cookie
 
     @pytest.mark.asyncio
     async def test_magic_link_verify_marks_token_used(
