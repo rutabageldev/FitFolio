@@ -11,10 +11,16 @@ from collections.abc import AsyncGenerator
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.db.base import Base
+
+# Ensure OTEL is disabled before importing app unless explicitly enabled
+if os.getenv("TEST_OTEL", "").lower() not in {"1", "true", "yes"}:
+    os.environ.setdefault("OTEL_SDK_DISABLED", "true")
+
 from app.main import app
 
 # Disable rate limiting for most tests (rate limiting tests will override)
@@ -64,7 +70,7 @@ def anyio_backend():
     return "asyncio"
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(scope="session")
 async def db_engine():
     """Create test database engine (Postgres)."""
 
@@ -92,6 +98,20 @@ async def db_engine():
 @pytest_asyncio.fixture
 async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
     """Create test database session."""
+    # Ensure a clean database state before each test
+    async with db_engine.begin() as conn:
+        await conn.execute(
+            text(
+                "TRUNCATE TABLE "
+                "login_events, "
+                "magic_link_tokens, "
+                "webauthn_credentials, "
+                "sessions, "
+                "users "
+                "RESTART IDENTITY CASCADE"
+            ),
+        )
+
     async_session_factory = sessionmaker(
         db_engine, class_=AsyncSession, expire_on_commit=False
     )
@@ -112,7 +132,15 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
 
     app.dependency_overrides[get_db] = override_get_db
 
-    async with AsyncClient(
+    class TestAsyncClient(AsyncClient):
+        async def request(self, method, url, **kwargs):
+            # Avoid httpx per-request cookies deprecation by moving them to the jar
+            cookies = kwargs.pop("cookies", None)
+            if cookies:
+                self.cookies.update(cookies)
+            return await super().request(method, url, **kwargs)
+
+    async with TestAsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
@@ -141,3 +169,43 @@ async def cleanup_redis():
 
     yield
     # No cleanup after - let Redis connection persist across tests for performance
+
+
+@pytest.fixture(scope="session", autouse=True)
+def disable_otel():
+    """Disable OpenTelemetry SDK during tests to avoid noisy teardown logging."""
+    # Allow opt-in tracing in tests via TEST_OTEL=1/true, otherwise disable SDK.
+    test_otel = os.getenv("TEST_OTEL", "").lower() in {"1", "true", "yes"}
+    if not test_otel:
+        os.environ.setdefault("OTEL_SDK_DISABLED", "true")
+        yield
+        return
+    # If tracing is enabled for tests, ensure we cleanly shut down
+    # the provider to avoid warnings.
+    try:
+        yield
+    finally:
+        try:
+            from opentelemetry import trace
+
+            provider = trace.get_tracer_provider()
+            shutdown = getattr(provider, "shutdown", None)
+            if callable(shutdown):
+                shutdown()
+        except Exception:
+            # Never let tracing teardown break tests
+            pass
+
+
+@pytest.fixture(scope="session", autouse=True)
+def close_redis_session():
+    """Ensure Redis connection is closed at the end of the test session."""
+    import asyncio
+
+    from app.core.redis_client import close_redis
+
+    yield
+    try:
+        asyncio.run(close_redis())
+    except Exception:
+        pass

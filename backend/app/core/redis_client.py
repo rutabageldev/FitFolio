@@ -41,5 +41,9 @@ async def close_redis() -> None:
     """Close Redis connection (call on app shutdown)."""
     global _redis_client
     if _redis_client is not None:
-        await _redis_client.close()
+        # redis-py 5.x deprecates close() in favor of aclose() for asyncio
+        try:
+            await _redis_client.aclose()  # type: ignore[attr-defined]
+        except AttributeError:
+            await _redis_client.close()  # Backwards compatibility
         _redis_client = None

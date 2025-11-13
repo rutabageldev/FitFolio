@@ -358,9 +358,14 @@ async def verify_magic_link(
 
     if not magic_link_token:
         # Invalid token - if any account is currently locked, respond with 429
+        lockout_keys = []
         try:
             redis_client = await get_redis()
             lockout_keys = await redis_client.keys("lockout:*")
+        except Exception as e:
+            # Fall through to generic error if Redis unavailable; log for visibility
+            log.warning("lockout_fallback_check_failed", error=str(e))
+        else:
             if lockout_keys:
                 raise HTTPException(
                     status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -368,9 +373,6 @@ async def verify_magic_link(
                         "Account temporarily locked due to too many failed attempts."
                     ),
                 )
-        except Exception as e:
-            # Fall through to generic error if Redis unavailable; log for visibility
-            log.warning("lockout_fallback_check_failed", error=str(e))
 
         # Otherwise, return generic invalid token error
         log.warning(
