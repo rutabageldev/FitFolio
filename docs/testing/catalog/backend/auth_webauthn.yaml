@@ -66,6 +66,42 @@ items:
     tests:
       - backend/tests/auth/webauthn/test_webauthn_credentials.py
     last_verified: 2025-11-13
+  - id: AUTH-WA-070
+    title: Authentication happy paths
+    level: integration
+    markers: [security]
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_authentication_happy_paths.py
+    last_verified: 2025-11-13
+  - id: AUTH-WA-071
+    title: WebAuthn authorization checks
+    level: integration
+    markers: [security]
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_authorization.py
+    last_verified: 2025-11-13
+  - id: AUTH-WA-072
+    title: WebAuthn end-to-end flow
+    level: integration
+    markers: [security]
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_end_to_end.py
+    last_verified: 2025-11-13
+  - id: AUTH-WA-073
+    title: WebAuthn integration paths
+    level: integration
+    markers: []
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_integration.py
+    last_verified: 2025-11-13
   - id: AUTH-WA-020
     title: Registration finish persists credential (valid attestation)
     level: integration

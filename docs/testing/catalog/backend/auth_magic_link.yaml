@@ -149,3 +149,39 @@ items:
     status: planned
     tests: []
     last_verified: null
+  - id: AUTH-ML-201
+    title: Magic link authorization checks
+    level: integration
+    markers: [security]
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/magic_link/test_magic_link_authorization.py
+    last_verified: 2025-11-13
+  - id: AUTH-ML-202
+    title: Magic link email capture
+    level: integration
+    markers: []
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/magic_link/test_magic_link_email_capture.py
+    last_verified: 2025-11-13
+  - id: AUTH-ML-203
+    title: Magic link integration path coverage
+    level: integration
+    markers: []
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/magic_link/test_magic_link_integration.py
+    last_verified: 2025-11-13
+  - id: AUTH-ML-204
+    title: Magic link verify happy paths
+    level: integration
+    markers: []
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/magic_link/test_magic_link_verify_happy_paths.py
+    last_verified: 2025-11-13

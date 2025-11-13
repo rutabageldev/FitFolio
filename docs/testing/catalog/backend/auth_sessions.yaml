@@ -57,6 +57,24 @@ items:
     tests:
       - backend/tests/auth/sessions/test_logout.py
     last_verified: 2025-11-13
+  - id: AUTH-SESS-020
+    title: Auth endpoint authorization checks
+    level: integration
+    markers: [security]
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/test_auth_authorization.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-021
+    title: Auth endpoint edge cases
+    level: integration
+    markers: []
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/test_auth_edge_cases.py
+    last_verified: 2025-11-13
   - id: AUTH-SESS-010
     title: /me auto session rotation after 7 days
     level: integration

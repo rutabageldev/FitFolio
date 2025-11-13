@@ -58,6 +58,12 @@ repos:
   # --- Frontend lint & format (run in devcontainer) ---
   - repo: local
     hooks:
+      - id: catalog-check
+        name: backend catalog check
+        language: system
+        entry: bash -lc 'python3 scripts/check_tests_in_catalog.py'
+        pass_filenames: false
+        files: ^(backend/tests/|docs/testing/catalog/backend/).*
       - id: eslint
         name: frontend eslint
         language: system

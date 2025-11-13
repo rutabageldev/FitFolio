@@ -30,6 +30,24 @@ items:
     tests:
       - backend/tests/security/test_rate_limiting.py
     last_verified: 2025-11-13
+  - id: SEC-LOCKOUT-001
+    title: Account lockout enforcement
+    level: integration
+    markers: [security]
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/security/test_account_lockout.py
+    last_verified: 2025-11-13
+  - id: SEC-CORE-001
+    title: Core security primitives (tokens/hashing) behavior
+    level: unit
+    markers: [security]
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/security/test_security.py
+    last_verified: 2025-11-13
   - id: SEC-RATE-010
     title: Allowed request passes through with X-RateLimit headers
     level: integration

@@ -26,27 +26,27 @@
     },
     "auth.magic_link": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_magic_link.yaml",
-      "total": 18,
-      "implemented": 2,
+      "total": 22,
+      "implemented": 6,
       "planned": 16,
       "deprecated": 0,
-      "implementation_rate": 0.1111
+      "implementation_rate": 0.2727
     },
     "auth.sessions": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_sessions.yaml",
-      "total": 7,
-      "implemented": 6,
+      "total": 9,
+      "implemented": 8,
       "planned": 1,
       "deprecated": 0,
-      "implementation_rate": 0.8571
+      "implementation_rate": 0.8889
     },
     "auth.webauthn": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_webauthn.yaml",
-      "total": 28,
-      "implemented": 7,
+      "total": 32,
+      "implemented": 11,
       "planned": 21,
       "deprecated": 0,
-      "implementation_rate": 0.25
+      "implementation_rate": 0.3438
     },
     "contract": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/contract.yaml",
@@ -66,20 +66,31 @@
     },
     "security": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/security.yaml",
-      "total": 19,
-      "implemented": 3,
+      "total": 21,
+      "implemented": 5,
       "planned": 16,
       "deprecated": 0,
-      "implementation_rate": 0.1579
+      "implementation_rate": 0.2381
+    },
+    "unassigned": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/unassigned.yaml",
+      "total": 0,
+      "implemented": 0,
+      "planned": 0,
+      "deprecated": 0,
+      "implementation_rate": 0.0
     }
   },
   "totals": {
-    "areas": 9,
-    "items_total": 119,
-    "items_implemented": 27,
+    "areas": 10,
+    "items_total": 131,
+    "items_implemented": 39,
     "items_planned": 92,
     "items_deprecated": 0,
-    "overall_implementation_rate": 0.2269
+    "overall_implementation_rate": 0.2977
   },
-  "duplicate_ids": {}
+  "duplicate_ids": {},
+  "unreferenced_test_files": [
+    "backend/tests/__init__.py"
+  ]
 }
