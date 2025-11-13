@@ -231,3 +231,59 @@ class TestWebAuthnRegistrationHappyPaths:
         assert len(credentials) == 1 and credentials[0].credential_id == bytes.fromhex(
             "abc123"
         )
+
+    @pytest.mark.asyncio
+    @patch("app.core.challenge_storage.retrieve_and_delete_challenge")
+    @patch("app.api.v1.auth.get_webauthn_manager")
+    async def test_registration_finish_allows_additional_credentials(
+        self,
+        mock_get_webauthn_manager,
+        mock_retrieve_challenge,
+        client: AsyncClient,
+        csrf_token,
+        user_with_credential,
+        db_session,
+    ):
+        """Should allow adding a second credential for the same user."""
+        user, first_credential = user_with_credential
+        mock_retrieve_challenge.return_value = (user.email, "deadbeef")
+        mock_manager = Mock()
+        mock_manager.rp_id = "localhost"
+        mock_manager.origin = "http://localhost:3000"
+        mock_manager.verify_registration_response.return_value = {
+            "credential_id": "beadfeed",
+            "public_key": b"second_key",
+            "sign_count": 0,
+            "transports": ["internal"],
+            "backed_up": False,
+            "uv_available": True,
+        }
+        mock_get_webauthn_manager.return_value = mock_manager
+
+        response = await client.post(
+            "/api/v1/auth/webauthn/register/finish",
+            json={
+                "email": user.email,
+                "credential": {
+                    "id": "beadfeed",
+                    "response": {},
+                    "type": "public-key",
+                },
+                "challenge_id": "challenge-xyz",
+            },
+            cookies={"csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        assert response.status_code == 200
+
+        from sqlalchemy import select
+
+        from app.db.models.auth import WebAuthnCredential
+
+        stmt = select(WebAuthnCredential).where(WebAuthnCredential.user_id == user.id)
+        result = await db_session.execute(stmt)
+        credentials = result.scalars().all()
+        ids = {c.credential_id.hex() for c in credentials}
+        assert len(credentials) == 2
+        assert first_credential.credential_id.hex() in ids
+        assert "beadfeed" in ids

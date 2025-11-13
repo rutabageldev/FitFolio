@@ -123,29 +123,35 @@ items:
   title: Registration finish persists credential (valid attestation)
   level: integration
   markers:
+  - integration
   - security
   risk: critical
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_registration_happy_paths.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-021
   title: Registration finish creates first credential for user
   level: integration
   markers:
+  - integration
   - security
   risk: high
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_registration_happy_paths.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-022
   title: Registration finish allows additional credentials per user
   level: integration
   markers:
+  - integration
   - security
   risk: high
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_registration_happy_paths.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-023
   title: Duplicate credential ID rejected with conflict
   level: integration
@@ -161,18 +167,21 @@ items:
   markers:
   - security
   risk: critical
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_integration.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-031
   title: Authenticate start for user without credentials returns empty allowCredentials
   level: integration
   markers:
+  - integration
   - security
   risk: high
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_end_to_end.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-032
   title: Authenticate start respects rate limit decorator
   level: integration
@@ -208,29 +217,35 @@ items:
   title: Authenticate finish creates session on valid assertion
   level: integration
   markers:
+  - integration
   - security
   risk: critical
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_authentication_happy_paths.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-041
   title: Authenticate finish increments sign count
   level: integration
   markers:
+  - integration
   - security
   risk: high
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_authentication_happy_paths.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-042
   title: Authenticate finish respects rate limit decorator
   level: integration
   markers:
+  - integration
   - security
   risk: high
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/security/test_rate_limiting.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-043
   title: Authenticate finish sets cookie flags and rate limit headers
   level: integration

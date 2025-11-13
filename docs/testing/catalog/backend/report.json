@@ -43,10 +43,10 @@
     "auth.webauthn": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_webauthn.yaml",
       "total": 32,
-      "implemented": 22,
-      "planned": 10,
+      "implemented": 30,
+      "planned": 2,
       "deprecated": 0,
-      "implementation_rate": 0.6875
+      "implementation_rate": 0.9375
     },
     "contract": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/contract.yaml",
@@ -84,10 +84,10 @@
   "totals": {
     "areas": 10,
     "items_total": 129,
-    "items_implemented": 118,
-    "items_planned": 11,
+    "items_implemented": 126,
+    "items_planned": 3,
     "items_deprecated": 2,
-    "overall_implementation_rate": 0.9147
+    "overall_implementation_rate": 0.9767
   },
   "duplicate_ids": {},
   "unreferenced_test_files": [
