@@ -1,187 +1,214 @@
 schema: 1
 area: auth.magic_link
 updated: 2025-11-13
-owners: ['backend-auth', 'qa']
+owners:
+- backend-auth
+- qa
 items:
-  - id: AUTH-ML-001
-    title: Magic link start returns 200 for known email with CSRF
-    level: integration
-    markers: [security]
-    risk: high
-    status: implemented
-    tests:
-      - backend/tests/auth/magic_link/test_magic_link_start.py
-    last_verified: 2025-11-13
-  - id: AUTH-ML-002
-    title: Unverified user can request magic link
-    level: integration
-    markers: [security]
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-003
-    title: Magic link start respects rate limit decorator
-    level: integration
-    markers: [security]
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-004
-    title: Magic link start invalid email format returns 422
-    level: integration
-    markers: []
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-005
-    title: Magic link start empty email returns 422
-    level: integration
-    markers: []
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-006
-    title: Magic link start database failure yields 500
-    level: integration
-    markers: []
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-007
-    title: Unknown email returns generic success (no enumeration)
-    level: integration
-    markers: [security]
-    risk: critical
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-101
-    title: Magic link verify new user creates account and session
-    level: integration
-    markers: [security]
-    risk: critical
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-102
-    title: Magic link verify existing user logs in without duplicate
-    level: integration
-    markers: [security]
-    risk: critical
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-103
-    title: Magic link verify respects rate limit decorator
-    level: integration
-    markers: [security]
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-104
-    title: Magic link verify invalid token format returns 400
-    level: integration
-    markers: [security]
-    risk: critical
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-105
-    title: Magic link verify expired token returns 400
-    level: integration
-    markers: [security]
-    risk: critical
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-106
-    title: Magic link verify token not found returns 400
-    level: integration
-    markers: [security]
-    risk: critical
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-107
-    title: Magic link verify used token returns 400
-    level: integration
-    markers: [security]
-    risk: critical
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-108
-    title: Magic link verify sets cookie with correct flags
-    level: integration
-    markers: [security]
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-110
-    title: Magic link verify rejects invalid or expired token
-    level: integration
-    markers: [security]
-    risk: high
-    status: implemented
-    tests:
-      - backend/tests/auth/magic_link/test_magic_link_verify_error_paths.py
-    last_verified: 2025-11-13
-  - id: AUTH-EMAIL-201
-    title: Resend verification respects rate limit decorator
-    level: integration
-    markers: [security]
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-EMAIL-202
-    title: Resend verification unauthenticated request returns 401
-    level: integration
-    markers: [security]
-    risk: critical
-    status: planned
-    tests: []
-    last_verified: null
-  - id: AUTH-ML-201
-    title: Magic link authorization checks
-    level: integration
-    markers: [security]
-    risk: high
-    status: implemented
-    tests:
-      - backend/tests/auth/magic_link/test_magic_link_authorization.py
-    last_verified: 2025-11-13
-  - id: AUTH-ML-202
-    title: Magic link email capture
-    level: integration
-    markers: []
-    risk: medium
-    status: implemented
-    tests:
-      - backend/tests/auth/magic_link/test_magic_link_email_capture.py
-    last_verified: 2025-11-13
-  - id: AUTH-ML-203
-    title: Magic link integration path coverage
-    level: integration
-    markers: []
-    risk: medium
-    status: implemented
-    tests:
-      - backend/tests/auth/magic_link/test_magic_link_integration.py
-    last_verified: 2025-11-13
-  - id: AUTH-ML-204
-    title: Magic link verify happy paths
-    level: integration
-    markers: []
-    risk: high
-    status: implemented
-    tests:
-      - backend/tests/auth/magic_link/test_magic_link_verify_happy_paths.py
-    last_verified: 2025-11-13
+- id: AUTH-ML-001
+  title: Magic link start returns 200 for known email with CSRF
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_start.py
+  last_verified: 2025-11-13
+- id: AUTH-ML-002
+  title: Unverified user can request magic link
+  level: integration
+  markers:
+  - security
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-003
+  title: Magic link start respects rate limit decorator
+  level: integration
+  markers:
+  - security
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-004
+  title: Magic link start invalid email format returns 422
+  level: integration
+  markers: []
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-005
+  title: Magic link start empty email returns 422
+  level: integration
+  markers: []
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-006
+  title: Magic link start database failure yields 500
+  level: integration
+  markers: []
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-007
+  title: Unknown email returns generic success (no enumeration)
+  level: integration
+  markers:
+  - security
+  risk: critical
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-101
+  title: Magic link verify new user creates account and session
+  level: integration
+  markers:
+  - security
+  risk: critical
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-102
+  title: Magic link verify existing user logs in without duplicate
+  level: integration
+  markers:
+  - security
+  risk: critical
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-103
+  title: Magic link verify respects rate limit decorator
+  level: integration
+  markers:
+  - security
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-104
+  title: Magic link verify invalid token format returns 400
+  level: integration
+  markers:
+  - security
+  risk: critical
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-105
+  title: Magic link verify expired token returns 400
+  level: integration
+  markers:
+  - security
+  risk: critical
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-106
+  title: Magic link verify token not found returns 400
+  level: integration
+  markers:
+  - security
+  risk: critical
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-107
+  title: Magic link verify used token returns 400
+  level: integration
+  markers:
+  - security
+  risk: critical
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-108
+  title: Magic link verify sets cookie with correct flags
+  level: integration
+  markers:
+  - security
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-110
+  title: Magic link verify rejects invalid or expired token
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_verify_error_paths.py
+  last_verified: 2025-11-13
+- id: AUTH-EMAIL-201
+  title: Resend verification respects rate limit decorator
+  level: integration
+  markers:
+  - security
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-EMAIL-202
+  title: Resend verification unauthenticated request returns 401
+  level: integration
+  markers:
+  - security
+  risk: critical
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-ML-201
+  title: Magic link authorization checks
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_authorization.py
+  last_verified: 2025-11-13
+- id: AUTH-ML-202
+  title: Magic link email capture
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_email_capture.py
+  last_verified: 2025-11-13
+- id: AUTH-ML-203
+  title: Magic link integration path coverage
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_integration.py
+  last_verified: 2025-11-13
+- id: AUTH-ML-204
+  title: Magic link verify happy paths
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_verify_happy_paths.py
+  last_verified: 2025-11-13

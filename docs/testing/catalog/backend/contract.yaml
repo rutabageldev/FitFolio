@@ -1,23 +1,29 @@
 schema: 1
 area: contract
 updated: 2025-11-13
-owners: ['backend', 'qa']
+owners:
+- backend
+- qa
 items:
-  - id: CONTRACT-GLOBAL-001
-    title: Global endpoints exist and are versioned appropriately
-    level: integration
-    markers: [contract]
-    risk: medium
-    status: implemented
-    tests:
-      - backend/tests/contract/test_api_contract.py
-    last_verified: 2025-11-13
-  - id: CONTRACT-AUTH-001
-    title: Auth endpoints exist under /api/v1/auth
-    level: integration
-    markers: [contract]
-    risk: medium
-    status: implemented
-    tests:
-      - backend/tests/contract/test_auth_contract.py
-    last_verified: 2025-11-13
+- id: CONTRACT-GLOBAL-001
+  title: Global endpoints exist and are versioned appropriately
+  level: integration
+  markers:
+  - contract
+  - integration
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/contract/test_api_contract.py
+  last_verified: 2025-11-13
+- id: CONTRACT-AUTH-001
+  title: Auth endpoints exist under /api/v1/auth
+  level: integration
+  markers:
+  - contract
+  - integration
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/contract/test_auth_contract.py
+  last_verified: 2025-11-13

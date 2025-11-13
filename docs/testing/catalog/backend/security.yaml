@@ -1,178 +1,199 @@
 schema: 1
 area: security
 updated: 2025-11-13
-owners: ['backend-security', 'qa']
+owners:
+- backend-security
+- qa
 items:
-  - id: SEC-CSRF-001
-    title: CSRF token required on state-changing requests
-    level: integration
-    markers: [security]
-    risk: high
-    status: implemented
-    tests:
-      - backend/tests/security/test_csrf.py
-    last_verified: 2025-11-13
-  - id: SEC-ROT-001
-    title: Old sessions rotate; recent sessions do not
-    level: integration
-    markers: [security]
-    risk: high
-    status: implemented
-    tests:
-      - backend/tests/security/test_session_rotation.py
-    last_verified: 2025-11-13
-  - id: SEC-RATE-001
-    title: Rate limiting enforced on sensitive endpoints
-    level: integration
-    markers: [security]
-    risk: medium
-    status: implemented
-    tests:
-      - backend/tests/security/test_rate_limiting.py
-    last_verified: 2025-11-13
-  - id: SEC-LOCKOUT-001
-    title: Account lockout enforcement
-    level: integration
-    markers: [security]
-    risk: critical
-    status: implemented
-    tests:
-      - backend/tests/security/test_account_lockout.py
-    last_verified: 2025-11-13
-  - id: SEC-CORE-001
-    title: Core security primitives (tokens/hashing) behavior
-    level: unit
-    markers: [security]
-    risk: medium
-    status: implemented
-    tests:
-      - backend/tests/security/test_security.py
-    last_verified: 2025-11-13
-  - id: SEC-RATE-010
-    title: Allowed request passes through with X-RateLimit headers
-    level: integration
-    markers: [security]
-    risk: critical
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-RATE-011
-    title: Global fallback limit applies when no specific pattern
-    level: integration
-    markers: [security]
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-RATE-012
-    title: RATE_LIMIT_ENABLED=false disables checks
-    level: integration
-    markers: [security]
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-RATE-013
-    title: Exempt paths bypass limiter
-    level: integration
-    markers: [security]
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-RATE-014
-    title: Health endpoints bypass limiter
-    level: integration
-    markers: [security]
-    risk: medium
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-RATE-015
-    title: Exceed per-endpoint limit returns 429 with Retry-After
-    level: integration
-    markers: [security]
-    risk: critical
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-RATE-016
-    title: Headers reflect remaining and reset correctly
-    level: integration
-    markers: [security]
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-RATE-017
-    title: IP identification uses first value from X-Forwarded-For
-    level: integration
-    markers: [security]
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-RATE-CORE-001
-    title: Core limiter allows within limit and counts remaining
-    level: unit
-    markers: []
-    risk: critical
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-RATE-CORE-002
-    title: Core limiter denies at limit; sets retry_after
-    level: unit
-    markers: []
-    risk: critical
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-RATE-CORE-003
-    title: Sliding window expires old entries to allow new requests
-    level: unit
-    markers: []
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-RATE-CORE-004
-    title: Pipeline atomicity prevents race conditions
-    level: unit
-    markers: []
-    risk: medium
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-RATE-CORE-005
-    title: User strategy uses request.state.user_id (future)
-    level: unit
-    markers: []
-    risk: medium
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-REQID-001
-    title: Request ID generated when header missing
-    level: integration
-    markers: []
-    risk: medium
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-REQID-002
-    title: Echo incoming x-request-id header
-    level: integration
-    markers: []
-    risk: high
-    status: planned
-    tests: []
-    last_verified: null
-  - id: SEC-REQID-003
-    title: Clear bound context after request
-    level: integration
-    markers: []
-    risk: low
-    status: planned
-    tests: []
-    last_verified: null
+- id: SEC-CSRF-001
+  title: CSRF token required on state-changing requests
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/security/test_csrf.py
+  last_verified: 2025-11-13
+- id: SEC-ROT-001
+  title: Old sessions rotate; recent sessions do not
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/security/test_session_rotation.py
+  last_verified: 2025-11-13
+- id: SEC-RATE-001
+  title: Rate limiting enforced on sensitive endpoints
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/security/test_rate_limiting.py
+  last_verified: 2025-11-13
+- id: SEC-LOCKOUT-001
+  title: Account lockout enforcement
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: critical
+  status: implemented
+  tests:
+  - backend/tests/security/test_account_lockout.py
+  last_verified: 2025-11-13
+- id: SEC-CORE-001
+  title: Core security primitives (tokens/hashing) behavior
+  level: unit
+  markers:
+  - integration
+  - security
+  - unit
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/security/test_security.py
+  last_verified: 2025-11-13
+- id: SEC-RATE-010
+  title: Allowed request passes through with X-RateLimit headers
+  level: integration
+  markers:
+  - security
+  risk: critical
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-RATE-011
+  title: Global fallback limit applies when no specific pattern
+  level: integration
+  markers:
+  - security
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-RATE-012
+  title: RATE_LIMIT_ENABLED=false disables checks
+  level: integration
+  markers:
+  - security
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-RATE-013
+  title: Exempt paths bypass limiter
+  level: integration
+  markers:
+  - security
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-RATE-014
+  title: Health endpoints bypass limiter
+  level: integration
+  markers:
+  - security
+  risk: medium
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-RATE-015
+  title: Exceed per-endpoint limit returns 429 with Retry-After
+  level: integration
+  markers:
+  - security
+  risk: critical
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-RATE-016
+  title: Headers reflect remaining and reset correctly
+  level: integration
+  markers:
+  - security
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-RATE-017
+  title: IP identification uses first value from X-Forwarded-For
+  level: integration
+  markers:
+  - security
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-RATE-CORE-001
+  title: Core limiter allows within limit and counts remaining
+  level: unit
+  markers: []
+  risk: critical
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-RATE-CORE-002
+  title: Core limiter denies at limit; sets retry_after
+  level: unit
+  markers: []
+  risk: critical
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-RATE-CORE-003
+  title: Sliding window expires old entries to allow new requests
+  level: unit
+  markers: []
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-RATE-CORE-004
+  title: Pipeline atomicity prevents race conditions
+  level: unit
+  markers: []
+  risk: medium
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-RATE-CORE-005
+  title: User strategy uses request.state.user_id (future)
+  level: unit
+  markers: []
+  risk: medium
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-REQID-001
+  title: Request ID generated when header missing
+  level: integration
+  markers: []
+  risk: medium
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-REQID-002
+  title: Echo incoming x-request-id header
+  level: integration
+  markers: []
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: SEC-REQID-003
+  title: Clear bound context after request
+  level: integration
+  markers: []
+  risk: low
+  status: planned
+  tests: []
+  last_verified: null
