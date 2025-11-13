@@ -1009,6 +1009,134 @@ class TestRevokeSession:
         await db_session.refresh(other_session)
         assert other_session.revoked_at is not None
 
+    @pytest.mark.asyncio
+    async def test_revoke_session_of_other_user(self, client: AsyncClient, db_session):
+        """Should return 404 for session belonging to another user (no enumeration)."""
+        # Get CSRF token
+        csrf_response = await client.get("/healthz")
+        csrf_token = csrf_response.cookies["csrf_token"]
+
+        now = datetime.now(UTC)
+
+        # Create two users with sessions
+        user1 = User(
+            email="user1@test.com",
+            is_active=True,
+            is_email_verified=True,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user1)
+
+        user2 = User(
+            email="user2@test.com",
+            is_active=True,
+            is_email_verified=True,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user2)
+        await db_session.commit()
+        await db_session.refresh(user1)
+        await db_session.refresh(user2)
+
+        # Create session for user1
+        token1 = create_session_token()
+        session1 = Session(
+            user_id=user1.id,
+            token_hash=hash_token(token1),
+            created_at=now,
+            expires_at=now + timedelta(hours=336),
+            ip="127.0.0.1",
+            user_agent="test1",
+        )
+        db_session.add(session1)
+
+        # Create session for user2
+        token2 = create_session_token()
+        session2 = Session(
+            user_id=user2.id,
+            token_hash=hash_token(token2),
+            created_at=now,
+            expires_at=now + timedelta(hours=336),
+            ip="127.0.0.2",
+            user_agent="test2",
+        )
+        db_session.add(session2)
+        await db_session.commit()
+        await db_session.refresh(session1)
+        await db_session.refresh(session2)
+
+        # User1 tries to revoke user2's session
+        response = await client.delete(
+            f"/api/v1/auth/sessions/{session2.id}",
+            cookies={"ff_sess": token1, "csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        # Should return 404 to prevent enumeration
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_revoke_already_revoked_session(
+        self, client: AsyncClient, db_session
+    ):
+        """Should return 404 for already revoked session."""
+        # Get CSRF token
+        csrf_response = await client.get("/healthz")
+        csrf_token = csrf_response.cookies["csrf_token"]
+
+        now = datetime.now(UTC)
+        user = User(
+            email="alreadyrevoked@test.com",
+            is_active=True,
+            is_email_verified=True,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        # Create two sessions
+        current_token = create_session_token()
+        current_session = Session(
+            user_id=user.id,
+            token_hash=hash_token(current_token),
+            created_at=now,
+            expires_at=now + timedelta(days=14),
+            ip="127.0.0.1",
+            user_agent="test",
+        )
+
+        target_token = create_session_token()
+        target_session = Session(
+            user_id=user.id,
+            token_hash=hash_token(target_token),
+            created_at=now,
+            expires_at=now + timedelta(days=14),
+            ip="192.168.1.1",
+            user_agent="other",
+        )
+
+        db_session.add(current_session)
+        db_session.add(target_session)
+        await db_session.commit()
+        await db_session.refresh(target_session)
+
+        # Revoke the target session first
+        target_session.revoked_at = datetime.now(UTC)
+        await db_session.commit()
+
+        # Try to revoke again
+        response = await client.delete(
+            f"/api/v1/auth/sessions/{target_session.id}",
+            cookies={"ff_sess": current_token, "csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        assert response.status_code == 404
+
 
 class TestMagicLinkStartHappyPaths:
     """Test happy paths for magic link start endpoint."""

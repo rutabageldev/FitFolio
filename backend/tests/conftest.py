@@ -5,6 +5,7 @@ Test-specific fixtures should be in their respective test files.
 """
 
 import os
+import subprocess
 from collections.abc import AsyncGenerator
 
 import pytest
@@ -20,8 +21,35 @@ from app.main import app
 # Disable rate limiting for most tests (rate limiting tests will override)
 os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
 
+
 # Use separate Redis database for tests to avoid conflicts with dev data
-os.environ.setdefault("REDIS_URL", "redis://redis:6379/1")
+# In WSL2/devcontainer environments, localhost may not work for Docker containers
+# Try to get Redis container IP dynamically, fall back to localhost
+def get_redis_url() -> str:
+    """Get Redis URL for tests, handling WSL2/Docker networking."""
+    try:
+        # Try to get Redis container IP (works in WSL2/devcontainer)
+        result = subprocess.run(
+            [
+                "docker",
+                "inspect",
+                "fitfolio-redis",
+                "--format={{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            container_ip = result.stdout.strip()
+            return f"redis://{container_ip}:6379/1"
+    except Exception:
+        pass
+    # Fallback to localhost (works in most environments)
+    return "redis://localhost:6379/1"
+
+
+os.environ.setdefault("REDIS_URL", get_redis_url())
 
 # Test database URL (in-memory SQLite for speed)
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
