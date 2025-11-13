@@ -35,10 +35,10 @@
     "auth.sessions": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_sessions.yaml",
       "total": 9,
-      "implemented": 8,
-      "planned": 1,
+      "implemented": 9,
+      "planned": 0,
       "deprecated": 0,
-      "implementation_rate": 0.8889
+      "implementation_rate": 1.0
     },
     "auth.webauthn": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_webauthn.yaml",
@@ -84,10 +84,10 @@
   "totals": {
     "areas": 10,
     "items_total": 129,
-    "items_implemented": 106,
-    "items_planned": 23,
+    "items_implemented": 107,
+    "items_planned": 22,
     "items_deprecated": 2,
-    "overall_implementation_rate": 0.8217
+    "overall_implementation_rate": 0.8295
   },
   "duplicate_ids": {},
   "unreferenced_test_files": [
