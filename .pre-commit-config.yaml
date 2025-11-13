@@ -58,6 +58,13 @@ repos:
   # --- Frontend lint & format (run in devcontainer) ---
   - repo: local
     hooks:
+      - id: catalog-report
+        name: generate catalog report
+        language: system
+        entry: bash -lc 'python3 scripts/build_catalog_report.py'
+        pass_filenames: false
+        always_run: true
+        files: ^(backend/tests/|docs/testing/catalog/backend/|scripts/build_catalog_report\.py).*
       - id: catalog-check
         name: backend catalog check
         language: system
