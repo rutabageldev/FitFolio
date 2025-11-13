@@ -124,6 +124,15 @@ items:
     status: planned
     tests: []
     last_verified: null
+  - id: AUTH-ML-110
+    title: Magic link verify rejects invalid or expired token
+    level: integration
+    markers: [security]
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/magic_link/test_magic_link_verify_error_paths.py
+    last_verified: 2025-11-13
   - id: AUTH-EMAIL-201
     title: Resend verification respects rate limit decorator
     level: integration

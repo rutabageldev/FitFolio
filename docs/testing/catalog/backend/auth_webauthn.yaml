@@ -12,6 +12,60 @@ items:
     tests:
       - backend/tests/auth/webauthn/test_webauthn_registration_happy_paths.py
     last_verified: 2025-11-13
+  - id: AUTH-WA-001
+    title: Registration start returns options with challenge
+    level: integration
+    markers: [security]
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_registration.py
+    last_verified: 2025-11-13
+  - id: AUTH-WA-002
+    title: Registration start stores challenge
+    level: integration
+    markers: []
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_registration.py
+    last_verified: 2025-11-13
+  - id: AUTH-WA-003
+    title: Registration start invalid email 422
+    level: integration
+    markers: []
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_registration.py
+    last_verified: 2025-11-13
+  - id: AUTH-WA-050
+    title: Authenticate start without credentials errors
+    level: integration
+    markers: []
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_error_paths.py
+    last_verified: 2025-11-13
+  - id: AUTH-WA-051
+    title: Authenticate start Redis failure 500
+    level: integration
+    markers: []
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_error_paths.py
+    last_verified: 2025-11-13
+  - id: AUTH-WA-060
+    title: List credentials returns user's credentials
+    level: integration
+    markers: []
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_credentials.py
+    last_verified: 2025-11-13
   - id: AUTH-WA-020
     title: Registration finish persists credential (valid attestation)
     level: integration

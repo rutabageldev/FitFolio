@@ -1,0 +1,85 @@
+{
+  "per_area": {
+    "admin": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/admin.yaml",
+      "total": 32,
+      "implemented": 1,
+      "planned": 31,
+      "deprecated": 0,
+      "implementation_rate": 0.0312
+    },
+    "auth": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth.yaml",
+      "total": 0,
+      "implemented": 0,
+      "planned": 0,
+      "deprecated": 0,
+      "implementation_rate": 0.0
+    },
+    "auth.email": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_email.yaml",
+      "total": 5,
+      "implemented": 4,
+      "planned": 1,
+      "deprecated": 0,
+      "implementation_rate": 0.8
+    },
+    "auth.magic_link": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_magic_link.yaml",
+      "total": 18,
+      "implemented": 2,
+      "planned": 16,
+      "deprecated": 0,
+      "implementation_rate": 0.1111
+    },
+    "auth.sessions": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_sessions.yaml",
+      "total": 7,
+      "implemented": 6,
+      "planned": 1,
+      "deprecated": 0,
+      "implementation_rate": 0.8571
+    },
+    "auth.webauthn": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_webauthn.yaml",
+      "total": 28,
+      "implemented": 7,
+      "planned": 21,
+      "deprecated": 0,
+      "implementation_rate": 0.25
+    },
+    "contract": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/contract.yaml",
+      "total": 2,
+      "implemented": 2,
+      "planned": 0,
+      "deprecated": 0,
+      "implementation_rate": 1.0
+    },
+    "deps": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/deps.yaml",
+      "total": 8,
+      "implemented": 2,
+      "planned": 6,
+      "deprecated": 0,
+      "implementation_rate": 0.25
+    },
+    "security": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/security.yaml",
+      "total": 19,
+      "implemented": 3,
+      "planned": 16,
+      "deprecated": 0,
+      "implementation_rate": 0.1579
+    }
+  },
+  "totals": {
+    "areas": 9,
+    "items_total": 119,
+    "items_implemented": 27,
+    "items_planned": 92,
+    "items_deprecated": 0,
+    "overall_implementation_rate": 0.2269
+  },
+  "duplicate_ids": {}
+}

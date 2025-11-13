@@ -21,6 +21,42 @@ items:
     tests:
       - backend/tests/auth/sessions/test_sessions_authorization.py
     last_verified: 2025-11-13
+  - id: AUTH-SESS-003
+    title: List active sessions returns current and others
+    level: integration
+    markers: []
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_sessions_listing_variants.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-004
+    title: Revoke specific session succeeds
+    level: integration
+    markers: []
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-005
+    title: Revoke all other sessions succeeds
+    level: integration
+    markers: []
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-006
+    title: Logout revokes session and clears cookie
+    level: integration
+    markers: []
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_logout.py
+    last_verified: 2025-11-13
   - id: AUTH-SESS-010
     title: /me auto session rotation after 7 days
     level: integration

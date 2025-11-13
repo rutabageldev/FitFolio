@@ -3,6 +3,42 @@ area: auth.email
 updated: 2025-11-13
 owners: ['backend-auth', 'qa']
 items:
+  - id: AUTH-EMAIL-001
+    title: Email verify success marks user verified
+    level: integration
+    markers: []
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/auth/email/test_email_verification.py
+    last_verified: 2025-11-13
+  - id: AUTH-EMAIL-002
+    title: Email already verified is idempotent (200)
+    level: integration
+    markers: []
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/auth/email/test_email_verification.py
+    last_verified: 2025-11-13
+  - id: AUTH-EMAIL-003
+    title: Email verify invalid token returns 400
+    level: integration
+    markers: []
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/auth/email/test_email_error_paths.py
+    last_verified: 2025-11-13
+  - id: AUTH-EMAIL-004
+    title: Resend verification success
+    level: integration
+    markers: []
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/auth/email/test_email_authorization.py
+    last_verified: 2025-11-13
   - id: AUTH-EMAIL-101
     title: Email verify already verified is idempotent (200)
     level: integration
