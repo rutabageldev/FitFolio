@@ -244,6 +244,13 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
     app.dependency_overrides.clear()
 
 
+@pytest_asyncio.fixture
+async def csrf_token(client: AsyncClient) -> str:
+    """Fetch CSRF token cookie via health endpoint."""
+    response = await client.get("/healthz")
+    return response.cookies["csrf_token"]
+
+
 @pytest_asyncio.fixture(scope="function", autouse=True)
 async def cleanup_redis():
     """Flush Redis database before each test to prevent state leakage."""
