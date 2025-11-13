@@ -4,7 +4,9 @@ import sys
 from pathlib import Path
 
 try:
-    import yaml  # type: ignore
+    from typing import Any, cast
+
+    yaml = cast(Any, __import__("yaml"))
 except Exception:
     print("Missing dependency: pyyaml is required to run this script.", file=sys.stderr)
     sys.exit(2)

@@ -177,19 +177,24 @@ items:
   title: Authenticate start respects rate limit decorator
   level: integration
   markers:
+  - integration
   - security
   risk: high
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/security/test_rate_limiting.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-033
   title: Authenticate start invalid email format returns 422
   level: integration
-  markers: []
+  markers:
+  - integration
+  - security
   risk: high
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_integration.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-034
   title: Authenticate start enumeration-resistant response (future)
   level: integration
@@ -230,73 +235,98 @@ items:
   title: Authenticate finish sets cookie flags and rate limit headers
   level: integration
   markers:
+  - integration
   - security
   risk: high
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_authentication_happy_paths.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-CH-001
   title: Challenge storage stores challenge with TTL
   level: integration
   markers:
+  - integration
   - security
   risk: critical
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-CH-002
   title: Challenge storage returns opaque challenge_id
   level: integration
-  markers: []
+  markers:
+  - integration
+  - security
   risk: high
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-CH-003
   title: Challenge storage Redis error raises RuntimeError (setex)
   level: integration
-  markers: []
+  markers:
+  - integration
+  - security
   risk: critical
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-CH-004
   title: Retrieve and delete challenge returns tuple and deletes key
   level: integration
-  markers: []
+  markers:
+  - integration
+  - security
   risk: critical
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-CH-005
   title: Missing or expired challenge returns None
   level: integration
-  markers: []
+  markers:
+  - integration
+  - security
   risk: high
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-CH-006
   title: Malformed stored value returns None
   level: integration
-  markers: []
+  markers:
+  - integration
+  - security
   risk: medium
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-CH-007
   title: Challenge retrieval pipeline failure raises RuntimeError
   level: integration
-  markers: []
+  markers:
+  - integration
+  - security
   risk: high
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
 - id: AUTH-WA-CH-008
   title: Cleanup deletes keys by user/type pattern; returns count
   level: integration
-  markers: []
+  markers:
+  - integration
+  - security
   risk: medium
-  status: planned
-  tests: []
-  last_verified: null
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13

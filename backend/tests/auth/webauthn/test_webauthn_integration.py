@@ -81,6 +81,19 @@ class TestWebAuthnAuthenticateStart:
         assert stored_data is not None
 
     @pytest.mark.asyncio
+    async def test_authenticate_start_invalid_email_422(
+        self, client: AsyncClient, csrf_token
+    ):
+        """Should reject invalid email format."""
+        response = await client.post(
+            "/api/v1/auth/webauthn/authenticate/start",
+            json={"email": "not-an-email"},
+            cookies={"csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
     async def test_authenticate_start_includes_user_credentials(
         self, client: AsyncClient, csrf_token, user_with_webauthn
     ):

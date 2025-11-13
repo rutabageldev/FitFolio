@@ -166,6 +166,41 @@ class TestRateLimitMiddleware:
         assert "Retry-After" in r11.headers
 
     @pytest.mark.asyncio
+    async def test_webauthn_authenticate_start_rate_limited(self, client: AsyncClient):
+        """Authenticate start should be rate limited (10/min)."""
+        for _ in range(10):
+            r = await client.post(
+                "/api/v1/auth/webauthn/authenticate/start",
+                json={"email": "rate@test.com"},
+            )
+            assert r.status_code in (400, 403, 404, 422)
+        r11 = await client.post(
+            "/api/v1/auth/webauthn/authenticate/start",
+            json={"email": "rate@test.com"},
+        )
+        assert r11.status_code == 429
+        assert "Retry-After" in r11.headers
+
+    @pytest.mark.asyncio
+    async def test_webauthn_authenticate_finish_rate_limited(self, client: AsyncClient):
+        """Authenticate finish should be rate limited (20/min)."""
+        for _ in range(20):
+            r = await client.post(
+                "/api/v1/auth/webauthn/authenticate/finish",
+                json={
+                    "challenge_id": "x",
+                    "credential": {"id": "y", "type": "public-key"},
+                },
+            )
+            assert r.status_code in (400, 403, 422)
+        r21 = await client.post(
+            "/api/v1/auth/webauthn/authenticate/finish",
+            json={"challenge_id": "x", "credential": {"id": "y", "type": "public-key"}},
+        )
+        assert r21.status_code == 429
+        assert "Retry-After" in r21.headers
+
+    @pytest.mark.asyncio
     async def test_health_check_not_rate_limited(self, client: AsyncClient):
         """Health check endpoints should not be rate limited."""
         # Make many requests to health check
