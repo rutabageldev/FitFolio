@@ -1,4 +1,4 @@
-### Test catalog schema
+### Test catalog schema (backend-first)
 
 Purpose
 
@@ -27,3 +27,8 @@ Editing rules
 - Prefer linking tests via file path; add node id when stable.
 - When behavior changes, update `last_verified`.
 - Avoid duplication; consolidate via parametrization when possible.
+
+Layout
+
+- Backend catalogs live under `docs/testing/catalog/backend/`.
+- Frontend catalogs will live under `docs/testing/catalog/frontend/` when added.

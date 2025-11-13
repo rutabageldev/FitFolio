@@ -3,6 +3,15 @@ area: auth.webauthn
 updated: 2025-11-13
 owners: ['backend-auth', 'qa']
 items:
+  - id: AUTH-WA-010
+    title: WebAuthn registration finish persists credential and attributes
+    level: integration
+    markers: [security]
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_registration_happy_paths.py
+    last_verified: 2025-11-13
   - id: AUTH-WA-020
     title: Registration finish persists credential (valid attestation)
     level: integration
