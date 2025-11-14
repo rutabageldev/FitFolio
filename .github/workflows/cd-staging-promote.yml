@@ -6,6 +6,10 @@ on:
       image_tag:
         description: "Immutable image tag (e.g., sha-<commit>)"
         required: true
+      extended_smoke:
+        description: "Run extended auth smoke (/_debug/mail) if enabled"
+        required: false
+        default: "false"
   push:
     branches:
       - staging-env
@@ -15,6 +19,33 @@ env:
   GHCR_REPO: fitfolio
 
 jobs:
+  require-ci:
+    name: Require CI Success
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check latest CI run for this commit
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = context.sha;
+            const { owner, repo } = context.repo;
+            const runs = await github.rest.actions.listWorkflowRunsForRepo({
+              owner, repo, per_page: 50, head_sha: sha
+            });
+            const ciRun = runs.data.workflow_runs.find(r => r.name === "CI" && r.head_sha === sha);
+            if (!ciRun) {
+              core.setFailed("No CI run found for this commit.");
+              return;
+            }
+            if (ciRun.status !== "completed" || ciRun.conclusion !== "success") {
+              core.setFailed(`CI run not successful: status=${ciRun.status} conclusion=${ciRun.conclusion}`);
+            } else {
+              core.info("CI success verified.");
+            }
+
   build-and-push:
     name: Build and Push Images
     runs-on: ubuntu-latest
@@ -22,6 +53,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
+    needs: require-ci
     outputs:
       image_tag: ${{ steps.tag.outputs.image_tag }}
     steps:
@@ -110,10 +142,34 @@ jobs:
         run: |
           set -e
           curl -fsS https://staging.fitfolio.rutabagel.com/healthz
+      - name: Frontend root (GET 200)
+        run: |
+          set -e
+          curl -fsS https://staging.fitfolio.rutabagel.com/ >/dev/null
+      - name: Auth me (GET 401)
+        run: |
+          set -e
+          code=$(curl -s -o /dev/null -w "%{http_code}\n" https://staging.fitfolio.rutabagel.com/api/v1/auth/me)
+          [ "$code" = "401" ]
+      - name: Auth me (HEAD 401)
+        run: |
+          set -e
+          code=$(curl -s -I -o /dev/null -w "%{http_code}\n" https://staging.fitfolio.rutabagel.com/api/v1/auth/me)
+          [ "$code" = "401" ]
+      - name: Header assertions (HSTS/CSP)
+        run: |
+          set -e
+          curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi "strict-transport-security"
+          curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi "content-security-policy"
       - name: API root check
         run: |
           set -e
           curl -fsS https://staging.fitfolio.rutabagel.com/api
+      - name: Optional auth email debug
+        if: ${{ github.event.inputs.extended_smoke == 'true' }}
+        run: |
+          set -e
+          curl -fsS -X POST "https://staging.fitfolio.rutabagel.com/_debug/mail?to=test@staging.local" || true
 
   promote-prod:
     name: Promote to Production (Manual)
