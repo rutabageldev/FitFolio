@@ -64,6 +64,14 @@
       "deprecated": 0,
       "implementation_rate": 1.0
     },
+    "observability": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/observability.yaml",
+      "total": 2,
+      "implemented": 2,
+      "planned": 0,
+      "deprecated": 0,
+      "implementation_rate": 1.0
+    },
     "security": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/security.yaml",
       "total": 21,
@@ -82,12 +90,12 @@
     }
   },
   "totals": {
-    "areas": 10,
-    "items_total": 146,
-    "items_implemented": 139,
+    "areas": 11,
+    "items_total": 148,
+    "items_implemented": 141,
     "items_planned": 7,
     "items_deprecated": 2,
-    "overall_implementation_rate": 0.9521
+    "overall_implementation_rate": 0.9527
   },
   "duplicate_ids": {},
   "unreferenced_test_files": [

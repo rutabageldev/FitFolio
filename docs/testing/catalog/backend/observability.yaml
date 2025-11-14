@@ -1,0 +1,27 @@
+schema: 1
+area: observability
+updated: 2025-11-14
+owners:
+  - backend
+  - qa
+items:
+  - id: OBS-OTEL-001
+    title: setup_otel uses Console exporter when no endpoint set
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/observability/test_otel.py
+    last_verified: 2025-11-14
+  - id: OBS-OTEL-002
+    title: setup_otel uses OTLP exporter when endpoint provided
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/observability/test_otel.py
+    last_verified: 2025-11-14
