@@ -18,19 +18,28 @@ services:
       - ./:/workspaces/fitfolio:cached
       - sshkeys:/root/.ssh
       - /var/run/docker.sock:/var/run/docker.sock
+    secrets:
+      - postgres_password
+      - smtp_username
+      - smtp_password
     env_file:
       - .env
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      # Non-sensitive configuration
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
       REDIS_URL: ${REDIS_URL}
       EMAIL_SENDER: ${EMAIL_SENDER}
-      JWT_SECRET: ${JWT_SECRET}
       PYTHONPATH: /workspaces/fitfolio
       LOG_LEVEL: info
       OTEL_SERVICE_NAME: fitfolio-backend
       # Updated CORS for Traefik domain
       CORS_ORIGINS: https://fitfolio.dev.rutabagel.com,http://localhost:5173
       # OTEL_EXPORTER_OTLP_ENDPOINT: http://localhost:4318/v1/traces   # enable if you run an OTLP collector (e.g., Tempo/Jaeger/Otel-collector)
+      # Signal to app to read secrets from Docker secrets
+      USE_DOCKER_SECRETS: "true"
     ports:
       - "8080:8000"  # Keep for direct access during dev
     healthcheck:
@@ -98,12 +107,14 @@ services:
     image: postgres:16
     container_name: fitfolio-db
     restart: always
+    secrets:
+      - postgres_password
     ports:
       - "5432:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -146,3 +157,14 @@ volumes:
   pgdata:
   redisdata:
   sshkeys:
+
+# Docker secrets configuration (file-based for development)
+# These files should be created locally in .secrets/ directory
+# Run: make setup-dev-secrets (or create manually)
+secrets:
+  postgres_password:
+    file: ./.secrets/postgres_password
+  smtp_username:
+    file: ./.secrets/smtp_username
+  smtp_password:
+    file: ./.secrets/smtp_password

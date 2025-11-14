@@ -58,8 +58,8 @@
     },
     "core": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/core.yaml",
-      "total": 11,
-      "implemented": 11,
+      "total": 17,
+      "implemented": 17,
       "planned": 0,
       "deprecated": 0,
       "implementation_rate": 1.0
@@ -99,11 +99,11 @@
   },
   "totals": {
     "areas": 12,
-    "items_total": 213,
-    "items_implemented": 210,
+    "items_total": 219,
+    "items_implemented": 216,
     "items_planned": 3,
     "items_deprecated": 2,
-    "overall_implementation_rate": 0.9859
+    "overall_implementation_rate": 0.9863
   },
   "duplicate_ids": {
     "AUTH-EMAIL-201": [

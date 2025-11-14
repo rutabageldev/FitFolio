@@ -4,22 +4,31 @@
 
 services:
   backend:
-    image: ghcr.io/rutabageldev/fitfolio/backend:latest
+    image: ghcr.io/${GHCR_OWNER:-rutabageldev}/${GHCR_REPO:-fitfolio}/backend:${IMAGE_TAG:-latest}
     container_name: fitfolio-backend-prod
     restart: unless-stopped
-    env_file:
-      - .env
+    secrets:
+      - postgres_password
+      - smtp_username
+      - smtp_password
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
+      # Non-sensitive configuration
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-fitfolio}
+      POSTGRES_USER: ${POSTGRES_USER:-fitfolio_user}
+      REDIS_URL: redis://redis:6379/0
       EMAIL_SENDER: ${EMAIL_SENDER}
-      JWT_SECRET: ${JWT_SECRET}
+      SMTP_HOST: mail
+      SMTP_PORT: 1025
       PYTHONPATH: /workspaces/fitfolio
       LOG_LEVEL: info
       OTEL_SERVICE_NAME: fitfolio-backend-prod
       # Production CORS - update with your production domain
       CORS_ORIGINS: https://fitfolio.rutabagel.com
       # OTEL_EXPORTER_OTLP_ENDPOINT: http://localhost:4318/v1/traces
+      # Signal to app to read secrets from Docker secrets
+      USE_DOCKER_SECRETS: "true"
     # Ports are commented out - Traefik handles routing
     # Uncomment for direct access if needed
     # ports:
@@ -51,7 +60,7 @@ services:
       - default         # For internal service communication
 
   frontend:
-    image: ghcr.io/rutabageldev/fitfolio/frontend:latest
+    image: ghcr.io/${GHCR_OWNER:-rutabageldev}/${GHCR_REPO:-fitfolio}/frontend:${IMAGE_TAG:-latest}
     container_name: fitfolio-frontend-prod
     restart: unless-stopped
     # Ports are commented out - Traefik handles routing
@@ -80,14 +89,16 @@ services:
     image: postgres:16
     container_name: fitfolio-db-prod
     restart: unless-stopped
+    secrets:
+      - postgres_password
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-fitfolio}
+      POSTGRES_USER: ${POSTGRES_USER:-fitfolio_user}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fitfolio_user} -d ${POSTGRES_DB:-fitfolio}"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -96,8 +107,9 @@ services:
       - default
 
   # Production mail service
-  # Replace with your SMTP service (e.g., SendGrid, AWS SES, etc.)
-  # Or use a managed mail relay service
+  # NOTE: Mailpit is a placeholder for local testing.
+  # For production, replace with a real SMTP provider (e.g., SendGrid, AWS SES, Mailgun)
+  # and update SMTP_HOST/PORT accordingly. See docs/deployment/DOCKER_SECRETS.md.
   mail:
     image: axllent/mailpit:latest
     container_name: fitfolio-mail-prod
@@ -138,3 +150,17 @@ networks:
 volumes:
   pgdata:
   redisdata:
+
+# Docker secrets configuration
+# Secrets are stored in external files for security
+# Create these files before deploying:
+#   echo "your-secure-password" | docker secret create postgres_password -
+#   echo "your-smtp-username" | docker secret create smtp_username -
+#   echo "your-smtp-password" | docker secret create smtp_password -
+secrets:
+  postgres_password:
+    external: true
+  smtp_username:
+    external: true
+  smtp_password:
+    external: true

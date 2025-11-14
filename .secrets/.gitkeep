@@ -1,0 +1,2 @@
+# This directory stores Docker secrets for development
+# Add secret files here (they will be ignored by git)
