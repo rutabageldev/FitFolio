@@ -143,6 +143,27 @@ class TestMagicLinkStartExistingUser:
 
     @patch("app.api.v1.auth.send_email")
     @pytest.mark.asyncio
+    async def test_start_existing_user_email_send_failure_returns_500(
+        self,
+        mock_send_email,
+        client: AsyncClient,
+        csrf_token,
+        existing_verified_user,
+    ):
+        """Existing user login email failure should return 500."""
+        from smtplib import SMTPException
+
+        mock_send_email.side_effect = SMTPException("SMTP down")
+        response = await client.post(
+            "/api/v1/auth/magic-link/start",
+            json={"email": existing_verified_user.email},
+            cookies={"csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        assert response.status_code == 500
+
+    @patch("app.api.v1.auth.send_email")
+    @pytest.mark.asyncio
     async def test_start_unverified_user_sends_login_link(
         self,
         mock_send_email,

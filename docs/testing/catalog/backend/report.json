@@ -27,10 +27,10 @@
     "auth.magic_link": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_magic_link.yaml",
       "total": 25,
-      "implemented": 20,
-      "planned": 5,
+      "implemented": 25,
+      "planned": 0,
       "deprecated": 2,
-      "implementation_rate": 0.8
+      "implementation_rate": 1.0
     },
     "auth.sessions": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_sessions.yaml",
@@ -100,10 +100,10 @@
   "totals": {
     "areas": 12,
     "items_total": 179,
-    "items_implemented": 159,
-    "items_planned": 20,
+    "items_implemented": 164,
+    "items_planned": 15,
     "items_deprecated": 2,
-    "overall_implementation_rate": 0.8883
+    "overall_implementation_rate": 0.9162
   },
   "duplicate_ids": {
     "AUTH-EMAIL-201": [
