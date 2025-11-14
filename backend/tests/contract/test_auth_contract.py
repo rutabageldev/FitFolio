@@ -60,6 +60,7 @@ class TestAuthEndpointInventory:
             response = await client.delete(path)
         else:
             pytest.fail(f"Unsupported method: {method}")
+            return  # Make it explicit that execution stops here
 
         assert response.status_code != 404, f"{method} {path} should exist"
         # Expected statuses are unauthenticated defaults; warn if different
