@@ -3,7 +3,7 @@
 Tests for registration start/finish flows including happy paths and error cases.
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 import pytest_asyncio
@@ -185,6 +185,97 @@ class TestWebAuthnRegisterFinish:
 
         assert response.status_code == 400
         assert "challenge" in response.json()["detail"].lower()
+
+    @pytest.mark.asyncio
+    async def test_register_finish_rotates_existing_session_and_sets_cookie(
+        self, client: AsyncClient, csrf_token, db_session, monkeypatch
+    ):
+        """Finishing registration with existing session should rotate and set cookie."""
+        from unittest.mock import Mock
+
+        from sqlalchemy import select
+
+        from app.core.security import create_session_token, hash_token
+        from app.db.models.auth import Session
+
+        # Create user
+        now = datetime.now(UTC)
+        email = "rotate@test.com"
+        user = User(
+            email=email,
+            is_active=True,
+            is_email_verified=True,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        # Create current session
+        current_token = create_session_token()
+        current_session = Session(
+            user_id=user.id,
+            token_hash=hash_token(current_token),
+            created_at=now,
+            expires_at=now + timedelta(days=14),
+        )
+        db_session.add(current_session)
+        await db_session.commit()
+
+        challenge_id = "register_rotate_chal"
+        challenge_hex = "abcd1234"
+
+        # Monkeypatch manager verify to bypass real attestation
+        import app.api.v1.auth as auth_api
+
+        fake_manager = Mock()
+        fake_manager.rp_id = "localhost"
+        fake_manager.origin = "http://localhost:5173"
+        fake_manager.verify_registration_response.return_value = {
+            "credential_id": "0102030405060708",
+            "public_key": b"pk",
+            "sign_count": 0,
+            "transports": [],
+            "backed_up": True,
+            "uv_available": False,
+        }
+        monkeypatch.setattr(auth_api, "get_webauthn_manager", lambda: fake_manager)
+        # Bypass Redis by mocking challenge retrieval to expected value
+        import app.core.challenge_storage as cs
+
+        async def _fake_retrieve_and_delete_challenge(_challenge_id, _challenge_type):
+            return (email, challenge_hex)
+
+        monkeypatch.setattr(
+            cs,
+            "retrieve_and_delete_challenge",
+            _fake_retrieve_and_delete_challenge,
+            raising=True,
+        )
+
+        # Finish registration
+        response = await client.post(
+            "/api/v1/auth/webauthn/register/finish",
+            json={
+                "email": email,
+                "credential": {"id": "ignored_for_mock"},
+                "challenge_id": challenge_id,
+            },
+            cookies={"csrf_token": csrf_token, "ff_sess": current_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+
+        assert response.status_code == 200
+        # Should set a new ff_sess cookie due to rotation
+        set_cookie = response.headers.get("set-cookie", "")
+        assert "ff_sess=" in set_cookie
+        # New session should exist (different from current session)
+        stmt = select(Session).where(Session.user_id == user.id)
+        sessions = (await db_session.execute(stmt)).scalars().all()
+        assert any(
+            s.id != current_session.id and s.revoked_at is None for s in sessions
+        )
 
 
 class TestWebAuthnCredentialManagement:

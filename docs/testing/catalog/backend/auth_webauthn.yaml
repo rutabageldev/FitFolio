@@ -139,9 +139,10 @@ items:
       - integration
       - security
     risk: medium
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_error_paths.py
+    last_verified: 2025-11-14
   - id: AUTH-WA-075
     title: List credentials unauthorized without token returns 401
     level: integration
@@ -149,9 +150,10 @@ items:
       - integration
       - security
     risk: medium
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_credentials.py
+    last_verified: 2025-11-14
   - id: AUTH-WA-076
     title: List credentials invalid session returns 401
     level: integration
@@ -159,9 +161,10 @@ items:
       - integration
       - security
     risk: medium
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_credentials.py
+    last_verified: 2025-11-14
   - id: AUTH-WA-071
     title: WebAuthn authorization checks
     level: integration
@@ -233,9 +236,10 @@ items:
       - integration
       - security
     risk: medium
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_registration.py
+    last_verified: 2025-11-14
   - id: AUTH-WA-023
     title: Duplicate credential ID rejected with conflict
     level: integration

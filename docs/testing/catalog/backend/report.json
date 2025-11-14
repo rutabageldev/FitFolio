@@ -43,10 +43,10 @@
     "auth.webauthn": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_webauthn.yaml",
       "total": 40,
-      "implemented": 34,
-      "planned": 6,
+      "implemented": 38,
+      "planned": 2,
       "deprecated": 0,
-      "implementation_rate": 0.85
+      "implementation_rate": 0.95
     },
     "contract": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/contract.yaml",
@@ -100,10 +100,10 @@
   "totals": {
     "areas": 12,
     "items_total": 179,
-    "items_implemented": 172,
-    "items_planned": 7,
+    "items_implemented": 176,
+    "items_planned": 3,
     "items_deprecated": 2,
-    "overall_implementation_rate": 0.9609
+    "overall_implementation_rate": 0.9832
   },
   "duplicate_ids": {
     "AUTH-EMAIL-201": [
