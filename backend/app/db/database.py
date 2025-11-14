@@ -5,10 +5,29 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 # Get database URL from environment
 _env_test = os.getenv("TEST_DATABASE_URL")
-_env_main = os.getenv(
-    "DATABASE_URL", "postgresql+psycopg://fitfolio_user:supersecret@db:5432/fitfolio"
-)
-DATABASE_URL: str = _env_test if _env_test is not None else _env_main
+
+if _env_test is not None:
+    # Test mode: use TEST_DATABASE_URL directly
+    DATABASE_URL: str = _env_test
+else:
+    # Production/Development mode: try Docker secrets first, then env vars
+    use_docker_secrets = os.getenv("USE_DOCKER_SECRETS", "").lower() in (
+        "true",
+        "1",
+        "yes",
+    )
+
+    if use_docker_secrets:
+        # Import secrets module only when needed
+        from app.core.secrets import get_database_url
+
+        DATABASE_URL = get_database_url()
+    else:
+        # Fall back to DATABASE_URL environment variable
+        DATABASE_URL = os.getenv(
+            "DATABASE_URL",
+            "postgresql+psycopg://fitfolio_user:supersecret@db:5432/fitfolio",
+        )
 
 # Convert to async URL if needed
 if DATABASE_URL.startswith("postgresql://"):
