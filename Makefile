@@ -115,6 +115,9 @@ smoke-staging: ## Quick staging smoke tests
 	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi \"strict-transport-security\"; \
 	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi \"content-security-policy\"
 
+smoke-url: ## Run generic smoke against BASE (usage: make smoke-url BASE=https://host)
+	@bash scripts/smoke_deploy.sh "$(BASE)" false
+
 build-prod:
 	docker build -f backend/Dockerfile.prod -t fitfolio-backend:prod .
 	docker build -f frontend/Dockerfile.prod -t fitfolio-frontend:prod .

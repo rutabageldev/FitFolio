@@ -144,38 +144,9 @@ jobs:
     needs: deploy-staging
     runs-on: ubuntu-latest
     steps:
-      - name: Health check
-        run: |
-          set -e
-          curl -fsS https://staging.fitfolio.rutabagel.com/healthz
-      - name: Frontend root (GET 200)
-        run: |
-          set -e
-          curl -fsS https://staging.fitfolio.rutabagel.com/ >/dev/null
-      - name: Auth me (GET 401)
-        run: |
-          set -e
-          code=$(curl -s -o /dev/null -w "%{http_code}\n" https://staging.fitfolio.rutabagel.com/api/v1/auth/me)
-          [ "$code" = "401" ]
-      - name: Auth me (HEAD 401)
-        run: |
-          set -e
-          code=$(curl -s -I -o /dev/null -w "%{http_code}\n" https://staging.fitfolio.rutabagel.com/api/v1/auth/me)
-          [ "$code" = "401" ]
-      - name: Header assertions (HSTS/CSP)
-        run: |
-          set -e
-          curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi "strict-transport-security"
-          curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi "content-security-policy"
-      - name: API root check
-        run: |
-          set -e
-          curl -fsS https://staging.fitfolio.rutabagel.com/api
-      - name: Optional auth email debug
-        if: ${{ github.event.inputs.extended_smoke == 'true' }}
-        run: |
-          set -e
-          curl -fsS -X POST "https://staging.fitfolio.rutabagel.com/_debug/mail?to=test@staging.local" || true
+      - uses: actions/checkout@v4
+      - name: Run smoke test script
+        run: bash scripts/smoke_deploy.sh "https://staging.fitfolio.rutabagel.com" "${{ github.event.inputs.extended_smoke || 'false' }}"
 
   promote-prod:
     name: Promote to Production (Manual)
