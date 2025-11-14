@@ -44,6 +44,26 @@ npm install
 - **`compose.dev.yml`**: Development environment (used by default with `make` commands)
 - **`compose.prod.yml`**: Production environment (requires building prod images first)
 
+## Production Deploys (Reproducible)
+
+Use immutable image tags to ensure reproducible deployments:
+
+```bash
+# Set image coordinates (default owner/repo already in compose)
+export GHCR_OWNER=rutabageldev
+export GHCR_REPO=fitfolio
+
+# Pin to a specific commit SHA (recommended)
+export IMAGE_TAG=sha-$(git rev-parse --short=12 HEAD)
+
+# Deploy
+docker compose -f compose.prod.yml pull
+docker compose -f compose.prod.yml up -d
+```
+
+Rollback by setting `IMAGE_TAG` to a previously known-good SHA and re-running the
+pull/up commands.
+
 ## Secrets
 
 ### Development Preflight

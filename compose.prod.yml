@@ -107,8 +107,9 @@ services:
       - default
 
   # Production mail service
-  # Replace with your SMTP service (e.g., SendGrid, AWS SES, etc.)
-  # Or use a managed mail relay service
+  # NOTE: Mailpit is a placeholder for local testing.
+  # For production, replace with a real SMTP provider (e.g., SendGrid, AWS SES, Mailgun)
+  # and update SMTP_HOST/PORT accordingly. See docs/deployment/DOCKER_SECRETS.md.
   mail:
     image: axllent/mailpit:latest
     container_name: fitfolio-mail-prod

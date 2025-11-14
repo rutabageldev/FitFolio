@@ -2,7 +2,7 @@
 
 **Modern fitness tracking application with passwordless authentication and comprehensive security.**
 
-[![CI](https://github.com/YOUR_USERNAME/fitfolio/workflows/CI/badge.svg)](https://github.com/YOUR_USERNAME/fitfolio/actions) [![Coverage](https://img.shields.io/badge/coverage-98.0%25-brightgreen)]() [![Security](https://img.shields.io/badge/security-A+-success)]() [![Python](https://img.shields.io/badge/python-3.12-blue)]() [![FastAPI](https://img.shields.io/badge/FastAPI-0.120-009688)]() [![React](https://img.shields.io/badge/React-19-61dafb)]()
+[![CI](https://github.com/rutabageldev/fitfolio/workflows/CI/badge.svg)](https://github.com/rutabageldev/fitfolio/actions) [![Coverage](https://img.shields.io/badge/coverage-97.81%25-brightgreen)]() [![Security](https://img.shields.io/badge/security-A+-success)]() [![Python](https://img.shields.io/badge/python-3.12-blue)]() [![FastAPI](https://img.shields.io/badge/FastAPI-0.120-009688)]() [![React](https://img.shields.io/badge/React-19-61dafb)]()
 
 ---
 
@@ -116,11 +116,11 @@ _Coming after Phase 3 deployment:_
 - **Docker + Compose** - Containerized development and deployment
 - **Nginx** - Production frontend serving
 - **Gunicorn + Uvicorn** - Production WSGI/ASGI server
-- **Traefik** _(coming in Phase 3)_ - Reverse proxy with automatic TLS
+- **Traefik** - Reverse proxy with automatic TLS (dev and prod)
 
 ### Quality & Observability
 
-- **pytest** - 93 tests with 100% pass rate
+- **pytest** - 397 tests, 97.81% coverage, 100% pass rate
 - **Pre-commit hooks** - Automated quality gates (ruff, mypy, bandit)
 - **structlog** - Structured JSON logging
 - **OpenTelemetry** - Distributed tracing
@@ -129,8 +129,8 @@ _Coming after Phase 3 deployment:_
 
 ## Project Status
 
-**Current Phase:** Phase 2B Complete ✅
-**Next Phase:** Phase 3 - Production Deployment
+**Current Phase:** Phase 3B - Production Setup (In Progress)
+**Next Phase:** Phase 4 - Observability & Operations
 
 ### Completed ✅
 
@@ -139,13 +139,12 @@ _Coming after Phase 3 deployment:_
 - ✅ Phase 2A: Core security (CSRF, rate limiting, session rotation)
 - ✅ Phase 2B: Security hardening (lockout, email verification, audit logging)
 - ✅ API versioning (directory-based `/api/v1/`)
-- ✅ 93 comprehensive tests
+- ✅ 397 tests / 97.81% coverage
 
 ### Up Next 🔄
 
-- [ ] Phase 3: Production deployment (Traefik, TLS, Docker Secrets)
-- [ ] Phase 4: CI/CD pipeline (GitHub Actions)
-- [ ] Phase 5: Observability & operations (backups, monitoring)
+- [ ] Complete Phase 3B production deployment and validation
+- [ ] Phase 4: Observability & operations (backups, monitoring)
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for detailed planning.
 
@@ -153,13 +152,13 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for detailed planning.
 
 ## Documentation
 
-| Document                                                        | Purpose                             |
-| --------------------------------------------------------------- | ----------------------------------- |
-| [ROADMAP.md](docs/ROADMAP.md)                                   | Outstanding work and next steps     |
-| [CHANGELOG.md](docs/CHANGELOG.md)                               | Historical record of completed work |
-| [RUNBOOK.md](docs/RUNBOOK.md)                                   | Operational procedures and commands |
+| Document                                                        | Purpose                               |
+| --------------------------------------------------------------- | ------------------------------------- |
+| [ROADMAP.md](docs/ROADMAP.md)                                   | Outstanding work and next steps       |
+| [CHANGELOG.md](docs/CHANGELOG.md)                               | Historical record of completed work   |
+| [RUNBOOK.md](docs/RUNBOOK.md)                                   | Operational procedures and commands   |
 | [DOCKER_SECRETS.md](docs/development/DOCKER_SECRETS.md)         | Secrets in development and production |
-| [backend/CSRF_INTEGRATION.md](docs/backend/CSRF_INTEGRATION.md) | CSRF implementation details         |
+| [backend/CSRF_INTEGRATION.md](docs/backend/CSRF_INTEGRATION.md) | CSRF implementation details           |
 
 ---
 
@@ -256,7 +255,7 @@ fitfolio/
 │   │   ├── db/       # Database models & connection
 │   │   └── middleware/ # CSRF, rate limiting, etc.
 │   ├── migrations/   # Alembic database migrations
-│   └── tests/        # 93 comprehensive tests
+│   └── tests/        # 397 tests (see catalog in docs/)
 │
 ├── frontend/         # React frontend
 │   ├── src/
@@ -293,18 +292,9 @@ pre-commit run --all-files  # Run all checks
 
 ### Test Coverage
 
-**93 tests across 8 test suites:**
-
-- `test_security.py` (14) - Token generation, hashing, validation
-- `test_csrf.py` (14) - CSRF protection middleware
-- `test_session_rotation.py` (16) - Session rotation logic
-- `test_rate_limiting.py` (9) - Rate limiting per endpoint
-- `test_account_lockout.py` (7) - Failed login tracking
-- `test_email_verification.py` (11) - Email verification flow
-- `test_audit_logging.py` (11) - Audit event logging
-- `test_session_management.py` (11) - Session management & cleanup
-
-**100% pass rate** | **1.83s runtime** | **Pre-commit integrated**
+397 tests | 97.81% coverage | 100% pass rate
+See catalog reports in `docs/testing/catalog/backend/report.json`.
+Pre-commit integrates coverage and quality gates.
 
 ---
 
@@ -364,7 +354,19 @@ Built with:
 
 ---
 
-**Current Status:** Phase 2B Complete - Production-Ready Security Infrastructure
-**Next Milestone:** Deploy to production (Phase 3)
+**Current Status:** Phase 3B In Progress - Production Deployment
+**Next Milestone:** Observability & operations (Phase 4)
+
+### Reproducible deploys
+
+Use immutable image tags for production:
+
+```bash
+export GHCR_OWNER=rutabageldev
+export GHCR_REPO=fitfolio
+export IMAGE_TAG=sha-$(git rev-parse --short=12 HEAD)
+docker compose -f compose.prod.yml pull
+docker compose -f compose.prod.yml up -d
+```
 
 For questions or support, see [docs/RUNBOOK.md](docs/RUNBOOK.md).

@@ -104,6 +104,16 @@ docker stack deploy -c compose.prod.yml fitfolio
 docker compose -f compose.prod.yml up -d
 ```
 
+### SMTP Provider (Production)
+
+`compose.prod.yml` includes a `mail` service using Mailpit as a placeholder. In
+production:
+
+- Use a real SMTP provider (e.g., SendGrid, AWS SES, Mailgun)
+- Remove or disable the `mail` service
+- Set `SMTP_HOST`, `SMTP_PORT`, and (optionally) `smtp_username`/`smtp_password` secrets
+- Verify email delivery end-to-end after switching
+
 ### Verify Secret Mounting
 
 Check that secrets are mounted inside containers:
