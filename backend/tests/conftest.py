@@ -100,17 +100,16 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
     """Create test database session."""
     # Ensure a clean database state before each test
     async with db_engine.begin() as conn:
-        await conn.execute(
-            text(
-                "TRUNCATE TABLE "
-                "login_events, "
-                "magic_link_tokens, "
-                "webauthn_credentials, "
-                "sessions, "
-                "users "
-                "RESTART IDENTITY CASCADE"
-            ),
-        )
+        # Use ordered deletes to avoid taking AccessExclusiveLock from TRUNCATE,
+        # which can deadlock with concurrent transactions.
+        for table in (
+            "login_events",
+            "magic_link_tokens",
+            "webauthn_credentials",
+            "sessions",
+            "users",
+        ):
+            await conn.execute(text(f"DELETE FROM {table}"))
 
     async_session_factory = sessionmaker(
         db_engine, class_=AsyncSession, expire_on_commit=False

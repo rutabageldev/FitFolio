@@ -2,174 +2,214 @@ schema: 1
 area: deps
 updated: 2025-11-13
 owners:
-- backend
-- qa
+  - backend
+  - qa
 items:
-- id: DEPS-SESS-ATTR-001
-  title: Cookie flags include HttpOnly and SameSite=Lax by default
-  level: integration
-  markers:
-  - security
-  - unit
-  risk: medium
-  status: implemented
-  tests:
-  - backend/tests/deps/test_deps.py
-  last_verified: 2025-11-13
-- id: DEPS-SESS-ROT-001
-  title: Optional session dependency rotates old sessions
-  level: integration
-  markers:
-  - security
-  - unit
-  risk: medium
-  status: implemented
-  tests:
-  - backend/tests/deps/test_deps.py
-  last_verified: 2025-11-13
-- id: DEPS-DB-001
-  title: get_db yields AsyncSession
-  level: integration
-  markers:
-  - integration
-  risk: critical
-  status: implemented
-  tests:
-  - backend/tests/deps/test_db_lifecycle.py
-  last_verified: 2025-11-13
-- id: DEPS-REDIS-010
-  title: close_redis closes client connection
-  level: unit
-  markers:
-  - unit
-  risk: low
-  status: planned
-  tests: []
-  last_verified: null
-- id: DEPS-DB-002
-  title: get_db closes session on normal exit
-  level: integration
-  markers:
-  - integration
-  risk: high
-  status: implemented
-  tests:
-  - backend/tests/deps/test_db_lifecycle.py
-  last_verified: 2025-11-13
-- id: DEPS-DB-003
-  title: get_db closes session on exception
-  level: integration
-  markers:
-  - integration
-  risk: high
-  status: implemented
-  tests:
-  - backend/tests/deps/test_db_lifecycle.py
-  last_verified: 2025-11-13
-- id: DEPS-DB-004
-  title: init_db creates tables without error
-  level: integration
-  markers:
-  - integration
-  risk: medium
-  status: implemented
-  tests:
-  - backend/tests/deps/test_db_lifecycle.py
-  last_verified: 2025-11-13
-- id: DEPS-DB-005
-  title: close_db disposes engine
-  level: integration
-  markers:
-  - integration
-  risk: medium
-  status: implemented
-  tests:
-  - backend/tests/deps/test_db_lifecycle.py
-  last_verified: 2025-11-13
-- id: DEPS-DB-006
-  title: Converts postgresql:// to postgresql+psycopg://
-  level: integration
-  markers:
-  - integration
-  risk: high
-  status: implemented
-  tests:
-  - backend/tests/deps/test_db_lifecycle.py
-  last_verified: 2025-11-13
-- id: DEPS-ALLOW-001
-  title: allow_inactive without token returns 401
-  level: unit
-  markers:
-  - security
-  - unit
-  risk: medium
-  status: implemented
-  tests:
-  - backend/tests/deps/test_deps.py
-  last_verified: 2025-11-13
-- id: DEPS-ALLOW-002
-  title: allow_inactive invalid token returns 401
-  level: unit
-  markers:
-  - security
-  - unit
-  risk: medium
-  status: implemented
-  tests:
-  - backend/tests/deps/test_deps.py
-  last_verified: 2025-11-13
-- id: DEPS-ALLOW-003
-  title: allow_inactive returns session for inactive user
-  level: integration
-  markers:
-  - security
-  - unit
-  risk: high
-  status: implemented
-  tests:
-  - backend/tests/deps/test_deps.py
-  last_verified: 2025-11-13
-- id: DEPS-ALLOW-004
-  title: allow_inactive rotates old session and sets cookie flags
-  level: integration
-  markers:
-  - security
-  - unit
-  risk: high
-  status: implemented
-  tests:
-  - backend/tests/deps/test_deps.py
-  last_verified: 2025-11-13
-- id: DEPS-ALLOW-005
-  title: allow_inactive respects COOKIE_SECURE env
-  level: integration
-  markers:
-  - security
-  - unit
-  risk: medium
-  status: implemented
-  tests:
-  - backend/tests/deps/test_deps.py
-  last_verified: 2025-11-13
-- id: DEPS-ALLOW-006
-  title: allow_inactive no-rotation path does not set new cookie
-  level: integration
-  markers:
-  - security
-  - unit
-  risk: medium
-  status: implemented
-  tests:
-  - backend/tests/deps/test_deps.py
-  last_verified: 2025-11-14
-- id: DEPS-ALLOW-007
-  title: allow_inactive returns (session, user) with correct user fetched
-  level: unit
-  markers:
-  - security
-  - unit
-  risk: low
-  status: implemented
-  tests:
-  - backend/tests/deps/test_deps.py
-  last_verified: 2025-11-14
+  - id: DEPS-SESS-ATTR-001
+    title: Cookie flags include HttpOnly and SameSite=Lax by default
+    level: integration
+    markers:
+      - security
+      - unit
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_deps.py
+    last_verified: 2025-11-13
+  - id: DEPS-SESS-ROT-001
+    title: Optional session dependency rotates old sessions
+    level: integration
+    markers:
+      - security
+      - unit
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_deps.py
+    last_verified: 2025-11-13
+  - id: DEPS-DB-001
+    title: get_db yields AsyncSession
+    level: integration
+    markers:
+      - integration
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/deps/test_db_lifecycle.py
+    last_verified: 2025-11-13
+  - id: DEPS-REDIS-010
+    title: close_redis closes client connection
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: planned
+    tests: []
+    last_verified: null
+  - id: DEPS-DB-002
+    title: get_db closes session on normal exit
+    level: integration
+    markers:
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/deps/test_db_lifecycle.py
+    last_verified: 2025-11-13
+  - id: DEPS-DB-003
+    title: get_db closes session on exception
+    level: integration
+    markers:
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/deps/test_db_lifecycle.py
+    last_verified: 2025-11-13
+  - id: DEPS-DB-004
+    title: init_db creates tables without error
+    level: integration
+    markers:
+      - integration
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_db_lifecycle.py
+    last_verified: 2025-11-13
+  - id: DEPS-DB-005
+    title: close_db disposes engine
+    level: integration
+    markers:
+      - integration
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_db_lifecycle.py
+    last_verified: 2025-11-13
+  - id: DEPS-DB-006
+    title: Converts postgresql:// to postgresql+psycopg://
+    level: integration
+    markers:
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/deps/test_db_lifecycle.py
+    last_verified: 2025-11-13
+  - id: DEPS-ALLOW-001
+    title: allow_inactive without token returns 401
+    level: unit
+    markers:
+      - security
+      - unit
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_deps.py
+    last_verified: 2025-11-13
+  - id: DEPS-ALLOW-002
+    title: allow_inactive invalid token returns 401
+    level: unit
+    markers:
+      - security
+      - unit
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_deps.py
+    last_verified: 2025-11-13
+  - id: DEPS-ALLOW-003
+    title: allow_inactive returns session for inactive user
+    level: integration
+    markers:
+      - security
+      - unit
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/deps/test_deps.py
+    last_verified: 2025-11-13
+  - id: DEPS-ALLOW-004
+    title: allow_inactive rotates old session and sets cookie flags
+    level: integration
+    markers:
+      - security
+      - unit
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/deps/test_deps.py
+    last_verified: 2025-11-13
+  - id: DEPS-ALLOW-005
+    title: allow_inactive respects COOKIE_SECURE env
+    level: integration
+    markers:
+      - security
+      - unit
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_deps.py
+    last_verified: 2025-11-13
+  - id: DEPS-ALLOW-006
+    title: allow_inactive no-rotation path does not set new cookie
+    level: integration
+    markers:
+      - security
+      - unit
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/deps/test_deps.py
+    last_verified: 2025-11-14
+  - id: DEPS-ALLOW-007
+    title: allow_inactive returns (session, user) with correct user fetched
+    level: unit
+    markers:
+      - security
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/deps/test_deps.py
+    last_verified: 2025-11-14
+  - id: DEPS-CLEAN-001
+    title: run_cleanup_job happy path completes and commits
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_cleanup.py
+    last_verified: 2025-11-14
+  - id: DEPS-CLEAN-002
+    title: run_cleanup_job error path logs and re-raises
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_cleanup.py
+    last_verified: 2025-11-14
+  - id: DEPS-CLEAN-003
+    title: schedule_cleanup_job runs once and sleeps
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_cleanup.py
+    last_verified: 2025-11-14
+  - id: DEPS-CLEAN-004
+    title: schedule_cleanup_job logs error and continues loop
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_cleanup.py
+    last_verified: 2025-11-14
