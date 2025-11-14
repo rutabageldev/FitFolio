@@ -7,8 +7,11 @@ when running in production, while falling back to environment variables in devel
 import os
 from pathlib import Path
 
+# Sentinel value to distinguish "no default" from "default=None"
+_UNSET = object()
 
-def read_secret(secret_name: str, default: str | None = None) -> str:
+
+def read_secret(secret_name: str, default: str | None | object = _UNSET) -> str | None:
     """
     Read a secret from Docker secrets or environment variables.
 
@@ -17,10 +20,10 @@ def read_secret(secret_name: str, default: str | None = None) -> str:
 
     Args:
         secret_name: Name of the secret/environment variable
-        default: Default value if secret is not found
+        default: Default value if secret is not found (can be None)
 
     Returns:
-        Secret value as string
+        Secret value as string, or None if default=None and secret not found
 
     Raises:
         RuntimeError: If secret is not found and no default provided
@@ -41,8 +44,9 @@ def read_secret(secret_name: str, default: str | None = None) -> str:
     if env_value:
         return env_value
 
-    if default is not None:
-        return default
+    # Return default if provided (even if None)
+    if default is not _UNSET:
+        return default  # type: ignore
 
     raise RuntimeError(
         f"Secret '{secret_name}' not found in Docker secrets or environment variables"
@@ -71,14 +75,14 @@ def get_database_url() -> str:
     return f"postgresql+psycopg://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_db}"
 
 
-def get_jwt_secret() -> str:
+def get_smtp_username() -> str | None:
     """
-    Read JWT secret from Docker secrets or environment.
+    Read SMTP username from Docker secrets or environment.
 
     Returns:
-        JWT secret key for token signing/verification
+        SMTP username, or None if not configured (for development)
     """
-    return read_secret("jwt_secret")
+    return read_secret("smtp_username", default=None)
 
 
 def get_smtp_password() -> str | None:

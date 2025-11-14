@@ -62,8 +62,8 @@ echo ""
 # PostgreSQL password
 setup_secret "postgres_password" "POSTGRES_PASSWORD" "supersecret"
 
-# JWT secret (should be strong random value)
-setup_secret "jwt_secret" "JWT_SECRET" ""
+# SMTP username (optional, can be empty for Mailpit)
+setup_secret "smtp_username" "SMTP_USERNAME" ""
 
 # SMTP password (optional, can be empty for Mailpit)
 setup_secret "smtp_password" "SMTP_PASSWORD" ""

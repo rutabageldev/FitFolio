@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
     secrets:
       - postgres_password
-      - jwt_secret
+      - smtp_username
       - smtp_password
     environment:
       # Non-sensitive configuration
@@ -154,12 +154,12 @@ volumes:
 # Secrets are stored in external files for security
 # Create these files before deploying:
 #   echo "your-secure-password" | docker secret create postgres_password -
-#   echo "your-jwt-secret-key" | docker secret create jwt_secret -
+#   echo "your-smtp-username" | docker secret create smtp_username -
 #   echo "your-smtp-password" | docker secret create smtp_password -
 secrets:
   postgres_password:
     external: true
-  jwt_secret:
+  smtp_username:
     external: true
   smtp_password:
     external: true

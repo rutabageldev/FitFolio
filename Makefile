@@ -1,4 +1,4 @@
-.PHONY: help setup-dev-secrets up down ps be-health rebuild be-logs fe-logs logs be fe dbshell migrate autogen fmt lint test test-parity mail-logs mail-verify mail-ui magic-link open-mailpit open-frontend build-prod up-prod down-prod logs-prod
+.PHONY: help setup-dev-secrets check-dev-secrets up down ps be-health rebuild be-logs fe-logs logs be fe dbshell migrate autogen fmt lint test test-parity mail-logs mail-verify mail-ui magic-link open-mailpit open-frontend build-prod up-prod down-prod logs-prod
 
 help:        ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sed 's/:.*##/: /'
@@ -6,7 +6,10 @@ help:        ## Show available commands
 setup-dev-secrets:  ## Setup development Docker secrets
 	@bash scripts/setup-dev-secrets.sh
 
-up:          ## Start the whole stack (backend, db, frontend)
+check-dev-secrets:  ## Check if development secrets are configured
+	@bash scripts/check-dev-secrets.sh
+
+up: check-dev-secrets  ## Start the whole stack (backend, db, frontend)
 	docker compose -f compose.dev.yml up -d --build
 
 down:        ## Stop and remove containers

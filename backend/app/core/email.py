@@ -3,11 +3,11 @@ from email.message import EmailMessage
 
 import aiosmtplib
 
+from app.core.secrets import get_smtp_password, get_smtp_username
+
 SMTP_HOST = os.getenv("SMTP_HOST", "mail")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "1025"))
 SMTP_STARTTLS = os.getenv("SMTP_STARTTLS", "false").lower() == "true"
-SMTP_USERNAME = os.getenv("SMTP_USERNAME") or None
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD") or None
 EMAIL_SENDER = os.getenv("EMAIL_SENDER", "noreply@fitfolio.local")
 
 
@@ -18,11 +18,15 @@ async def send_email(to: str, subject: str, body: str, *, sender: str | None = N
     msg["Subject"] = subject
     msg.set_content(body)
 
+    # Lazy-load SMTP credentials from secrets/env
+    smtp_username = get_smtp_username()
+    smtp_password = get_smtp_password()
+
     await aiosmtplib.send(
         msg,
         hostname=SMTP_HOST,
         port=SMTP_PORT,
-        username=SMTP_USERNAME,
-        password=SMTP_PASSWORD,
+        username=smtp_username,
+        password=smtp_password,
         start_tls=SMTP_STARTTLS,
     )
