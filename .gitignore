@@ -46,3 +46,7 @@ frontend/node_modules
 # Development/test scripts (ad-hoc)
 # Proper tests belong in backend/tests/ or frontend/src/__tests__/
 test_webauthn.py
+
+# Docker secrets (development)
+.secrets/*
+!.secrets/.gitkeep
