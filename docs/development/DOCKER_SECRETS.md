@@ -48,8 +48,8 @@ chmod 700 .secrets
 
 # Create secret files
 echo "supersecret" > .secrets/postgres_password
-echo "$(openssl rand -base64 64)" > .secrets/jwt_secret
-echo "optional-smtp-password" > .secrets/smtp_password
+echo "" > .secrets/smtp_username
+echo "" > .secrets/smtp_password
 
 # Set permissions
 chmod 600 .secrets/*
@@ -85,14 +85,14 @@ services:
   backend:
     secrets:
       - postgres_password
-      - jwt_secret
+      - smtp_username
       - smtp_password
 
 secrets:
   postgres_password:
     file: ./.secrets/postgres_password
-  jwt_secret:
-    file: ./.secrets/jwt_secret
+  smtp_username:
+    file: ./.secrets/smtp_username
   smtp_password:
     file: ./.secrets/smtp_password
 ```
@@ -126,8 +126,8 @@ docker exec fitfolio-backend ls -la /run/secrets
 
 # Expected output:
 # -rw-r--r-- 1 root root  11 Nov 14 20:00 postgres_password
-# -rw-r--r-- 1 root root  88 Nov 14 20:00 jwt_secret
-# -rw-r--r-- 1 root root  20 Nov 14 20:00 smtp_password
+# -rw-r--r-- 1 root root   0 Nov 14 20:00 smtp_username
+# -rw-r--r-- 1 root root   0 Nov 14 20:00 smtp_password
 ```
 
 ### Test Secret Reading
@@ -272,8 +272,8 @@ chmod 600 .secrets/*
 For development, you can easily rotate secrets:
 
 ```bash
-# Generate new JWT secret
-openssl rand -base64 64 > .secrets/jwt_secret
+# Generate new database password
+openssl rand -base64 32 > .secrets/postgres_password
 
 # Restart to apply
 make down && make up
@@ -313,8 +313,7 @@ Development secrets should be:
 3. **Use strong random values** even in development:
 
    ```bash
-   openssl rand -base64 64  # For JWT secret
-   openssl rand -base64 32  # For passwords
+   openssl rand -base64 32  # For database password
    ```
 
 4. **Document team secret sharing** - use secure channels (1Password, LastPass,

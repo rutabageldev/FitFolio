@@ -33,7 +33,7 @@ docker swarm init
 FitFolio requires the following secrets for production:
 
 1. **postgres_password** - PostgreSQL database password
-2. **jwt_secret** - JWT signing key for authentication tokens
+2. **smtp_username** - SMTP username for email service (optional)
 3. **smtp_password** - SMTP password for email service (optional)
 
 ### Create Secrets from Command Line
@@ -44,8 +44,8 @@ FitFolio requires the following secrets for production:
 # PostgreSQL password
 echo "$(openssl rand -base64 32)" | docker secret create postgres_password -
 
-# JWT secret (generate a secure random key)
-echo "$(openssl rand -base64 64)" | docker secret create jwt_secret -
+# SMTP username (if using authenticated SMTP)
+echo "your-smtp-username" | docker secret create smtp_username -
 
 # SMTP password (if using authenticated SMTP)
 echo "your-smtp-password" | docker secret create smtp_password -
@@ -62,12 +62,12 @@ chmod 700 .secrets
 
 # Generate and save secrets
 openssl rand -base64 32 > .secrets/postgres_password
-openssl rand -base64 64 > .secrets/jwt_secret
+echo "your-smtp-username" > .secrets/smtp_username
 echo "your-smtp-password" > .secrets/smtp_password
 
 # Create Docker secrets from files
 docker secret create postgres_password .secrets/postgres_password
-docker secret create jwt_secret .secrets/jwt_secret
+docker secret create smtp_username .secrets/smtp_username
 docker secret create smtp_password .secrets/smtp_password
 
 # Securely delete local files
@@ -88,7 +88,7 @@ Expected output:
 ```
 ID                          NAME                DRIVER    CREATED          UPDATED
 abc123def456...             postgres_password             2 minutes ago    2 minutes ago
-def456ghi789...             jwt_secret                    2 minutes ago    2 minutes ago
+def456ghi789...             smtp_username                 2 minutes ago    2 minutes ago
 ghi789jkl012...             smtp_password                 2 minutes ago    2 minutes ago
 ```
 
@@ -114,7 +114,7 @@ docker exec fitfolio-backend-prod ls -la /run/secrets
 
 # Expected output:
 # -r--r--r-- 1 root root  44 Nov 14 20:00 postgres_password
-# -r--r--r-- 1 root root  88 Nov 14 20:00 jwt_secret
+# -r--r--r-- 1 root root  20 Nov 14 20:00 smtp_username
 # -r--r--r-- 1 root root  20 Nov 14 20:00 smtp_password
 ```
 
@@ -155,11 +155,12 @@ origins
 The backend reads secrets via the `app.core.secrets` module:
 
 ```python
-from app.core.secrets import read_secret, get_database_url, get_jwt_secret
+from app.core.secrets import read_secret, get_database_url, get_smtp_username, get_smtp_password
 
 # Automatic detection of Docker secrets vs environment variables
-database_url = get_database_url()  # Reads postgres_password from /run/secrets
-jwt_secret = get_jwt_secret()       # Reads jwt_secret from /run/secrets
+database_url = get_database_url()      # Reads postgres_password from /run/secrets
+smtp_username = get_smtp_username()    # Reads smtp_username from /run/secrets (optional)
+smtp_password = get_smtp_password()    # Reads smtp_password from /run/secrets (optional)
 ```
 
 ### Database Service
@@ -240,7 +241,8 @@ If migrating from `.env` file to secrets:
 
    ```bash
    grep POSTGRES_PASSWORD .env | cut -d= -f2 | docker secret create postgres_password -
-   grep JWT_SECRET .env | cut -d= -f2 | docker secret create jwt_secret -
+   grep SMTP_USERNAME .env | cut -d= -f2 | docker secret create smtp_username -
+   grep SMTP_PASSWORD .env | cut -d= -f2 | docker secret create smtp_password -
    ```
 
 2. **Update compose file** to use secrets (already done in `compose.prod.yml`)
