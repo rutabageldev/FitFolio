@@ -23,10 +23,16 @@ services:
       PYTHONPATH: /workspaces/fitfolio
       LOG_LEVEL: info
       OTEL_SERVICE_NAME: fitfolio-backend-staging
+      ENVIRONMENT: staging
       # Staging CORS
       CORS_ORIGINS: https://staging.fitfolio.rutabagel.com
       # Signal to app to read secrets from Docker secrets
       USE_DOCKER_SECRETS: "true"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1"]
       interval: 10s
@@ -46,6 +52,17 @@ services:
       - "traefik.http.routers.fitfolio-backend-staging.entrypoints=websecure"
       - "traefik.http.routers.fitfolio-backend-staging.tls=true"
       - "traefik.http.routers.fitfolio-backend-staging.priority=10"
+      # Attach security headers middleware
+      - "traefik.http.routers.fitfolio-backend-staging.middlewares=fitfolio-staging-security@docker"
+      # Security headers middleware
+      - "traefik.http.middlewares.fitfolio-staging-security.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.fitfolio-staging-security.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.fitfolio-staging-security.headers.stsPreload=true"
+      - "traefik.http.middlewares.fitfolio-staging-security.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.fitfolio-staging-security.headers.frameDeny=true"
+      - "traefik.http.middlewares.fitfolio-staging-security.headers.referrerPolicy=no-referrer-when-downgrade"
+      - "traefik.http.middlewares.fitfolio-staging-security.headers.permissionsPolicy=geolocation=(), microphone=(), camera=()"
+      - "traefik.http.middlewares.fitfolio-staging-security.headers.contentSecurityPolicy=default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://staging.fitfolio.rutabagel.com; frame-ancestors 'none'"
       # Service config (backend runs on port 8000 internally)
       - "traefik.http.services.fitfolio-backend-staging.loadbalancer.server.port=8000"
     networks:
@@ -64,8 +81,17 @@ services:
       - "traefik.http.routers.fitfolio-frontend-staging.entrypoints=websecure"
       - "traefik.http.routers.fitfolio-frontend-staging.tls=true"
       - "traefik.http.routers.fitfolio-frontend-staging.priority=1"
+      # Attach security headers middleware
+      - "traefik.http.routers.fitfolio-frontend-staging.middlewares=fitfolio-staging-security@docker"
       # Service config (nginx runs on port 80 internally)
       - "traefik.http.services.fitfolio-frontend-staging.loadbalancer.server.port=80"
+    environment:
+      ENVIRONMENT: staging
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
     networks:
       - traefik-public  # For Traefik routing
       - default         # For internal service communication
@@ -92,6 +118,11 @@ services:
       retries: 20
     networks:
       - default
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1G
 
   # Staging mail service (Mailpit)
   # Replace with a real SMTP provider before promoting email tests to prod
@@ -99,9 +130,7 @@ services:
     image: axllent/mailpit:latest
     container_name: fitfolio-mail-staging
     restart: unless-stopped
-    ports:
-      - "8026:8025"   # Web UI (staging)
-      - "1026:1025"   # SMTP (staging)
+    # Note: Do not expose ports publicly in staging to limit external access
     networks:
       - default
 
@@ -119,6 +148,11 @@ services:
       retries: 20
     networks:
       - default
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
 
 # Networks
 networks:
