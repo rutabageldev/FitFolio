@@ -26,8 +26,8 @@
     },
     "auth.magic_link": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_magic_link.yaml",
-      "total": 35,
-      "implemented": 35,
+      "total": 38,
+      "implemented": 38,
       "planned": 0,
       "deprecated": 2,
       "implementation_rate": 1.0
@@ -42,11 +42,11 @@
     },
     "auth.webauthn": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_webauthn.yaml",
-      "total": 40,
-      "implemented": 38,
+      "total": 43,
+      "implemented": 41,
       "planned": 2,
       "deprecated": 0,
-      "implementation_rate": 0.95
+      "implementation_rate": 0.9535
     },
     "contract": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/contract.yaml",
@@ -99,11 +99,11 @@
   },
   "totals": {
     "areas": 12,
-    "items_total": 189,
-    "items_implemented": 186,
+    "items_total": 195,
+    "items_implemented": 192,
     "items_planned": 3,
     "items_deprecated": 2,
-    "overall_implementation_rate": 0.9841
+    "overall_implementation_rate": 0.9846
   },
   "duplicate_ids": {
     "AUTH-EMAIL-201": [

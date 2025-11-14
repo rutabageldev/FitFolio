@@ -308,6 +308,7 @@ items:
   status: implemented
   tests:
   - backend/tests/auth/magic_link/test_magic_link_verify_error_paths.py
+  - backend/tests/auth/magic_link/test_magic_link_verify_missing_handler.py
   last_verified: 2025-11-14
 - id: AUTH-ML-232
   title: Verify success resets failed attempts and logs magic_link_login_success
@@ -320,6 +321,44 @@ items:
   tests:
   - backend/tests/security/test_account_lockout.py
   - backend/tests/auth/magic_link/test_magic_link_verify_precheck_handler.py
+  - backend/tests/auth/magic_link/test_magic_link_verify_success_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-ML-233
+  title: Verify inactive user returns 400
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_verify_happy_paths.py
+  - backend/tests/auth/magic_link/test_magic_link_verify_user_state_lines.py
+  - backend/tests/auth/magic_link/test_magic_link_verify_user_state_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-ML-234
+  title: Verify unverified user returns 403
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_verify_happy_paths.py
+  - backend/tests/auth/magic_link/test_magic_link_verify_user_state_lines.py
+  - backend/tests/auth/magic_link/test_magic_link_verify_user_state_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-ML-235
+  title: Verify lockout after user load returns 429
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_verify_user_state_handler.py
   last_verified: 2025-11-14
 - id: AUTH-ML-240
   title: Start (unit) new user executes creation and sends verification
