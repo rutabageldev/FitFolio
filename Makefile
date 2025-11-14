@@ -99,10 +99,18 @@ migrate-staging: ## Apply DB migrations in staging
 	docker compose -f compose.staging.yml exec backend bash -lc "alembic -c /app/alembic.ini upgrade head"
 
 smoke-staging: ## Quick staging smoke tests
-	@echo "Health check -> https://staging.fitfolio.rutabagel.com/healthz"
-	@curl -fsS -I https://staging.fitfolio.rutabagel.com/healthz | head -n 1
-	@echo "API root -> https://staging.fitfolio.rutabagel.com/api"
-	@curl -fsS https://staging.fitfolio.rutabagel.com/api | python3 -m json.tool || true
+	@set -e; \
+	echo "Health check -> https://staging.fitfolio.rutabagel.com/healthz"; \
+	curl -fsS -I https://staging.fitfolio.rutabagel.com/healthz | head -n 1; \
+	echo "API root -> https://staging.fitfolio.rutabagel.com/api"; \
+	curl -fsS https://staging.fitfolio.rutabagel.com/api | python3 -m json.tool || true; \
+	echo "Auth me (expect 401) -> https://staging.fitfolio.rutabagel.com/api/v1/auth/me"; \
+	curl -s -o /dev/null -w "%{http_code}\n" https://staging.fitfolio.rutabagel.com/api/v1/auth/me | grep -q "^401$$"; \
+	echo "Frontend root (HEAD) -> https://staging.fitfolio.rutabagel.com/"; \
+	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | head -n 1; \
+	echo "Validate security headers (HSTS, CSP)"; \
+	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi \"strict-transport-security\"; \
+	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi \"content-security-policy\"
 
 build-prod:
 	docker build -f backend/Dockerfile.prod -t fitfolio-backend:prod .
