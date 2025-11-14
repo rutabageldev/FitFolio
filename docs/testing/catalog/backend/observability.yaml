@@ -25,3 +25,23 @@ items:
     tests:
       - backend/tests/observability/test_otel.py
     last_verified: 2025-11-14
+  - id: OBS-LOG-001
+    title: logging falls back to stdlib json when orjson missing
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/observability/test_logging.py
+    last_verified: 2025-11-14
+  - id: OBS-LOG-002
+    title: add_trace_ids injects trace_id and span_id when span valid
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/observability/test_logging.py
+    last_verified: 2025-11-14

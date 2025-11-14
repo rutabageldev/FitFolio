@@ -74,8 +74,8 @@
     },
     "observability": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/observability.yaml",
-      "total": 2,
-      "implemented": 2,
+      "total": 4,
+      "implemented": 4,
       "planned": 0,
       "deprecated": 0,
       "implementation_rate": 1.0
@@ -99,11 +99,11 @@
   },
   "totals": {
     "areas": 12,
-    "items_total": 148,
-    "items_implemented": 141,
+    "items_total": 150,
+    "items_implemented": 143,
     "items_planned": 7,
     "items_deprecated": 2,
-    "overall_implementation_rate": 0.9527
+    "overall_implementation_rate": 0.9533
   },
   "duplicate_ids": {},
   "unreferenced_test_files": [
