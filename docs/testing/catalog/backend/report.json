@@ -18,35 +18,35 @@
     },
     "auth.email": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_email.yaml",
-      "total": 5,
-      "implemented": 5,
-      "planned": 0,
-      "deprecated": 0,
-      "implementation_rate": 1.0
-    },
-    "auth.magic_link": {
-      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_magic_link.yaml",
-      "total": 20,
-      "implemented": 20,
-      "planned": 0,
-      "deprecated": 2,
-      "implementation_rate": 1.0
-    },
-    "auth.sessions": {
-      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_sessions.yaml",
       "total": 9,
       "implemented": 9,
       "planned": 0,
       "deprecated": 0,
       "implementation_rate": 1.0
     },
+    "auth.magic_link": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_magic_link.yaml",
+      "total": 25,
+      "implemented": 20,
+      "planned": 5,
+      "deprecated": 2,
+      "implementation_rate": 0.8
+    },
+    "auth.sessions": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_sessions.yaml",
+      "total": 17,
+      "implemented": 9,
+      "planned": 8,
+      "deprecated": 0,
+      "implementation_rate": 0.5294
+    },
     "auth.webauthn": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_webauthn.yaml",
-      "total": 36,
+      "total": 40,
       "implemented": 34,
-      "planned": 2,
+      "planned": 6,
       "deprecated": 0,
-      "implementation_rate": 0.9444
+      "implementation_rate": 0.85
     },
     "contract": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/contract.yaml",
@@ -99,13 +99,22 @@
   },
   "totals": {
     "areas": 12,
-    "items_total": 158,
-    "items_implemented": 155,
-    "items_planned": 3,
+    "items_total": 179,
+    "items_implemented": 159,
+    "items_planned": 20,
     "items_deprecated": 2,
-    "overall_implementation_rate": 0.981
+    "overall_implementation_rate": 0.8883
   },
-  "duplicate_ids": {},
+  "duplicate_ids": {
+    "AUTH-EMAIL-201": [
+      "/workspaces/fitfolio/docs/testing/catalog/backend/auth_email.yaml",
+      "/workspaces/fitfolio/docs/testing/catalog/backend/auth_magic_link.yaml"
+    ],
+    "AUTH-EMAIL-202": [
+      "/workspaces/fitfolio/docs/testing/catalog/backend/auth_email.yaml",
+      "/workspaces/fitfolio/docs/testing/catalog/backend/auth_magic_link.yaml"
+    ]
+  },
   "unreferenced_test_files": [
     "backend/tests/__init__.py"
   ]

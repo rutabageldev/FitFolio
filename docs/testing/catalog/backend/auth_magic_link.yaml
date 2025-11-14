@@ -243,3 +243,58 @@ items:
   tests:
   - backend/tests/auth/magic_link/test_magic_link_verify_happy_paths.py
   last_verified: 2025-11-13
+-
+  id: AUTH-ML-220
+  title: New user verification email send failure returns 500 and logs error
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: planned
+  tests: []
+  last_verified: null
+-
+  id: AUTH-ML-221
+  title: Existing user magic link email send failure returns 500 and logs error
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: planned
+  tests: []
+  last_verified: null
+-
+  id: AUTH-ML-230
+  title: Verify precheck lockout returns 429 and records login_attempt_locked event
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+-
+  id: AUTH-ML-231
+  title: Verify invalid token returns 429 when any lockout key exists
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: planned
+  tests: []
+  last_verified: null
+-
+  id: AUTH-ML-232
+  title: Verify success resets failed attempts and logs magic_link_login_success
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: planned
+  tests: []
+  last_verified: null

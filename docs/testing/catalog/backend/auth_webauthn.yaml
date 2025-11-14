@@ -132,6 +132,36 @@ items:
     tests:
       - backend/tests/auth/webauthn/test_webauthn_authentication_happy_paths.py
     last_verified: 2025-11-13
+  - id: AUTH-WA-074
+    title: Authenticate finish invalid credential id returns 400
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: planned
+    tests: []
+    last_verified: null
+  - id: AUTH-WA-075
+    title: List credentials unauthorized without token returns 401
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: planned
+    tests: []
+    last_verified: null
+  - id: AUTH-WA-076
+    title: List credentials invalid session returns 401
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: planned
+    tests: []
+    last_verified: null
   - id: AUTH-WA-071
     title: WebAuthn authorization checks
     level: integration
@@ -196,6 +226,16 @@ items:
     tests:
       - backend/tests/auth/webauthn/test_webauthn_registration_happy_paths.py
     last_verified: 2025-11-13
+  - id: AUTH-WA-024
+    title: Registration finish rotates existing session and sets cookie (privilege escalation)
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: planned
+    tests: []
+    last_verified: null
   - id: AUTH-WA-023
     title: Duplicate credential ID rejected with conflict
     level: integration

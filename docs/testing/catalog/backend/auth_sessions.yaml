@@ -101,3 +101,83 @@ items:
     tests:
       - backend/tests/auth/sessions/test_me_endpoint.py
     last_verified: 2025-11-13
+  - id: AUTH-SESS-030
+    title: Revoke session invalid UUID returns 400
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: low
+    status: planned
+    tests: []
+    last_verified: null
+  - id: AUTH-SESS-031
+    title: Revoke current session returns 400 with guidance
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: low
+    status: planned
+    tests: []
+    last_verified: null
+  - id: AUTH-SESS-032
+    title: Revoke session not found or already revoked returns 404
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: low
+    status: planned
+    tests: []
+    last_verified: null
+  - id: AUTH-SESS-033
+    title: Revoke session logs event and commits
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: planned
+    tests: []
+    last_verified: null
+  - id: AUTH-SESS-040
+    title: Revoke all other sessions logs count and returns number revoked
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: planned
+    tests: []
+    last_verified: null
+  - id: AUTH-SESS-041
+    title: Revoke all others with none active returns 0 and logs
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: low
+    status: planned
+    tests: []
+    last_verified: null
+  - id: AUTH-SESS-050
+    title: List sessions marks current and orders by created_at desc
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: planned
+    tests: []
+    last_verified: null
+  - id: AUTH-SESS-051
+    title: List sessions excludes expired, revoked, or rotated sessions
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: planned
+    tests: []
+    last_verified: null

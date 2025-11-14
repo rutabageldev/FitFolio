@@ -176,6 +176,81 @@ class TestEmailVerification:
         assert "Invalid or expired" in response.json()["detail"]
 
     @pytest.mark.asyncio
+    async def test_email_verification_inactive_user_returns_400(
+        self, client: AsyncClient, db_session
+    ):
+        """Verifying an inactive user should return 400."""
+        now = datetime.now(UTC)
+        user = User(
+            email="inactive@test.com",
+            is_active=False,
+            is_email_verified=False,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        token = "inactive_verification_token"
+        verification_token = MagicLinkToken(
+            user_id=user.id,
+            token_hash=hash_token(token),
+            purpose="email_verification",
+            created_at=now,
+            expires_at=now + timedelta(hours=24),
+        )
+        db_session.add(verification_token)
+        await db_session.commit()
+
+        response = await client.post(
+            "/api/v1/auth/email/verify",
+            json={"token": token},
+        )
+        assert response.status_code == 400
+        assert "inactive" in response.json()["detail"].lower()
+
+    @pytest.mark.asyncio
+    async def test_email_verification_sets_session_cookie_flags(
+        self, client: AsyncClient, db_session
+    ):
+        """Successful email verify should set ff_sess cookie with flags."""
+        now = datetime.now(UTC)
+        user = User(
+            email="cookie@test.com",
+            is_active=True,
+            is_email_verified=False,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        token = "cookie_verification_token"
+        verification_token = MagicLinkToken(
+            user_id=user.id,
+            token_hash=hash_token(token),
+            purpose="email_verification",
+            created_at=now,
+            expires_at=now + timedelta(hours=24),
+        )
+        db_session.add(verification_token)
+        await db_session.commit()
+
+        response = await client.post(
+            "/api/v1/auth/email/verify",
+            json={"token": token},
+        )
+        assert response.status_code == 200
+        set_cookie = response.headers.get("set-cookie", "").lower()
+        assert "ff_sess=" in set_cookie
+        assert "httponly" in set_cookie
+        assert "samesite=lax" in set_cookie
+        # secure defaults to false in tests unless env set
+        assert "secure" not in set_cookie
+
+    @pytest.mark.asyncio
     async def test_resend_verification_email(self, client: AsyncClient, db_session):
         """Should resend verification email for unverified users."""
         # Create unverified user

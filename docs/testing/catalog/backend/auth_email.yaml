@@ -60,3 +60,51 @@ items:
   tests:
   - backend/tests/auth/email/test_email_verification.py
   last_verified: 2025-11-13
+-
+  id: AUTH-EMAIL-201
+  title: Email verify inactive user returns 400
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/email/test_email_verification.py
+  last_verified: 2025-11-14
+-
+  id: AUTH-EMAIL-202
+  title: Email verify sets session cookie with correct flags
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/email/test_email_verification.py
+  last_verified: 2025-11-14
+-
+  id: AUTH-EMAIL-203
+  title: Resend verification non-existent or verified user returns 200 (no enumeration)
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: low
+  status: implemented
+  tests:
+  - backend/tests/auth/email/test_email_verification.py
+  last_verified: 2025-11-14
+-
+  id: AUTH-EMAIL-204
+  title: Resend verification email send failure returns 500 and logs error
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/email/test_email_error_paths.py
+  last_verified: 2025-11-14
