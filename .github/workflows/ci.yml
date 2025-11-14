@@ -77,11 +77,11 @@ jobs:
       - name: Run tests with coverage
         working-directory: backend
         env:
-          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/test_db
-          REDIS_URL: redis://localhost:6379/0
+          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/test_db
+          REDIS_URL: redis://redis:6379/0
           JWT_SECRET: test-secret-key-for-ci-only
           EMAIL_SENDER: test@example.com
-          SMTP_HOST: localhost
+          SMTP_HOST: mailhog
           SMTP_PORT: 1025
         run: |
           pytest --cov=app --cov-report=xml --cov-report=html --cov-report=term --cov-fail-under=85
