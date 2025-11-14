@@ -9,6 +9,7 @@ from fastapi import HTTPException, Response
 from app.api.deps import (
     get_current_session_with_rotation,
     get_optional_session_with_rotation,
+    get_session_allow_inactive,
 )
 from app.core.security import create_session_token, hash_token
 from app.db.models.auth import Session, User
@@ -381,3 +382,146 @@ async def test_get_optional_session_old_session_triggers_rotation(
     assert returned_session is not None and returned_user is not None
     assert returned_session.id != old_session.id
     assert "ff_sess" in response.headers.get("set-cookie", "")
+
+
+# ---------------- get_session_allow_inactive ----------------
+
+
+@pytest.mark.asyncio
+async def test_get_session_allow_inactive_no_token_401(db_session):
+    """allow_inactive: missing token -> 401 Not authenticated."""
+    response = Response()
+    with pytest.raises(HTTPException) as exc_info:
+        await get_session_allow_inactive(response, None, db_session)
+    assert exc_info.value.status_code == 401
+    assert "Not authenticated" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_get_session_allow_inactive_invalid_token_401(db_session):
+    """allow_inactive: invalid token -> 401 Invalid or expired session."""
+    response = Response()
+    with pytest.raises(HTTPException) as exc_info:
+        await get_session_allow_inactive(response, "invalid", db_session)
+    assert exc_info.value.status_code == 401
+    assert "Invalid or expired session" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_get_session_allow_inactive_allows_inactive_user(db_session, test_user):
+    """allow_inactive: returns session even if user is inactive (no 401)."""
+    # Create a valid session
+    token = create_session_token()
+    token_hash = hash_token(token)
+    now = datetime.now(UTC)
+    session = Session(
+        user_id=test_user.id,
+        token_hash=token_hash,
+        created_at=now,
+        expires_at=now + timedelta(days=7),
+        ip="127.0.0.1",
+        user_agent="test",
+    )
+    db_session.add(session)
+    # Deactivate user
+    test_user.is_active = False
+    test_user.updated_at = now
+    await db_session.commit()
+
+    response = Response()
+    returned_session, returned_user = await get_session_allow_inactive(
+        response, token, db_session
+    )
+    assert returned_session.id == session.id
+    assert returned_user.id == test_user.id
+
+
+@pytest.mark.asyncio
+async def test_get_session_allow_inactive_rotates_old_sets_cookie(
+    db_session, test_user, monkeypatch
+):
+    """allow_inactive: old session rotates and sets cookie flags (default)."""
+    # Ensure COOKIE_SECURE is not set
+    monkeypatch.delenv("COOKIE_SECURE", raising=False)
+    token = create_session_token()
+    token_hash = hash_token(token)
+    old_session = Session(
+        user_id=test_user.id,
+        token_hash=token_hash,
+        created_at=datetime.now(UTC) - timedelta(days=8),
+        expires_at=datetime.now(UTC) + timedelta(days=7),
+        ip="127.0.0.1",
+        user_agent="test",
+    )
+    db_session.add(old_session)
+    await db_session.commit()
+
+    response = Response()
+    new_session, _ = await get_session_allow_inactive(response, token, db_session)
+
+    assert new_session.id != old_session.id
+    set_cookie = response.headers.get("set-cookie", "").lower()
+    assert "ff_sess=" in set_cookie
+    assert "httponly" in set_cookie
+    assert "samesite=lax" in set_cookie
+    assert "secure" not in set_cookie
+
+
+@pytest.mark.asyncio
+async def test_get_session_allow_inactive_respects_cookie_secure_env(
+    db_session, test_user, monkeypatch
+):
+    """allow_inactive: secure flag honored when COOKIE_SECURE=true."""
+    monkeypatch.setenv("COOKIE_SECURE", "true")
+    token = create_session_token()
+    token_hash = hash_token(token)
+    old_session = Session(
+        user_id=test_user.id,
+        token_hash=token_hash,
+        created_at=datetime.now(UTC) - timedelta(days=8),
+        expires_at=datetime.now(UTC) + timedelta(days=7),
+        ip="127.0.0.1",
+        user_agent="test",
+    )
+    db_session.add(old_session)
+    await db_session.commit()
+
+    response = Response()
+    await get_session_allow_inactive(response, token, db_session)
+
+    set_cookie_header = response.headers.get("set-cookie", "")
+    assert "secure" in set_cookie_header.lower() or "Secure" in set_cookie_header
+
+
+@pytest.mark.asyncio
+async def test_get_session_allow_inactive_recent_no_rotation_sets_no_cookie(
+    db_session, test_user, monkeypatch
+):
+    """allow_inactive: recent session should not rotate or set new cookie."""
+    # Ensure COOKIE_SECURE is not forcing anything
+    monkeypatch.delenv("COOKIE_SECURE", raising=False)
+
+    token = create_session_token()
+    token_hash = hash_token(token)
+    # Recent session (younger than rotation threshold)
+    recent_session = Session(
+        user_id=test_user.id,
+        token_hash=token_hash,
+        created_at=datetime.now(UTC),  # no rotation needed
+        expires_at=datetime.now(UTC) + timedelta(days=7),
+        ip="127.0.0.1",
+        user_agent="test",
+    )
+    db_session.add(recent_session)
+    await db_session.commit()
+
+    response = Response()
+    returned_session, returned_user = await get_session_allow_inactive(
+        response, token, db_session
+    )
+
+    # Should not rotate: same session id and no Set-Cookie header for ff_sess
+    assert returned_session.id == recent_session.id
+    set_cookie_header = response.headers.get("set-cookie", "")
+    assert "ff_sess=" not in set_cookie_header
+    assert returned_user.id == test_user.id

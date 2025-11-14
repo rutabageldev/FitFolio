@@ -58,11 +58,11 @@
     },
     "deps": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/deps.yaml",
-      "total": 9,
-      "implemented": 8,
+      "total": 16,
+      "implemented": 15,
       "planned": 1,
       "deprecated": 0,
-      "implementation_rate": 0.8889
+      "implementation_rate": 0.9375
     },
     "security": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/security.yaml",
@@ -83,11 +83,11 @@
   },
   "totals": {
     "areas": 10,
-    "items_total": 134,
-    "items_implemented": 126,
+    "items_total": 141,
+    "items_implemented": 133,
     "items_planned": 8,
     "items_deprecated": 2,
-    "overall_implementation_rate": 0.9403
+    "overall_implementation_rate": 0.9433
   },
   "duplicate_ids": {},
   "unreferenced_test_files": [
