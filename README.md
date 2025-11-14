@@ -158,6 +158,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for detailed planning.
 | [ROADMAP.md](docs/ROADMAP.md)                                   | Outstanding work and next steps     |
 | [CHANGELOG.md](docs/CHANGELOG.md)                               | Historical record of completed work |
 | [RUNBOOK.md](docs/RUNBOOK.md)                                   | Operational procedures and commands |
+| [DOCKER_SECRETS.md](docs/development/DOCKER_SECRETS.md)         | Secrets in development and production |
 | [backend/CSRF_INTEGRATION.md](docs/backend/CSRF_INTEGRATION.md) | CSRF implementation details         |
 
 ---

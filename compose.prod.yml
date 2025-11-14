@@ -4,7 +4,7 @@
 
 services:
   backend:
-    image: ghcr.io/rutabageldev/fitfolio/backend:latest
+    image: ghcr.io/${GHCR_OWNER:-rutabageldev}/${GHCR_REPO:-fitfolio}/backend:${IMAGE_TAG:-latest}
     container_name: fitfolio-backend-prod
     restart: unless-stopped
     secrets:
@@ -60,7 +60,7 @@ services:
       - default         # For internal service communication
 
   frontend:
-    image: ghcr.io/rutabageldev/fitfolio/frontend:latest
+    image: ghcr.io/${GHCR_OWNER:-rutabageldev}/${GHCR_REPO:-fitfolio}/frontend:${IMAGE_TAG:-latest}
     container_name: fitfolio-frontend-prod
     restart: unless-stopped
     # Ports are commented out - Traefik handles routing

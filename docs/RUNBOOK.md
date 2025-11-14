@@ -44,6 +44,34 @@ npm install
 - **`compose.dev.yml`**: Development environment (used by default with `make` commands)
 - **`compose.prod.yml`**: Production environment (requires building prod images first)
 
+## Secrets
+
+### Development Preflight
+
+- Verify required dev secrets exist:
+
+```bash
+make check-dev-secrets
+```
+
+If any are missing, generate them:
+
+```bash
+make setup-dev-secrets
+```
+
+### Secret Rotation (Production)
+
+1. Create new secrets (keep old ones until services are updated):
+   - postgres: `echo "new-password" | docker secret create postgres_password_new -`
+   - smtp user: `echo "new-username" | docker secret create smtp_username_new -`
+   - smtp pass: `echo "new-password" | docker secret create smtp_password_new -`
+2. Update `compose.prod.yml` to point services at the new secret names (or replace the
+   existing secrets in place).
+3. Deploy:
+   `docker compose -f compose.prod.yml pull && docker compose -f compose.prod.yml up -d`
+4. Remove old secrets once all services are confirmed healthy.
+
 ## Start / Stop
 
 - Start all services (dev): `make up` or `docker compose -f compose.dev.yml up -d`

@@ -15,7 +15,7 @@ All notable completed work is documented here. For outstanding work, see
 - Created `app/core/secrets.py` module for secure secret reading
 - Updated `compose.prod.yml` to use external Docker secrets
 - Added comprehensive production secrets documentation
-- Secrets: `postgres_password`, `jwt_secret`, `smtp_password`
+- Secrets: `postgres_password`, `smtp_username`, `smtp_password`
 
 **Development Environment Parity**
 

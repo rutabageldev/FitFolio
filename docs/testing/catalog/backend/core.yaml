@@ -115,3 +115,63 @@ items:
     tests:
       - backend/tests/core/test_main_lifespan.py
     last_verified: 2025-11-14
+  - id: CORE-SECRETS-001
+    title: read_secret reads from /run/secrets when enabled
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_secrets.py::test_read_secret_file_present
+    last_verified: 2025-11-14
+  - id: CORE-SECRETS-002
+    title: read_secret falls back to env when file absent
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_secrets.py::test_read_secret_env_fallback
+    last_verified: 2025-11-14
+  - id: CORE-SECRETS-003
+    title: missing secret without default raises RuntimeError
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_secrets.py::test_missing_secret_raises_when_no_default
+    last_verified: 2025-11-14
+  - id: CORE-SECRETS-004
+    title: get_database_url uses secret password
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_secrets.py::test_get_database_url_uses_secret_password
+    last_verified: 2025-11-14
+  - id: CORE-SECRETS-005
+    title: SMTP username/password optional via secrets or env
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_secrets.py::test_get_smtp_username_and_password_optional
+    last_verified: 2025-11-14
+  - id: CORE-SECRETS-INT-001
+    title: App imports cleanly with USE_DOCKER_SECRETS and secret present
+    level: integration
+    markers:
+      - integration
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_secrets.py::test_integration_import_app_with_docker_secrets_enabled
+    last_verified: 2025-11-14
