@@ -2,7 +2,7 @@
 
 **Modern fitness tracking application with passwordless authentication and comprehensive security.**
 
-[![CI](https://github.com/YOUR_USERNAME/fitfolio/workflows/CI/badge.svg)](https://github.com/YOUR_USERNAME/fitfolio/actions) [![Coverage](https://img.shields.io/badge/coverage-94.4%25-brightgreen)]() [![Security](https://img.shields.io/badge/security-A+-success)]() [![Python](https://img.shields.io/badge/python-3.12-blue)]() [![FastAPI](https://img.shields.io/badge/FastAPI-0.120-009688)]() [![React](https://img.shields.io/badge/React-19-61dafb)]()
+[![CI](https://github.com/YOUR_USERNAME/fitfolio/workflows/CI/badge.svg)](https://github.com/YOUR_USERNAME/fitfolio/actions) [![Coverage](https://img.shields.io/badge/coverage-98.0%25-brightgreen)]() [![Security](https://img.shields.io/badge/security-A+-success)]() [![Python](https://img.shields.io/badge/python-3.12-blue)]() [![FastAPI](https://img.shields.io/badge/FastAPI-0.120-009688)]() [![React](https://img.shields.io/badge/React-19-61dafb)]()
 
 ---
 
