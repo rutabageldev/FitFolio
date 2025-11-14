@@ -43,9 +43,20 @@ items:
     markers:
       - unit
     risk: low
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/core/test_redis_client.py
+    last_verified: 2025-11-14
+  - id: DEPS-REDIS-011
+    title: get_redis raises RuntimeError on ping failure
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_redis_client.py
+    last_verified: 2025-11-14
   - id: DEPS-DB-002
     title: get_db closes session on normal exit
     level: integration

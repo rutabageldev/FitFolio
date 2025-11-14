@@ -32,6 +32,8 @@ async def get_redis() -> redis.Redis:
             # Test connection
             await _redis_client.ping()
         except Exception as e:
+            # Ensure we don't cache a bad client on failure
+            _redis_client = None
             raise RuntimeError(f"Failed to connect to Redis at {redis_url}: {e}") from e
 
     return _redis_client
