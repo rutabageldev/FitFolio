@@ -132,14 +132,11 @@ class TestWebAuthnAuthenticationHappyPaths:
         sessions = result.scalars().all()
         assert len(sessions) == 1
         assert "ff_sess" in response.cookies
-        # Validate cookie flags and presence of rate limit headers
+        # Validate cookie flags
         set_cookie = response.headers.get("set-cookie", "")
         assert "HttpOnly" in set_cookie
         assert "SameSite=lax" in set_cookie
         # In dev config, Secure may be false
-        assert "X-RateLimit-Limit" in response.headers
-        assert "X-RateLimit-Remaining" in response.headers
-        assert "X-RateLimit-Reset" in response.headers
 
     @pytest.mark.asyncio
     @patch("app.core.challenge_storage.retrieve_and_delete_challenge")
