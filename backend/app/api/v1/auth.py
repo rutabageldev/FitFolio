@@ -474,7 +474,7 @@ async def verify_magic_link(
         value=session_token,
         httponly=True,
         secure=False,  # Set to True in production with HTTPS
-        samesite="Lax",
+        samesite="lax",
         max_age=336 * 3600,  # 14 days in seconds
     )
 
@@ -680,7 +680,7 @@ async def finish_webauthn_registration(
                 value=new_token,
                 httponly=True,
                 secure=cookie_secure,
-                samesite="Lax",
+                samesite="lax",
                 max_age=336 * 3600,
             )
 
@@ -898,7 +898,7 @@ async def finish_webauthn_authentication(
         value=session_token,
         httponly=True,
         secure=False,  # Set to True in production with HTTPS
-        samesite="Lax",
+        samesite="lax",
         max_age=336 * 3600,  # 14 days in seconds
     )
 
@@ -1101,7 +1101,7 @@ async def verify_email(
         value=session_token,
         httponly=True,
         secure=False,  # Set to True in production with HTTPS
-        samesite="Lax",
+        samesite="lax",
         max_age=336 * 3600,  # 14 days
     )
 

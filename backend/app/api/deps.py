@@ -68,7 +68,7 @@ async def get_current_session_with_rotation(
             value=new_token,
             httponly=True,
             secure=cookie_secure,
-            samesite="Lax",
+            samesite="lax",
             max_age=336 * 3600,  # 14 days
         )
 
