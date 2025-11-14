@@ -13,6 +13,12 @@ on:
   push:
     branches:
       - staging-env
+  workflow_run:
+    workflows: ["CI"]
+    branches:
+      - staging-env
+    types:
+      - completed
 
 env:
   GHCR_OWNER: rutabageldev
