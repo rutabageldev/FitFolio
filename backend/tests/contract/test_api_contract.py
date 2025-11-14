@@ -41,7 +41,11 @@ class TestHealthEndpoints:
 class TestAPIVersioning:
     """Reserved for cross-cutting versioning assertions (kept minimal here)."""
 
-    pass
+    async def test_api_root_exists_and_lists_versions(self, client: AsyncClient):
+        response = await client.get("/api")
+        assert response.status_code == 200
+        data = response.json()
+        assert "versions" in data and "v1" in data["versions"]
 
 
 class TestDebugEndpoints:

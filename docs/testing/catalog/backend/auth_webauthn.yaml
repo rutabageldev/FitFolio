@@ -23,9 +23,10 @@ items:
       - security
       - unit
     risk: medium
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_manager.py
+    last_verified: 2025-11-14
   - id: AUTH-WA-201
     title: Verify registration response error branches (manager unit)
     level: unit
@@ -33,9 +34,10 @@ items:
       - security
       - unit
     risk: medium
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_manager.py
+    last_verified: 2025-11-14
   - id: AUTH-WA-210
     title: Verify authentication response success (manager unit)
     level: unit
@@ -43,9 +45,10 @@ items:
       - security
       - unit
     risk: medium
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_manager.py
+    last_verified: 2025-11-14
   - id: AUTH-WA-211
     title: Verify authentication response error branches (manager unit)
     level: unit
@@ -53,9 +56,10 @@ items:
       - security
       - unit
     risk: medium
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/webauthn/test_webauthn_manager.py
+    last_verified: 2025-11-14
   - id: AUTH-WA-001
     title: Registration start returns options with challenge
     level: integration

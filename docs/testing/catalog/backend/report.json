@@ -43,23 +43,23 @@
     "auth.webauthn": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_webauthn.yaml",
       "total": 36,
-      "implemented": 30,
-      "planned": 6,
+      "implemented": 34,
+      "planned": 2,
       "deprecated": 0,
-      "implementation_rate": 0.8333
+      "implementation_rate": 0.9444
     },
     "contract": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/contract.yaml",
-      "total": 2,
-      "implemented": 2,
+      "total": 3,
+      "implemented": 3,
       "planned": 0,
       "deprecated": 0,
       "implementation_rate": 1.0
     },
     "core": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/core.yaml",
-      "total": 6,
-      "implemented": 6,
+      "total": 11,
+      "implemented": 11,
       "planned": 0,
       "deprecated": 0,
       "implementation_rate": 1.0
@@ -74,8 +74,8 @@
     },
     "observability": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/observability.yaml",
-      "total": 4,
-      "implemented": 4,
+      "total": 6,
+      "implemented": 6,
       "planned": 0,
       "deprecated": 0,
       "implementation_rate": 1.0
@@ -99,11 +99,11 @@
   },
   "totals": {
     "areas": 12,
-    "items_total": 150,
-    "items_implemented": 143,
-    "items_planned": 7,
+    "items_total": 158,
+    "items_implemented": 155,
+    "items_planned": 3,
     "items_deprecated": 2,
-    "overall_implementation_rate": 0.9533
+    "overall_implementation_rate": 0.981
   },
   "duplicate_ids": {},
   "unreferenced_test_files": [

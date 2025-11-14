@@ -45,3 +45,23 @@ items:
     tests:
       - backend/tests/observability/test_logging.py
     last_verified: 2025-11-14
+  - id: OBS-MAIN-001
+    title: main calls configure_logging at import
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/observability/test_main.py
+    last_verified: 2025-11-14
+  - id: OBS-MAIN-OTEL-ERR
+    title: lifespan logs error when OTEL setup fails
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/observability/test_main.py
+    last_verified: 2025-11-14
