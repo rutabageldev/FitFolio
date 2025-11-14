@@ -56,10 +56,18 @@
       "deprecated": 0,
       "implementation_rate": 1.0
     },
+    "core": {
+      "file": "/workspaces/fitfolio/docs/testing/catalog/backend/core.yaml",
+      "total": 6,
+      "implemented": 6,
+      "planned": 0,
+      "deprecated": 0,
+      "implementation_rate": 1.0
+    },
     "deps": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/deps.yaml",
-      "total": 21,
-      "implemented": 21,
+      "total": 15,
+      "implemented": 15,
       "planned": 0,
       "deprecated": 0,
       "implementation_rate": 1.0
@@ -90,7 +98,7 @@
     }
   },
   "totals": {
-    "areas": 11,
+    "areas": 12,
     "items_total": 148,
     "items_implemented": 141,
     "items_planned": 7,
