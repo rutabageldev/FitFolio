@@ -193,6 +193,133 @@ class TestRevokeSession:
         assert target_session.revoked_at is not None
 
     @pytest.mark.asyncio
+    async def test_revoke_session_invalid_uuid_returns_400(
+        self, client: AsyncClient, db_session
+    ):
+        """Invalid UUID path param should return 400."""
+        csrf_token = (await client.get("/healthz")).cookies["csrf_token"]
+        # Create user and authenticated session to pass auth dependency
+        now = datetime.now(UTC)
+        user = User(
+            email="baduuid@test.com",
+            is_active=True,
+            is_email_verified=True,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        current_token = create_session_token()
+        current_session = Session(
+            user_id=user.id,
+            token_hash=hash_token(current_token),
+            created_at=now,
+            expires_at=now + timedelta(hours=336),
+        )
+        db_session.add(current_session)
+        await db_session.commit()
+        response = await client.delete(
+            "/api/v1/auth/sessions/not-a-uuid",
+            cookies={"ff_sess": current_token, "csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        assert response.status_code == 400
+        assert "invalid session id" in response.json()["detail"].lower()
+
+    @pytest.mark.asyncio
+    async def test_revoke_session_not_found_returns_404(
+        self, client: AsyncClient, db_session
+    ):
+        """Revoking a non-existent session for the user should return 404."""
+        from uuid import uuid4
+
+        csrf_response = await client.get("/healthz")
+        csrf_token = csrf_response.cookies["csrf_token"]
+
+        # Create user and current session
+        now = datetime.now(UTC)
+        user = User(
+            email="notfound@test.com",
+            is_active=True,
+            is_email_verified=True,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        session_token = create_session_token()
+        current_session = Session(
+            user_id=user.id,
+            token_hash=hash_token(session_token),
+            created_at=now,
+            expires_at=now + timedelta(hours=336),
+        )
+        db_session.add(current_session)
+        await db_session.commit()
+
+        # Attempt to revoke random UUID
+        response = await client.delete(
+            f"/api/v1/auth/sessions/{uuid4()}",
+            cookies={"ff_sess": session_token, "csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_revoke_session_logs_event(self, client: AsyncClient, db_session):
+        """Revoking a session should record a session_revoked LoginEvent."""
+        from sqlalchemy import select
+
+        csrf_token = (await client.get("/healthz")).cookies["csrf_token"]
+        now = datetime.now(UTC)
+        user = User(
+            email="revokelog@test.com",
+            is_active=True,
+            is_email_verified=True,
+            created_at=now,
+            updated_at=now,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        current_token = create_session_token()
+        current_session = Session(
+            user_id=user.id,
+            token_hash=hash_token(current_token),
+            created_at=now,
+            expires_at=now + timedelta(hours=336),
+        )
+        target_session = Session(
+            user_id=user.id,
+            created_at=now,
+            expires_at=now + timedelta(hours=336),
+            token_hash=hash_token(create_session_token()),
+        )
+        db_session.add_all([current_session, target_session])
+        await db_session.commit()
+        await db_session.refresh(target_session)
+
+        response = await client.delete(
+            f"/api/v1/auth/sessions/{target_session.id}",
+            cookies={"ff_sess": current_token, "csrf_token": csrf_token},
+            headers={"X-CSRF-Token": csrf_token},
+        )
+        assert response.status_code == 200
+
+        from app.db.models.auth import LoginEvent
+
+        ev_stmt = select(LoginEvent).where(
+            LoginEvent.user_id == user.id, LoginEvent.event_type == "session_revoked"
+        )
+        ev = (await db_session.execute(ev_stmt)).scalar_one_or_none()
+        assert ev is not None
+
+    @pytest.mark.asyncio
     async def test_cannot_revoke_current_session(self, client: AsyncClient, db_session):
         """Should not allow revoking current session."""
         # Get CSRF token
@@ -349,6 +476,21 @@ class TestRevokeAllOtherSessions:
         # Verify current session was NOT revoked
         await db_session.refresh(sessions[0][0])
         assert sessions[0][0].revoked_at is None
+
+        # Verify login event recorded with count
+        from sqlalchemy import select
+
+        from app.db.models.auth import LoginEvent
+
+        ev = (
+            await db_session.execute(
+                select(LoginEvent).where(
+                    LoginEvent.user_id == user.id,
+                    LoginEvent.event_type == "sessions_revoked_all_others",
+                )
+            )
+        ).scalar_one_or_none()
+        assert ev is not None
 
     @pytest.mark.asyncio
     async def test_revoke_all_others_with_no_other_sessions(

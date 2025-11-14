@@ -108,9 +108,10 @@ items:
       - integration
       - security
     risk: low
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-14
   - id: AUTH-SESS-031
     title: Revoke current session returns 400 with guidance
     level: integration
@@ -118,9 +119,10 @@ items:
       - integration
       - security
     risk: low
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-14
   - id: AUTH-SESS-032
     title: Revoke session not found or already revoked returns 404
     level: integration
@@ -128,9 +130,10 @@ items:
       - integration
       - security
     risk: low
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-14
   - id: AUTH-SESS-033
     title: Revoke session logs event and commits
     level: integration
@@ -138,9 +141,10 @@ items:
       - integration
       - security
     risk: medium
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-14
   - id: AUTH-SESS-040
     title: Revoke all other sessions logs count and returns number revoked
     level: integration
@@ -148,9 +152,10 @@ items:
       - integration
       - security
     risk: medium
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-14
   - id: AUTH-SESS-041
     title: Revoke all others with none active returns 0 and logs
     level: integration
@@ -158,9 +163,10 @@ items:
       - integration
       - security
     risk: low
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-14
   - id: AUTH-SESS-050
     title: List sessions marks current and orders by created_at desc
     level: integration
@@ -168,9 +174,10 @@ items:
       - integration
       - security
     risk: medium
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_sessions_listing_variants.py
+    last_verified: 2025-11-14
   - id: AUTH-SESS-051
     title: List sessions excludes expired, revoked, or rotated sessions
     level: integration
@@ -178,6 +185,7 @@ items:
       - integration
       - security
     risk: medium
-    status: planned
-    tests: []
-    last_verified: null
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_sessions_listing_variants.py
+    last_verified: 2025-11-14
