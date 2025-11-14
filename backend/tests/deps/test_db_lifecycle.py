@@ -59,7 +59,7 @@ async def test_get_db_closes_on_exception(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_init_db_calls_create_all(monkeypatch):
-    import app.db.database as database
+    from app.db import database
 
     class FakeConn:
         def __init__(self):
@@ -90,7 +90,7 @@ async def test_init_db_calls_create_all(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_close_db_disposes_engine(monkeypatch):
-    import app.db.database as database
+    from app.db import database
 
     called = {"dispose": False}
 
@@ -105,7 +105,7 @@ async def test_close_db_disposes_engine(monkeypatch):
 @pytest.mark.asyncio
 async def test_database_url_conversion(monkeypatch):
     # Save original env and module
-    import app.db.database as database
+    from app.db import database
 
     original_url = os.getenv("DATABASE_URL")
     try:

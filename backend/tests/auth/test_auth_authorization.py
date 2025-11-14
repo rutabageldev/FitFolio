@@ -31,38 +31,40 @@ async def inactive_user(db_session):
 class TestWebAuthnRegistrationAuthorization:
     """Test authorization for WebAuthn registration endpoints."""
 
-    ...
+    pass  # TODO: Implement authorization tests
 
 
 class TestWebAuthnAuthenticationAuthorization:
     """Test authorization for WebAuthn authentication endpoints."""
 
-    ...
+    pass  # TODO: Implement authorization tests
 
 
 class TestCredentialManagementAuthorization:
     """Test authorization for credential management endpoints."""
 
-    ...
+    pass  # TODO: Implement authorization tests
 
 
 class TestSessionManagementAuthorization:
     """Test authorization for session management endpoints."""
 
-    ...
+    pass  # TODO: Implement authorization tests
 
 
 class TestUserEndpointAuthorization:
     """Test authorization for user endpoints."""
 
     @pytest.mark.asyncio
-    async def test_me_endpoint_unauthenticated(self): ...
+    async def test_me_endpoint_unauthenticated(self):
+        pass  # TODO: Implement test
 
 
-class TestMagicLinkAuthorization: ...
+class TestMagicLinkAuthorization:
+    pass  # TODO: Implement authorization tests
 
 
 class TestEmailVerificationAuthorization:
     """Test authorization for email verification endpoints."""
 
-    ...
+    pass  # TODO: Implement authorization tests

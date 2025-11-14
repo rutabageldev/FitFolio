@@ -51,7 +51,8 @@ class TestInactiveUserEdgeCases:
     """Tests for inactive user behavior across endpoints."""
 
     @pytest.mark.asyncio
-    async def test_me_endpoint_inactive_user_rejected(self): ...
+    async def test_me_endpoint_inactive_user_rejected(self):
+        pass  # TODO: Implement test
 
     @pytest.mark.asyncio
     async def test_email_verify_inactive_user_rejected(

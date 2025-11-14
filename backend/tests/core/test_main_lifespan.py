@@ -164,10 +164,11 @@ async def test_lifespan_schedules_cleanup_when_enabled(monkeypatch):
             if callable(close):
                 close()
         except Exception:
-            pass
+            pass  # Ignore errors when closing mock coroutines
 
         class _T:
-            def cancel(self): ...
+            def cancel(self):
+                pass
 
         return _T()
 
