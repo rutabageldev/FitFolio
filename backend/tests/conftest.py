@@ -5,26 +5,63 @@ Test-specific fixtures should be in their respective test files.
 """
 
 import os
+import subprocess
 from collections.abc import AsyncGenerator
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
-from app.main import app
+
+# Ensure OTEL is disabled before importing app unless explicitly enabled
+if os.getenv("TEST_OTEL", "").lower() not in {"1", "true", "yes"}:
+    os.environ.setdefault("OTEL_SDK_DISABLED", "true")
 
 # Disable rate limiting for most tests (rate limiting tests will override)
 os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
 
-# Use separate Redis database for tests to avoid conflicts with dev data
-os.environ.setdefault("REDIS_URL", "redis://redis:6379/1")
+from app.main import app
 
-# Test database URL (in-memory SQLite for speed)
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+
+# Use separate Redis database for tests to avoid conflicts with dev data
+# In WSL2/devcontainer environments, localhost may not work for Docker containers
+# Try to get Redis container IP dynamically, fall back to localhost
+def get_redis_url() -> str:
+    """Get Redis URL for tests, handling WSL2/Docker networking."""
+    try:
+        # Try to get Redis container IP (works in WSL2/devcontainer)
+        result = subprocess.run(
+            [
+                "docker",
+                "inspect",
+                "fitfolio-redis",
+                "--format={{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            container_ip = result.stdout.strip()
+            return f"redis://{container_ip}:6379/1"
+    except Exception:
+        pass
+    # Fallback to localhost (works in most environments)
+    return "redis://localhost:6379/1"
+
+
+os.environ.setdefault("REDIS_URL", get_redis_url())
+
+# Test database URL (Postgres strongly recommended for representative testing)
+# Defaults to the dev Postgres instance's test DB.
+TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql+psycopg://fitfolio_user:supersecret@db:5432/fitfolio_test",
+)
 
 
 @pytest.fixture(scope="session")
@@ -33,161 +70,47 @@ def anyio_backend():
     return "asyncio"
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(scope="session")
 async def db_engine():
-    """Create test database engine with SQLite compatibility.
+    """Create test database engine (Postgres)."""
 
-    Note: Removes PostgreSQL-specific server defaults since SQLite doesn't
-    support functions like now() or true in DEFAULT clauses. Tests handle
-    object creation explicitly so server defaults aren't needed.
-    """
-    import json
-    import uuid
+    if not TEST_DATABASE_URL.startswith("postgresql"):
+        raise RuntimeError(
+            "TEST_DATABASE_URL must point to Postgres for representative testing. "
+            "Set TEST_DATABASE_URL=postgresql+psycopg://user:pass@host:5432/fitfolio_test"
+        )
 
-    from sqlalchemy import DateTime, LargeBinary, TypeDecorator
-    from sqlalchemy import String as SQLAString
-    from sqlalchemy.dialects.postgresql import BYTEA, INET, JSONB, TIMESTAMP, UUID
+    engine = create_async_engine(TEST_DATABASE_URL, pool_pre_ping=True)
 
-    # Create type decorators for proper value conversion
-    class UUIDAsString(TypeDecorator):
-        """Convert UUID to string for SQLite."""
-
-        impl = SQLAString
-        cache_ok = True
-
-        def process_bind_param(self, value, _dialect):
-            if value is not None:
-                return str(value)
-            return value
-
-        def process_result_value(self, value, _dialect):
-            if value is not None:
-                # Handle both string and UUID inputs (PostgreSQL returns UUID objects)
-                if isinstance(value, uuid.UUID):
-                    return value
-                return uuid.UUID(value)
-            return value
-
-    class JSONBAsString(TypeDecorator):
-        """Convert JSON to string for SQLite."""
-
-        impl = SQLAString
-        cache_ok = True
-
-        def process_bind_param(self, value, _dialect):
-            if value is not None:
-                return json.dumps(value)
-            return value
-
-        def process_result_value(self, value, _dialect):
-            if value is not None:
-                return json.loads(value)
-            return value
-
-    class TZAwareDateTime(TypeDecorator):
-        """Store timezone-aware datetimes in SQLite with automatic UTC timezone."""
-
-        impl = DateTime
-        cache_ok = True
-
-        def process_bind_param(self, value, _dialect):
-            # Store as UTC timestamp (remove timezone for SQLite)
-            if value is not None:
-                if hasattr(value, "tzinfo") and value.tzinfo is not None:
-                    # SQLite doesn't support timezones, store as naive UTC
-                    return value.replace(tzinfo=None)
-            return value
-
-        def process_result_value(self, value, _dialect):
-            # Read back as UTC-aware (SQLite returns naive datetimes)
-            if value is not None:
-                from datetime import UTC
-                from datetime import datetime as dt
-
-                # Always treat naive datetimes from SQLite as UTC
-                if isinstance(value, dt):
-                    if value.tzinfo is None:
-                        # Naive datetime from SQLite - make it UTC-aware
-                        return value.replace(tzinfo=UTC)
-                    else:
-                        # Already has timezone (shouldn't happen with SQLite)
-                        return value
-            return value
-
-    engine = create_async_engine(
-        TEST_DATABASE_URL,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-
-    # Save original column types so we can restore them after tests complete
-    original_types = {}
-    original_defaults = {}
-
-    def setup_sqlite_types():
-        """Replace PostgreSQL types with SQLite-compatible ones.
-
-        IMPORTANT: This modifies column types IN-PLACE on Base.metadata, which is
-        shared globally. We save the original types to restore after testing.
-        """
-        from sqlalchemy import BigInteger, Integer
-
-        # Save and replace types for all tables
-        for table in Base.metadata.tables.values():
-            for column in table.columns:
-                key = (table.name, column.name)
-
-                # Save originals (only once)
-                if key not in original_types:
-                    original_types[key] = column.type
-                    original_defaults[key] = column.server_default
-
-                # Clear server defaults (SQLite doesn't support now(), true, etc.)
-                column.server_default = None
-
-                # Replace PostgreSQL-specific types with SQLite-compatible ones
-                if isinstance(original_types[key], UUID):
-                    column.type = UUIDAsString(36)
-                elif isinstance(original_types[key], BYTEA):
-                    column.type = LargeBinary()
-                elif isinstance(original_types[key], INET):
-                    column.type = SQLAString(45)
-                elif isinstance(original_types[key], JSONB):
-                    column.type = JSONBAsString()
-                elif isinstance(original_types[key], TIMESTAMP):
-                    column.type = TZAwareDateTime()
-                elif isinstance(original_types[key], BigInteger):
-                    column.type = Integer()
-
-    def restore_original_types():
-        """Restore original PostgreSQL types after tests complete."""
-        for table in Base.metadata.tables.values():
-            for column in table.columns:
-                key = (table.name, column.name)
-                if key in original_types:
-                    column.type = original_types[key]
-                    column.server_default = original_defaults[key]
-
-    # Setup SQLite-compatible types
-    setup_sqlite_types()
-
+    # Ensure tables exist in public schema
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     yield engine
 
+    # Drop all tables at the end of the session to keep DB tidy
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
     await engine.dispose()
 
-    # Restore original types for production use
-    restore_original_types()
-
 
 @pytest_asyncio.fixture
 async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
     """Create test database session."""
+    # Ensure a clean database state before each test
+    async with db_engine.begin() as conn:
+        # Use ordered deletes to avoid taking AccessExclusiveLock from TRUNCATE,
+        # which can deadlock with concurrent transactions.
+        for table in (
+            "login_events",
+            "magic_link_tokens",
+            "webauthn_credentials",
+            "sessions",
+            "users",
+        ):
+            await conn.execute(text(f"DELETE FROM {table}"))
+
     async_session_factory = sessionmaker(
         db_engine, class_=AsyncSession, expire_on_commit=False
     )
@@ -208,12 +131,27 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
 
     app.dependency_overrides[get_db] = override_get_db
 
-    async with AsyncClient(
+    class TestAsyncClient(AsyncClient):
+        async def request(self, method, url, **kwargs):
+            # Avoid httpx per-request cookies deprecation by moving them to the jar
+            cookies = kwargs.pop("cookies", None)
+            if cookies:
+                self.cookies.update(cookies)
+            return await super().request(method, url, **kwargs)
+
+    async with TestAsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def csrf_token(client: AsyncClient) -> str:
+    """Fetch CSRF token cookie via health endpoint."""
+    response = await client.get("/healthz")
+    return response.cookies["csrf_token"]
 
 
 @pytest_asyncio.fixture(scope="function", autouse=True)
@@ -230,3 +168,43 @@ async def cleanup_redis():
 
     yield
     # No cleanup after - let Redis connection persist across tests for performance
+
+
+@pytest.fixture(scope="session", autouse=True)
+def disable_otel():
+    """Disable OpenTelemetry SDK during tests to avoid noisy teardown logging."""
+    # Allow opt-in tracing in tests via TEST_OTEL=1/true, otherwise disable SDK.
+    test_otel = os.getenv("TEST_OTEL", "").lower() in {"1", "true", "yes"}
+    if not test_otel:
+        os.environ.setdefault("OTEL_SDK_DISABLED", "true")
+        yield
+        return
+    # If tracing is enabled for tests, ensure we cleanly shut down
+    # the provider to avoid warnings.
+    try:
+        yield
+    finally:
+        try:
+            from opentelemetry import trace
+
+            provider = trace.get_tracer_provider()
+            shutdown = getattr(provider, "shutdown", None)
+            if callable(shutdown):
+                shutdown()
+        except Exception:
+            # Never let tracing teardown break tests
+            pass
+
+
+@pytest.fixture(scope="session", autouse=True)
+def close_redis_session():
+    """Ensure Redis connection is closed at the end of the test session."""
+    import asyncio
+
+    from app.core.redis_client import close_redis
+
+    yield
+    try:
+        asyncio.run(close_redis())
+    except Exception:
+        pass

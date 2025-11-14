@@ -1,0 +1,67 @@
+schema: 1
+area: observability
+updated: 2025-11-14
+owners:
+  - backend
+  - qa
+items:
+  - id: OBS-OTEL-001
+    title: setup_otel uses Console exporter when no endpoint set
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/observability/test_otel.py
+    last_verified: 2025-11-14
+  - id: OBS-OTEL-002
+    title: setup_otel uses OTLP exporter when endpoint provided
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/observability/test_otel.py
+    last_verified: 2025-11-14
+  - id: OBS-LOG-001
+    title: logging falls back to stdlib json when orjson missing
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/observability/test_logging.py
+    last_verified: 2025-11-14
+  - id: OBS-LOG-002
+    title: add_trace_ids injects trace_id and span_id when span valid
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/observability/test_logging.py
+    last_verified: 2025-11-14
+  - id: OBS-MAIN-001
+    title: main calls configure_logging at import
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/observability/test_main.py
+    last_verified: 2025-11-14
+  - id: OBS-MAIN-OTEL-ERR
+    title: lifespan logs error when OTEL setup fails
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/observability/test_main.py
+    last_verified: 2025-11-14

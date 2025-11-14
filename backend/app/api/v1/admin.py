@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_session_with_rotation
+from app.api.deps import get_session_allow_inactive
 from app.db.database import get_db
 from app.db.models.auth import LoginEvent, Session, User
 
@@ -39,7 +39,7 @@ class AuditLogResponse(BaseModel):
 
 @router.get("/audit/events", response_model=AuditLogResponse)
 async def get_audit_events(
-    session_and_user: tuple[Session, User] = Depends(get_current_session_with_rotation),
+    session_and_user: tuple[Session, User] = Depends(get_session_allow_inactive),
     db: AsyncSession = Depends(get_db),
     user_id: str | None = Query(None, description="Filter by user ID"),
     event_type: str | None = Query(None, description="Filter by event type"),
@@ -150,7 +150,7 @@ async def get_audit_events(
 
 @router.get("/audit/event-types")
 async def get_event_types(
-    session_and_user: tuple[Session, User] = Depends(get_current_session_with_rotation),
+    session_and_user: tuple[Session, User] = Depends(get_session_allow_inactive),
     db: AsyncSession = Depends(get_db),
 ):
     """

@@ -1,0 +1,235 @@
+schema: 1
+area: auth.sessions
+updated: 2025-11-13
+owners:
+  - backend-auth
+  - qa
+items:
+  - id: AUTH-SESS-001
+    title: /me requires authentication by default
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_me_endpoint.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-002
+    title: Sessions authorization rules enforced
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_sessions_authorization.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-003
+    title: List active sessions returns current and others
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_sessions_listing_variants.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-004
+    title: Revoke specific session succeeds
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-005
+    title: Revoke all other sessions succeeds
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-006
+    title: Logout revokes session and clears cookie
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_logout.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-020
+    title: Auth endpoint authorization checks
+    level: integration
+    markers:
+      - security
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/test_auth_authorization.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-021
+    title: Auth endpoint edge cases
+    level: integration
+    markers: []
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/test_auth_edge_cases.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-010
+    title: /me auto session rotation after 7 days
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_me_endpoint.py
+    last_verified: 2025-11-13
+  - id: AUTH-SESS-030
+    title: Revoke session invalid UUID returns 400
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-031
+    title: Revoke current session returns 400 with guidance
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-032
+    title: Revoke session not found or already revoked returns 404
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-033
+    title: Revoke session logs event and commits
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-040
+    title: Revoke all other sessions logs count and returns number revoked
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-041
+    title: Revoke all others with none active returns 0 and logs
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_management.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-050
+    title: List sessions marks current and orders by created_at desc
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_sessions_listing_variants.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-060
+    title: Logout handler revokes session and clears cookie
+    level: unit
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_logout_handler.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-061
+    title: List sessions handler returns all with is_current marked
+    level: unit
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_handlers_unit.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-062
+    title: Revoke session handler success marks revoked and logs
+    level: unit
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_handlers_unit.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-063
+    title: Revoke all other sessions handler revokes others and logs count
+    level: unit
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_handlers_unit.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-051
+    title: List sessions excludes expired, revoked, or rotated sessions
+    level: integration
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_sessions_listing_variants.py
+    last_verified: 2025-11-14

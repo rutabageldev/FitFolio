@@ -1,0 +1,5 @@
+schema: 1
+area: auth
+updated: 2025-11-13
+owners: ['backend-auth', 'qa']
+items: []

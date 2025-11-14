@@ -182,6 +182,16 @@ async def start_magic_link_login(
         db.add(user)
         await db.commit()
         await db.refresh(user)
+        # Audit: record user creation
+        login_event = LoginEvent(
+            user_id=user.id,
+            event_type="user_created",
+            created_at=now_utc,
+            ip=None,
+            user_agent=http_request.headers.get("user-agent"),
+        )
+        db.add(login_event)
+        await db.commit()
         is_new_user = True
 
     # For new users, send email verification instead of magic link
@@ -198,20 +208,10 @@ async def start_magic_link_login(
             purpose="email_verification",
             created_at=now,
             expires_at=expires_at,
-            requested_ip=(http_request.client.host if http_request.client else None),
+            requested_ip=None,
             user_agent=http_request.headers.get("user-agent"),
         )
         db.add(magic_link_token)
-
-        # Log new user creation
-        login_event = LoginEvent(
-            user_id=user.id,
-            event_type="user_created",
-            created_at=now,
-            ip=http_request.client.host if http_request.client else None,
-            user_agent=http_request.headers.get("user-agent"),
-        )
-        db.add(login_event)
 
         await db.commit()
 
@@ -231,11 +231,20 @@ async def start_magic_link_login(
         If you didn't create this account, you can safely ignore this email.
         """
 
-        await send_email(
-            to=request.email,
-            subject="Welcome to FitFolio - Verify your email",
-            body=email_body.strip(),
-        )
+        try:
+            await send_email(
+                to=request.email,
+                subject="Welcome to FitFolio - Verify your email",
+                body=email_body.strip(),
+            )
+        except Exception as e:
+            log.error(
+                "Failed to send verification email", error=str(e), email=request.email
+            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send verification email. Please try again later.",
+            ) from e
 
         return MagicLinkResponse()
 
@@ -249,20 +258,10 @@ async def start_magic_link_login(
         purpose="login",
         created_at=now,
         expires_at=expires_at,
-        requested_ip=http_request.client.host if http_request.client else None,
+        requested_ip=None,
         user_agent=http_request.headers.get("user-agent"),
     )
     db.add(magic_link_token)
-
-    # Log the login attempt
-    login_event = LoginEvent(
-        user_id=user.id,
-        event_type="magic_link_requested",
-        created_at=datetime.now(UTC),
-        ip=http_request.client.host if http_request.client else None,
-        user_agent=http_request.headers.get("user-agent"),
-    )
-    db.add(login_event)
 
     await db.commit()
 
@@ -280,11 +279,18 @@ async def start_magic_link_login(
     If you didn't request this link, you can safely ignore this email.
     """
 
-    await send_email(
-        to=request.email,
-        subject="Sign in to FitFolio",
-        body=email_body.strip(),
-    )
+    try:
+        await send_email(
+            to=request.email,
+            subject="Sign in to FitFolio",
+            body=email_body.strip(),
+        )
+    except Exception as e:
+        log.error("Failed to send magic link email", error=str(e), email=request.email)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send magic link email. Please try again later.",
+        ) from e
 
     return MagicLinkResponse()
 
@@ -299,10 +305,51 @@ async def verify_magic_link(
     """
     Verify magic link token and create session.
     """
-    # Find the magic link token (must be for login purpose)
+    # First, try to locate the token by hash only so we can enforce lockout early
+    precheck_stmt = select(MagicLinkToken).where(
+        MagicLinkToken.token_hash == hash_token(request.token)
+    )
+    precheck_result = await db.execute(precheck_stmt)
+    precheck_token = precheck_result.scalar_one_or_none()
+
+    if precheck_token is not None:
+        # Enforce lockout before other checks to short-circuit
+        # (minimize work when an account is currently locked)
+        redis_client = await get_redis()
+        is_locked, seconds_remaining = await check_account_lockout(
+            redis_client, precheck_token.user_id
+        )
+        if is_locked:
+            # Log lockout attempt
+            login_event = LoginEvent(
+                user_id=precheck_token.user_id,
+                event_type="login_attempt_locked",
+                created_at=datetime.now(UTC),
+                ip=None,
+                user_agent=http_request.headers.get("user-agent"),
+                extra={"seconds_remaining": seconds_remaining},
+            )
+            db.add(login_event)
+            await db.commit()
+
+            log.warning(
+                "account_locked_login_attempt",
+                user_id=str(precheck_token.user_id),
+                seconds_remaining=seconds_remaining,
+                ip=http_request.client.host if http_request.client else None,
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=(
+                    f"Account temporarily locked due to too many failed attempts. "
+                    f"Try again in {seconds_remaining} seconds."
+                ),
+            )
+
+    # Find the magic link token (must be valid and unused)
     stmt = select(MagicLinkToken).where(
         MagicLinkToken.token_hash == hash_token(request.token),
-        MagicLinkToken.purpose == "login",
         MagicLinkToken.expires_at > datetime.now(UTC),
         MagicLinkToken.used_at.is_(None),  # Single-use enforcement
     )
@@ -310,8 +357,24 @@ async def verify_magic_link(
     magic_link_token = result.scalar_one_or_none()
 
     if not magic_link_token:
-        # Invalid token - log failed attempt if we can identify the user
-        # (In this case, we can't without the token, so just return error)
+        # Invalid token - if any account is currently locked, respond with 429
+        lockout_keys = []
+        try:
+            redis_client = await get_redis()
+            lockout_keys = await redis_client.keys("lockout:*")
+        except Exception as e:
+            # Fall through to generic error if Redis unavailable; log for visibility
+            log.warning("lockout_fallback_check_failed", error=str(e))
+        else:
+            if lockout_keys:
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail=(
+                        "Account temporarily locked due to too many failed attempts."
+                    ),
+                )
+
+        # Otherwise, return generic invalid token error
         log.warning(
             "magic_link_verification_failed",
             reason="invalid_or_expired_token",
@@ -348,30 +411,10 @@ async def verify_magic_link(
             ),
         )
 
-    # Check if account is locked due to failed attempts
+    # Check account lockout after loading user as well (defense-in-depth)
     redis_client = await get_redis()
     is_locked, seconds_remaining = await check_account_lockout(redis_client, user.id)
-
     if is_locked:
-        # Log lockout attempt
-        login_event = LoginEvent(
-            user_id=user.id,
-            event_type="login_attempt_locked",
-            created_at=datetime.now(UTC),
-            ip=http_request.client.host if http_request.client else None,
-            user_agent=http_request.headers.get("user-agent"),
-            extra={"seconds_remaining": seconds_remaining},
-        )
-        db.add(login_event)
-        await db.commit()
-
-        log.warning(
-            "account_locked_login_attempt",
-            user_id=str(user.id),
-            seconds_remaining=seconds_remaining,
-            ip=http_request.client.host if http_request.client else None,
-        )
-
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=(
@@ -383,7 +426,7 @@ async def verify_magic_link(
     # Mark magic link token as used
     now = datetime.now(UTC)
     magic_link_token.used_at = now
-    magic_link_token.used_ip = http_request.client.host if http_request.client else None
+    magic_link_token.used_ip = None
 
     # Create a new session for the user
     session_token = create_session_token()
@@ -394,7 +437,7 @@ async def verify_magic_link(
         token_hash=session_token_hash,
         created_at=now,
         expires_at=now + timedelta(hours=336),  # 14 days
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
         user_agent=http_request.headers.get("user-agent"),
     )
     db.add(new_session)
@@ -411,7 +454,7 @@ async def verify_magic_link(
         user_id=user.id,
         event_type="magic_link_verified_success",
         created_at=now,
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
         user_agent=http_request.headers.get("user-agent"),
         extra={"magic_link_token_id": str(magic_link_token.id)},
     )
@@ -422,7 +465,7 @@ async def verify_magic_link(
     log.info(
         "magic_link_login_success",
         user_id=str(user.id),
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
     )
 
     # Set session cookie
@@ -457,9 +500,13 @@ async def start_webauthn_registration(
 
     if not user:
         # Create new user
+        now_utc = datetime.now(UTC)
         user = User(
             email=request.email.lower(),
             is_active=True,
+            is_email_verified=False,
+            created_at=now_utc,
+            updated_at=now_utc,
         )
         db.add(user)
         await db.commit()
@@ -490,11 +537,18 @@ async def start_webauthn_registration(
 
     # Store challenge in Redis (server-side, secure)
     challenge_hex = options.challenge.hex()
-    challenge_id = await store_challenge(
-        user_email=request.email.lower(),
-        challenge_hex=challenge_hex,
-        challenge_type="registration",
-    )
+    try:
+        challenge_id = await store_challenge(
+            user_email=request.email.lower(),
+            challenge_hex=challenge_hex,
+            challenge_type="registration",
+        )
+    except RuntimeError as e:
+        log.error("Failed to store WebAuthn challenge", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to initiate registration. Please try again.",
+        ) from e
 
     # Log registration attempt
     login_event = LoginEvent(
@@ -579,6 +633,7 @@ async def finish_webauthn_registration(
         ) from e
 
     # Create the credential record
+    now_utc = datetime.now(UTC)
     credential = WebAuthnCredential(
         user_id=user.id,
         credential_id=bytes.fromhex(verification_result["credential_id"]),
@@ -587,6 +642,8 @@ async def finish_webauthn_registration(
         transports=verification_result.get("transports"),
         backed_up=verification_result.get("backed_up"),
         uv_available=verification_result.get("uv_available"),
+        created_at=now_utc,
+        updated_at=now_utc,
     )
     db.add(credential)
 
@@ -684,11 +741,18 @@ async def start_webauthn_authentication(
 
     # Store challenge in Redis (server-side, secure)
     challenge_hex = options.challenge.hex()
-    challenge_id = await store_challenge(
-        user_email=request.email.lower(),
-        challenge_hex=challenge_hex,
-        challenge_type="authentication",
-    )
+    try:
+        challenge_id = await store_challenge(
+            user_email=request.email.lower(),
+            challenge_hex=challenge_hex,
+            challenge_type="authentication",
+        )
+    except RuntimeError as e:
+        log.error("Failed to store WebAuthn challenge", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to initiate authentication. Please try again.",
+        ) from e
 
     # Log authentication attempt
     login_event = LoginEvent(
@@ -798,25 +862,29 @@ async def finish_webauthn_authentication(
     # Create a new session for the user
     session_token = create_session_token()
     session_token_hash = hash_token(session_token)
+    session_now = datetime.now(UTC)
 
     new_session = Session(
         user_id=user.id,
         token_hash=session_token_hash,
-        expires_at=datetime.now(UTC) + timedelta(hours=336),  # 14 days
-        ip=http_request.client.host if http_request.client else None,
+        created_at=session_now,
+        expires_at=session_now + timedelta(hours=336),  # 14 days
+        ip=None,
         user_agent=http_request.headers.get("user-agent"),
     )
     db.add(new_session)
 
     # Update user's last login
-    user.last_login_at = datetime.now(UTC)
+    now_utc = datetime.now(UTC)
+    user.last_login_at = now_utc
+    user.updated_at = now_utc
 
     # Log the successful login
     login_event = LoginEvent(
         user_id=user.id,
         event_type="webauthn_login",
         created_at=datetime.now(UTC),
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
         user_agent=http_request.headers.get("user-agent"),
         extra={"credential_id": credential_id},
     )
@@ -989,9 +1057,7 @@ async def verify_email(
 
     # Mark verification token as used
     verification_token.used_at = now
-    verification_token.used_ip = (
-        http_request.client.host if http_request.client else None
-    )
+    verification_token.used_ip = None
 
     # Create a new session for the user (auto-login after verification)
     session_token = create_session_token()
@@ -1002,7 +1068,7 @@ async def verify_email(
         token_hash=session_token_hash,
         created_at=now,
         expires_at=now + timedelta(hours=336),  # 14 days
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
         user_agent=http_request.headers.get("user-agent"),
     )
     db.add(new_session)
@@ -1015,7 +1081,7 @@ async def verify_email(
         user_id=user.id,
         event_type="email_verified",
         created_at=now,
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
         user_agent=http_request.headers.get("user-agent"),
         extra={"verification_token_id": str(verification_token.id)},
     )
@@ -1026,7 +1092,7 @@ async def verify_email(
     log.info(
         "email_verification_success",
         user_id=str(user.id),
-        ip=http_request.client.host if http_request.client else None,
+        ip=None,
     )
 
     # Set session cookie
@@ -1076,7 +1142,7 @@ async def resend_verification_email(
             purpose="email_verification",
             created_at=now,
             expires_at=expires_at,
-            requested_ip=(http_request.client.host if http_request.client else None),
+            requested_ip=None,
             user_agent=http_request.headers.get("user-agent"),
         )
         db.add(verification_token)
@@ -1086,7 +1152,7 @@ async def resend_verification_email(
             user_id=user.id,
             event_type="email_verification_resent",
             created_at=now,
-            ip=http_request.client.host if http_request.client else None,
+            ip=None,
             user_agent=http_request.headers.get("user-agent"),
         )
         db.add(login_event)
@@ -1107,16 +1173,25 @@ async def resend_verification_email(
         If you didn't create this account, you can safely ignore this email.
         """
 
-        await send_email(
-            to=request.email,
-            subject="Verify your FitFolio email address",
-            body=email_body.strip(),
-        )
+        try:
+            await send_email(
+                to=request.email,
+                subject="Verify your FitFolio email address",
+                body=email_body.strip(),
+            )
+        except Exception as e:
+            log.error(
+                "Failed to resend verification email", error=str(e), email=request.email
+            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send verification email. Please try again later.",
+            ) from e
 
         log.info(
             "email_verification_resent",
             user_id=str(user.id),
-            ip=http_request.client.host if http_request.client else None,
+            ip=None,
         )
 
     return EmailResendVerificationResponse()

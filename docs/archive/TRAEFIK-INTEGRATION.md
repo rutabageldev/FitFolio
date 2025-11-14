@@ -1,8 +1,7 @@
 # FitFolio Traefik Integration
 
-**Status:** Ready to deploy
-**Date:** October 30, 2025
-**Domain:** https://fitfolio.dev.rutabagel.com
+**Status:** Ready to deploy **Date:** October 30, 2025 **Domain:**
+https://fitfolio.dev.rutabagel.com
 
 ---
 
@@ -10,7 +9,8 @@
 
 A new Traefik-integrated compose file has been created: **`compose.dev.traefik.yml`**
 
-This file adds Traefik routing to FitFolio while maintaining your existing development workflow.
+This file adds Traefik routing to FitFolio while maintaining your existing development
+workflow.
 
 ---
 
@@ -19,6 +19,7 @@ This file adds Traefik routing to FitFolio while maintaining your existing devel
 ### 1. Network Configuration
 
 **Added `traefik-public` network to frontend and backend:**
+
 - Frontend and backend join the external `traefik-public` network
 - Database, Redis, and Mail services stay on internal network only
 - Services can still communicate internally via default network
@@ -26,24 +27,29 @@ This file adds Traefik routing to FitFolio while maintaining your existing devel
 ### 2. Routing Configuration
 
 **Frontend:**
+
 - Domain: `https://fitfolio.dev.rutabagel.com`
 - Routes: All paths except `/api` go to frontend
 - Port: 5173 (Vite dev server)
 - Middleware: `web-chain@file` (compression + security headers)
 
 **Backend API:**
+
 - Domain: `https://fitfolio.dev.rutabagel.com/api`
 - Routes: All `/api` paths go to backend
 - Port: 8000 (FastAPI/Uvicorn)
-- Middleware: `api-chain@file,cors-dev@file` (compression + security + rate limiting + CORS)
+- Middleware: `api-chain@file,cors-dev@file` (compression + security + rate limiting +
+  CORS)
 
 ### 3. Port Changes
 
 **Removed external port exposure for:**
+
 - Frontend (was 5173) - Now accessed via Traefik
 - Backend (was 8080) - Now accessed via Traefik
 
 **Kept exposed for development:**
+
 - PostgreSQL (5432) - For DB clients/tools
 - Redis (6379) - For Redis clients/tools
 - Mailpit UI (8025) - For email testing
@@ -51,6 +57,7 @@ This file adds Traefik routing to FitFolio while maintaining your existing devel
 ### 4. Environment Variables
 
 **Updated frontend environment:**
+
 ```yaml
 environment:
   - VITE_API_BASE_URL=https://fitfolio.dev.rutabagel.com/api
@@ -79,7 +86,8 @@ docker compose -f compose.dev.traefik.yml down
 
 ### Option 2: Keep Original Direct Access
 
-Your original `compose.dev.yml` is unchanged. You can still use it for direct port access:
+Your original `compose.dev.yml` is unchanged. You can still use it for direct port
+access:
 
 ```bash
 cd ~/projects/fitfolio
@@ -89,6 +97,7 @@ docker compose -f compose.dev.yml up -d
 ```
 
 **Why keep both?**
+
 - Use Traefik version when testing full production-like setup
 - Use direct version for quick debugging or when Traefik is down
 
@@ -119,6 +128,7 @@ docker compose -f compose.dev.yml up -d
 ### How Requests are Routed
 
 1. **Frontend Requests**
+
    ```
    https://fitfolio.dev.rutabagel.com/
    https://fitfolio.dev.rutabagel.com/workouts
@@ -127,6 +137,7 @@ docker compose -f compose.dev.yml up -d
    ```
 
 2. **API Requests**
+
    ```
    https://fitfolio.dev.rutabagel.com/api/v1/workouts
    https://fitfolio.dev.rutabagel.com/api/auth/login
@@ -141,10 +152,12 @@ docker compose -f compose.dev.yml up -d
 ### Middleware Applied
 
 **Frontend (`web-chain@file`):**
+
 - Gzip compression
 - Security headers (XSS protection, CSP, etc.)
 
 **Backend (`api-chain@file,cors-dev@file`):**
+
 - Gzip compression
 - Security headers
 - Rate limiting (20 req/s)
@@ -179,6 +192,7 @@ docker compose -f compose.dev.traefik.yml ps
 Visit Traefik dashboard: https://traefik.dev.rutabagel.com
 
 Look for these routers:
+
 - `fitfolio-backend` (https, /api path)
 - `fitfolio-frontend` (https, root path)
 
@@ -202,6 +216,7 @@ curl -k https://fitfolio.dev.rutabagel.com/api/healthz
 ### 6. Test Frontend Calling Backend
 
 The frontend should automatically call the backend via:
+
 ```javascript
 // Frontend makes API call
 fetch('/api/v1/workouts')  // Uses VITE_API_BASE_URL
@@ -243,6 +258,7 @@ curl -k https://fitfolio.dev.rutabagel.com/api/healthz
 If you see CORS errors in the browser console:
 
 1. **Verify CORS middleware is applied:**
+
    ```bash
    docker inspect fitfolio-backend | grep cors-dev
    ```
@@ -294,7 +310,9 @@ docker exec fitfolio-frontend netstat -tlnp | grep 5173
 
 ### Certificate Warnings
 
-You'll see "Your connection isn't private" warnings for local development. This is **expected and safe**:
+You'll see "Your connection isn't private" warnings for local development. This is
+**expected and safe**:
+
 - Local domains can't get Let's Encrypt certificates
 - Traefik uses self-signed certificates locally
 - Click "Advanced" → "Proceed" to continue
@@ -303,6 +321,7 @@ You'll see "Your connection isn't private" warnings for local development. This 
 ### Hot Reload Still Works
 
 Both frontend and backend hot reload still function:
+
 - Frontend: Vite dev server detects file changes
 - Backend: Uvicorn --reload detects code changes
 - No need to rebuild containers for code changes
@@ -310,6 +329,7 @@ Both frontend and backend hot reload still function:
 ### Database Access
 
 Database and Redis remain directly accessible for development:
+
 ```bash
 # PostgreSQL
 psql -h localhost -p 5432 -U ${POSTGRES_USER} -d ${POSTGRES_DB}
@@ -323,6 +343,7 @@ redis-cli -h localhost -p 6379
 ## Migration Path
 
 ### Current State
+
 - ✅ Original `compose.dev.yml` - Works as before
 - ✅ New `compose.dev.traefik.yml` - Traefik integrated
 - ✅ Both can coexist
@@ -330,6 +351,7 @@ redis-cli -h localhost -p 6379
 ### Recommended Next Steps
 
 1. **Test with Traefik version:**
+
    ```bash
    docker compose -f compose.dev.traefik.yml up -d
    ```
@@ -340,6 +362,7 @@ redis-cli -h localhost -p 6379
    - No errors in console
 
 3. **Once confident, switch default:**
+
    ```bash
    # Rename files (backup original)
    mv compose.dev.yml compose.dev.direct.yml
@@ -369,6 +392,7 @@ When deploying to production:
 ## Summary
 
 **What You Have:**
+
 - ✅ Traefik-integrated compose file ready
 - ✅ DNS configured (fitfolio.dev.rutabagel.com)
 - ✅ Routing configured (frontend at /, backend at /api)
@@ -376,12 +400,14 @@ When deploying to production:
 - ✅ Original compose file preserved
 
 **Next Step:**
+
 ```bash
 cd ~/projects/fitfolio
 docker compose -f compose.dev.traefik.yml up -d
 ```
 
 **Access:**
+
 ```
 https://fitfolio.dev.rutabagel.com
 ```

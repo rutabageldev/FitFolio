@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+try:
+    from typing import Any, cast
+
+    yaml = cast(Any, __import__("yaml"))
+except Exception:
+    print("Missing dependency: pyyaml is required to run this script.", file=sys.stderr)
+    sys.exit(2)
+
+
+def load_catalogs(root: Path):
+    catalogs = []
+    for path in sorted(root.glob("*.yaml")):
+        with path.open("r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+            data["_filepath"] = str(path)
+            catalogs.append(data)
+    return catalogs
+
+
+def compute_report(catalogs):
+    id_to_files = {}
+    per_area = {}
+    totals = {
+        "areas": 0,
+        "items_total": 0,  # excludes deprecated
+        "items_implemented": 0,
+        "items_planned": 0,
+        "items_deprecated": 0,
+    }
+
+    for c in catalogs:
+        area = c.get("area", "unknown")
+        items = c.get("items", []) or []
+        statuses = [(it.get("status") or "").lower() for it in items]
+        # Active items exclude deprecated
+        active_items = [it for it, st in zip(items, statuses, strict=False) if st != "deprecated"]
+        impl = sum(1 for it in active_items if (it.get("status") or "").lower() == "implemented")
+        planned = sum(1 for it in active_items if (it.get("status") or "").lower() == "planned")
+        deprecated = sum(1 for st in statuses if st == "deprecated")
+        total = len(active_items)
+        rate = (impl / total) if total else 0.0
+        per_area[area] = {
+            "file": c.get("_filepath"),
+            "total": total,
+            "implemented": impl,
+            "planned": planned,
+            "deprecated": deprecated,
+            "implementation_rate": round(rate, 4),
+        }
+        totals["areas"] += 1
+        totals["items_total"] += total
+        totals["items_implemented"] += impl
+        totals["items_planned"] += planned
+        totals["items_deprecated"] += deprecated
+
+        # collect ids for duplicate detection
+        for it in items:
+            tid = it.get("id")
+            if not tid:
+                continue
+            id_to_files.setdefault(tid, set()).add(c.get("_filepath"))
+
+    duplicates = {i: sorted(list(paths)) for i, paths in id_to_files.items() if len(paths) > 1}
+    overall_rate = (
+        (totals["items_implemented"] / totals["items_total"]) if totals["items_total"] else 0.0
+    )
+
+    return {
+        "per_area": per_area,
+        "totals": {**totals, "overall_implementation_rate": round(overall_rate, 4)},
+        "duplicate_ids": duplicates,
+    }
+
+
+def main():
+    repo_root = Path(__file__).resolve().parents[1]
+    backend_dir = repo_root / "docs" / "testing" / "catalog" / "backend"
+    out_file = backend_dir / "report.json"
+    catalogs = load_catalogs(backend_dir)
+    report = compute_report(catalogs)
+    # referenced tests from catalogs (strip node ids)
+    referenced = set()
+    for c in catalogs:
+        for it in c.get("items", []) or []:
+            for t in it.get("tests", []) or []:
+                if not isinstance(t, str):
+                    continue
+                p = t.split("::", 1)[0]
+                if p.endswith(".py"):
+                    referenced.add(str(Path(p).as_posix()))
+    # scan backend tests for python files excluding conftest.py
+    all_tests = []
+    tests_root = repo_root / "backend" / "tests"
+    if tests_root.exists():
+        for p in tests_root.rglob("*.py"):
+            if p.name == "conftest.py":
+                continue
+            rel = p.relative_to(repo_root).as_posix()
+            all_tests.append(rel)
+    unreferenced = sorted(sorted(set(all_tests) - referenced))
+    report["unreferenced_test_files"] = unreferenced
+    out_file.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    print(f"Wrote report to {out_file}")
+
+
+if __name__ == "__main__":
+    main()

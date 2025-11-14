@@ -22,6 +22,9 @@ build/
 .vscode/
 .idea/
 
+# Claude devcontainer data (host-side storage)
+.claude-devcontainer/
+
 # System
 .DS_Store
 Thumbs.db

@@ -1,0 +1,117 @@
+schema: 1
+area: core
+updated: 2025-11-14
+owners:
+  - backend
+  - qa
+items:
+  - id: CORE-REDIS-010
+    title: close_redis closes client connection
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_redis_client.py
+    last_verified: 2025-11-14
+  - id: CORE-REDIS-011
+    title: get_redis raises RuntimeError on ping failure
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_redis_client.py
+    last_verified: 2025-11-14
+  - id: CORE-CLEAN-001
+    title: run_cleanup_job happy path completes and commits
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_cleanup.py
+    last_verified: 2025-11-14
+  - id: CORE-CLEAN-002
+    title: run_cleanup_job error path logs and re-raises
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_cleanup.py
+    last_verified: 2025-11-14
+  - id: CORE-CLEAN-003
+    title: schedule_cleanup_job runs once and sleeps
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_cleanup.py
+    last_verified: 2025-11-14
+  - id: CORE-CLEAN-004
+    title: schedule_cleanup_job logs error and continues loop
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_cleanup.py
+    last_verified: 2025-11-14
+  - id: CORE-MAIN-REDIS-001
+    title: lifespan logs redis connection established on success
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_main_lifespan.py
+    last_verified: 2025-11-14
+  - id: CORE-MAIN-REDIS-002
+    title: lifespan logs error when redis connection fails
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_main_lifespan.py
+    last_verified: 2025-11-14
+  - id: CORE-MAIN-DB-INIT-FAIL
+    title: lifespan logs error when DB init fails
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_main_lifespan.py
+    last_verified: 2025-11-14
+  - id: CORE-MAIN-CLEANUP-SCHED
+    title: lifespan schedules cleanup job when enabled
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_main_lifespan.py
+    last_verified: 2025-11-14
+  - id: CORE-MAIN-SHUTDOWN-ERR
+    title: lifespan logs error during shutdown cleanup
+    level: unit
+    markers:
+      - unit
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/core/test_main_lifespan.py
+    last_verified: 2025-11-14

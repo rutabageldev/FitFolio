@@ -1,0 +1,81 @@
+name: Update Coverage Badge
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  update-badge:
+    name: Update Coverage Badge in README
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download coverage badge artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-badge
+          path: badges/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Extract coverage from badge JSON
+        id: coverage
+        run: |
+          if [ -f badges/coverage.json ]; then
+            COVERAGE=$(jq -r '.message' badges/coverage.json)
+            COLOR=$(jq -r '.color' badges/coverage.json)
+            echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+            echo "color=$COLOR" >> $GITHUB_OUTPUT
+            echo "Coverage: $COVERAGE (color: $COLOR)"
+          else
+            echo "Badge file not found"
+            exit 1
+          fi
+
+      - name: Update README badge
+        run: |
+          COVERAGE="${{ steps.coverage.outputs.coverage }}"
+          COLOR="${{ steps.coverage.outputs.color }}"
+
+          # URL encode the percentage sign
+          ENCODED_COVERAGE="${COVERAGE//%/%25}"
+
+          # Update the coverage badge in README.md
+          sed -i "s|\[\!\[Coverage\](https://img.shields.io/badge/coverage-[^)]*)\]()|\[\!\[Coverage\](https://img.shields.io/badge/coverage-${ENCODED_COVERAGE}-${COLOR})\]()|g" README.md
+
+          echo "Updated README.md with coverage: $COVERAGE"
+
+      - name: Check if README was modified
+        id: check_changes
+        run: |
+          if git diff --quiet README.md; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes to README.md"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "README.md was modified"
+            git diff README.md
+          fi
+
+      - name: Commit and push if changed
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add README.md
+          git commit -m "chore: update coverage badge to ${{ steps.coverage.outputs.coverage }} [skip ci]"
+          git push

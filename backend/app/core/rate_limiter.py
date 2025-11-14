@@ -62,34 +62,48 @@ class RateLimiter:
         """
         key = f"{limit.key_prefix}:{identifier}"
         now = time.time()
-        window_start = now - limit.window
 
-        # Use Redis pipeline for atomic operations
-        pipe = self.redis.pipeline()
-
-        # Remove old requests outside the window
-        pipe.zremrangebyscore(key, 0, window_start)
-
-        # Count requests in current window (before adding new one)
-        pipe.zcard(key)
-
-        # Set expiration (cleanup old keys)
-        pipe.expire(key, limit.window)
-
-        results = await pipe.execute()
-
-        # results[1] is the count BEFORE adding current request
-        current_requests = results[1]
-
-        # Check if we're within limit
-        allowed = current_requests < limit.requests
-
-        # Only add current request if allowed
-        if allowed:
-            await self.redis.zadd(key, {str(now): now})
-            await self.redis.expire(key, limit.window)
-
-        remaining = max(0, limit.requests - current_requests - 1)
+        # Use Lua script to ensure atomicity under concurrency:
+        # 1) ZREMRANGEBYSCORE key 0 window_start
+        # 2) ZCARD key
+        # 3) If count < limit: ZADD key now now; allowed=1 else allowed=0
+        # 4) EXPIRE key window
+        # Returns: {allowed, remaining_after_this}
+        lua = """
+        local key        = KEYS[1]
+        local now        = tonumber(ARGV[1])
+        local window     = tonumber(ARGV[2])
+        local lim        = tonumber(ARGV[3])
+        local window_start = now - window
+        redis.call('ZREMRANGEBYSCORE', key, 0, window_start)
+        local count = redis.call('ZCARD', key)
+        local allowed = 0
+        if count < lim then
+          local seq_key = key .. ':seq'
+          local seq = redis.call('INCR', seq_key)
+          redis.call('EXPIRE', seq_key, window)
+          redis.call('ZADD', key, now, tostring(now) .. ':' .. tostring(seq))
+          allowed = 1
+          count = count + 1
+        end
+        redis.call('EXPIRE', key, window)
+        local remaining = lim - count
+        if remaining < 0 then remaining = 0 end
+        return {allowed, remaining}
+        """
+        # redis-py expects: eval(script, numkeys, key1, ..., arg1, arg2, ...)
+        allowed_flag, remaining = await self.redis.eval(
+            lua, 1, key, now, limit.window, limit.requests
+        )
+        # Decode (redis may return strings when decode_responses=True)
+        try:
+            allowed = bool(int(allowed_flag))
+        except (TypeError, ValueError):
+            allowed = bool(allowed_flag)
+        try:
+            remaining = int(remaining)
+        except (TypeError, ValueError):
+            remaining = max(0, limit.requests - 1)
 
         # Calculate reset time (when oldest request expires)
         reset_at = datetime.fromtimestamp(now + limit.window, tz=UTC)

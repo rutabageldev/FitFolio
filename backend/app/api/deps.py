@@ -114,3 +114,51 @@ async def get_optional_session_with_rotation(
         return await get_current_session_with_rotation(response, session_token, db)
     except HTTPException:
         return None, None
+
+
+async def get_session_allow_inactive(
+    response: Response,
+    session_token: Annotated[str | None, Cookie(alias="ff_sess")] = None,
+    db: AsyncSession = Depends(get_db),
+) -> tuple[Session, User]:
+    """
+    Get current session and user, allowing inactive users.
+
+    This is intended for admin endpoints that want to return 403 for inactive
+    users rather than failing at the dependency layer with 401.
+    """
+    if not session_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+
+    stmt = select(Session).where(
+        Session.token_hash == hash_token(session_token),
+        Session.expires_at > datetime.now(UTC),
+        Session.revoked_at.is_(None),
+    )
+    result = await db.execute(stmt)
+    session = result.scalar_one_or_none()
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired session",
+        )
+
+    session, new_token = await check_and_rotate_if_needed(session, db)
+    if new_token:
+        cookie_secure = os.getenv("COOKIE_SECURE", "false").lower() == "true"
+        response.set_cookie(
+            key="ff_sess",
+            value=new_token,
+            httponly=True,
+            secure=cookie_secure,
+            samesite="lax",
+            max_age=336 * 3600,
+        )
+
+    user_stmt = select(User).where(User.id == session.user_id)
+    user_result = await db.execute(user_stmt)
+    user = user_result.scalar_one()
+    return session, user

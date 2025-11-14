@@ -24,7 +24,8 @@ repos:
     rev: v1.10.0
     hooks:
       - id: mypy
-        additional_dependencies: ['sqlalchemy>=2.0', 'pydantic>=2', 'types-redis>=4.6.0']
+        additional_dependencies:
+          ['sqlalchemy>=2.0', 'pydantic>=2', 'types-redis>=4.6.0']
 
   # --- Security (static) ---
   - repo: https://github.com/PyCQA/bandit
@@ -57,6 +58,24 @@ repos:
   # --- Frontend lint & format (run in devcontainer) ---
   - repo: local
     hooks:
+      - id: catalog-sync-markers
+        name: sync catalog markers
+        language: system
+        entry: bash -lc 'python3 scripts/sync_catalog_markers.py'
+        pass_filenames: false
+        files: ^(docs/testing/catalog/backend/|scripts/sync_catalog_markers\.py).*
+      - id: catalog-report
+        name: generate catalog report
+        language: system
+        entry: bash -lc 'python3 scripts/build_catalog_report.py'
+        pass_filenames: false
+        files: ^(docs/testing/catalog/backend/|scripts/build_catalog_report\.py).*
+      - id: catalog-check
+        name: backend catalog check
+        language: system
+        entry: bash -lc 'python3 scripts/check_tests_in_catalog.py'
+        pass_filenames: false
+        files: ^(backend/tests/|docs/testing/catalog/backend/).*
       - id: eslint
         name: frontend eslint
         language: system
@@ -67,6 +86,11 @@ repos:
         language: system
         entry: bash -lc 'npx --yes prettier -w --config frontend/.prettierrc --ignore-path frontend/.prettierignore -- "$@"' --
         files: ^frontend/.*\.(ts|tsx|js|jsx|json|css|scss|md|markdown|ya?ml|html)$
+      - id: prettier-docs
+        name: docs prettier write
+        language: system
+        entry: bash -lc 'npx --yes prettier -w --prose-wrap always -- "$@"' --
+        files: ^docs/.*\.md$
 
   # --- Backend security tests ---
   - repo: local
@@ -74,9 +98,9 @@ repos:
       - id: pytest-security
         name: pytest security tests
         language: system
-        entry: bash -lc 'cd backend && pytest tests/test_security.py tests/test_csrf.py tests/test_session_rotation.py -v --tb=short'
+        entry: bash -lc 'cd backend && pytest -v --tb=short'
         pass_filenames: false
-        files: ^backend/(app/(core/(security|session_rotation|csrf)|middleware/csrf|api/(routes/auth|deps))|tests/test_(security|csrf|session_rotation))\.py$
+        files: ^backend/(app/(core/(security|session_rotation|csrf)|middleware/csrf|api/(routes/auth|deps))|tests/security/test_(security|csrf|session_rotation)\.py)$
 
   # --- Pre-push checks ---
   - repo: local

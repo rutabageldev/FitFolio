@@ -1,10 +1,14 @@
 # FitFolio Infrastructure Implementation Guide
 
-This document outlines the phases, activities, objectives, and definitions of done (DoD) for FitFolio's infrastructure setup, based on the final design decisions:
+This document outlines the phases, activities, objectives, and definitions of done (DoD)
+for FitFolio's infrastructure setup, based on the final design decisions:
 
-- **Routing:** Single host `rutabagel.com` with backend at `/api` (no cross-origin CORS in prod).
-- **Sessions:** Opaque, rotating, server-side sessions stored in Postgres, delivered via HttpOnly, Secure, SameSite=Lax cookie.
-- **Email Auth Flow:** Magic link (single-use, short TTL) as the primary sign-in method, with WebAuthn (passkeys) prompted after login.
+- **Routing:** Single host `rutabagel.com` with backend at `/api` (no cross-origin CORS
+  in prod).
+- **Sessions:** Opaque, rotating, server-side sessions stored in Postgres, delivered via
+  HttpOnly, Secure, SameSite=Lax cookie.
+- **Email Auth Flow:** Magic link (single-use, short TTL) as the primary sign-in method,
+  with WebAuthn (passkeys) prompted after login.
 
 ---
 
@@ -76,7 +80,8 @@ This document outlines the phases, activities, objectives, and definitions of do
 **Activities**
 
 - Switch backend prod to `gunicorn` with uvicorn workers.
-- Integrate with Traefik: frontend `/`, backend `/api` (strip prefix), TLS via certresolver.
+- Integrate with Traefik: frontend `/`, backend `/api` (strip prefix), TLS via
+  certresolver.
 - Move sensitive values to Docker secrets.
 
 **Objective**

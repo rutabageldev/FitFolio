@@ -1,0 +1,568 @@
+schema: 1
+area: auth.webauthn
+updated: 2025-11-13
+owners:
+- backend-auth
+- qa
+items:
+- id: AUTH-WA-010
+  title: WebAuthn registration finish persists credential and attributes
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_registration_happy_paths.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-200
+  title: Verify registration response success (manager unit)
+  level: unit
+  markers:
+  - security
+  - unit
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_manager.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-201
+  title: Verify registration response error branches (manager unit)
+  level: unit
+  markers:
+  - security
+  - unit
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_manager.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-210
+  title: Verify authentication response success (manager unit)
+  level: unit
+  markers:
+  - security
+  - unit
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_manager.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-211
+  title: Verify authentication response error branches (manager unit)
+  level: unit
+  markers:
+  - security
+  - unit
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_manager.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-001
+  title: Registration start returns options with challenge
+  level: integration
+  markers:
+  - security
+  risk: critical
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_registration.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-002
+  title: Registration start stores challenge
+  level: integration
+  markers: []
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_registration.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-015
+  title: Register start returns options and challenge_id; creates user if needed
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_register_start_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-016
+  title: Register start store_challenge failure returns 500
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_register_start_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-003
+  title: Registration start invalid email 422
+  level: integration
+  markers: []
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_registration.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-050
+  title: Authenticate start without credentials errors
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_error_paths.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-051
+  title: Authenticate start Redis failure 500
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_error_paths.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-060
+  title: List credentials returns user's credentials
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_credentials.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-070
+  title: Authentication happy paths
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_authentication_happy_paths.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-074
+  title: Authenticate finish invalid credential id returns 400
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_error_paths.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-075
+  title: List credentials unauthorized without token returns 401
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_credentials.py
+  last_verified: 2025-11-14
+-
+  id: AUTH-WA-061
+  title: List credentials handler returns user's credentials
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_credentials_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-076
+  title: List credentials invalid session returns 401
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_credentials.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-071
+  title: WebAuthn authorization checks
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_authorization.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-072
+  title: WebAuthn end-to-end flow
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_end_to_end.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-073
+  title: WebAuthn integration paths
+  level: integration
+  markers: []
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_integration.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-020
+  title: Registration finish persists credential (valid attestation)
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: critical
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_registration_happy_paths.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-021
+  title: Registration finish creates first credential for user
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_registration_happy_paths.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-022
+  title: Registration finish allows additional credentials per user
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_registration_happy_paths.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-017
+  title: Register finish missing challenge returns 400
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_register_finish_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-018
+  title: Register finish challenge email mismatch returns 400
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_register_finish_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-019
+  title: Register finish verify error returns 400
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_register_finish_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-025
+  title: Register finish rotates cookie when session present
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_register_finish_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-080
+  title: Authenticate start success; challenge stored and returned
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_auth_start_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-081
+  title: Authenticate start without credentials returns 400
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_auth_start_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-082
+  title: Authenticate start store_challenge failure returns 500
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_auth_start_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-091
+  title: Authenticate finish user not found returns 404
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_auth_finish_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-090
+  title: Authenticate finish missing credential id returns 400
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_auth_finish_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-024
+  title: Registration finish rotates existing session and sets cookie (privilege escalation)
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_registration.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-023
+  title: Duplicate credential ID rejected with conflict
+  level: integration
+  markers:
+  - security
+  risk: high
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-WA-030
+  title: Authenticate start for user with credentials returns allowCredentials
+  level: integration
+  markers:
+  - security
+  risk: critical
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_integration.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-031
+  title: Authenticate start for user without credentials returns empty allowCredentials
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_end_to_end.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-032
+  title: Authenticate start respects rate limit decorator
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/security/test_rate_limiting.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-033
+  title: Authenticate start invalid email format returns 422
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_integration.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-034
+  title: Authenticate start enumeration-resistant response (future)
+  level: integration
+  markers:
+  - security
+  risk: medium
+  status: planned
+  tests: []
+  last_verified: null
+- id: AUTH-WA-040
+  title: Authenticate finish creates session on valid assertion
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: critical
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_authentication_happy_paths.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-041
+  title: Authenticate finish increments sign count
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_authentication_happy_paths.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-042
+  title: Authenticate finish respects rate limit decorator
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/security/test_rate_limiting.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-043
+  title: Authenticate finish sets cookie flags and rate limit headers
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_authentication_happy_paths.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-CH-001
+  title: Challenge storage stores challenge with TTL
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: critical
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-CH-002
+  title: Challenge storage returns opaque challenge_id
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-CH-003
+  title: Challenge storage Redis error raises RuntimeError (setex)
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: critical
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-CH-004
+  title: Retrieve and delete challenge returns tuple and deletes key
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: critical
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-CH-005
+  title: Missing or expired challenge returns None
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-CH-006
+  title: Malformed stored value returns None
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-CH-007
+  title: Challenge retrieval pipeline failure raises RuntimeError
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: high
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13
+- id: AUTH-WA-CH-008
+  title: Cleanup deletes keys by user/type pattern; returns count
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_challenge_storage.py
+  last_verified: 2025-11-13

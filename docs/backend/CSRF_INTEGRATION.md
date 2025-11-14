@@ -2,7 +2,8 @@
 
 ## Overview
 
-The backend implements CSRF protection using the **double-submit cookie pattern**. This document explains how the frontend should integrate with this security feature.
+The backend implements CSRF protection using the **double-submit cookie pattern**. This
+document explains how the frontend should integrate with this security feature.
 
 ## How It Works
 
@@ -12,7 +13,8 @@ The backend implements CSRF protection using the **double-submit cookie pattern*
 
 2. **Frontend** must:
    - Read the token from the cookie
-   - Send it back in the `X-CSRF-Token` header for all state-changing requests (POST, PUT, DELETE, PATCH)
+   - Send it back in the `X-CSRF-Token` header for all state-changing requests (POST,
+     PUT, DELETE, PATCH)
 
 3. **Backend** validates:
    - Token in cookie matches token in header
@@ -21,6 +23,7 @@ The backend implements CSRF protection using the **double-submit cookie pattern*
 ## Protected Endpoints
 
 All POST/PUT/DELETE/PATCH endpoints require CSRF tokens, **except**:
+
 - `POST /auth/magic-link/start` - No session exists yet
 - `POST /auth/magic-link/verify` - Token in body provides protection
 - `GET` requests - Safe methods don't need protection
@@ -45,7 +48,10 @@ function getCsrfToken() {
 async function authenticatedFetch(url, options = {}) {
   const csrfToken = getCsrfToken();
 
-  if (!csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
+  if (
+    !csrfToken &&
+    ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())
+  ) {
     throw new Error('CSRF token not found. Please refresh the page.');
   }
 
@@ -152,7 +158,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 403 && error.response?.data?.detail?.includes('CSRF')) {
+    if (
+      error.response?.status === 403 &&
+      error.response?.data?.detail?.includes('CSRF')
+    ) {
       // CSRF token expired or invalid - refresh the page
       console.error('CSRF token invalid. Please refresh the page.');
       // Optionally: window.location.reload();
@@ -267,9 +276,10 @@ curl -X POST http://localhost:8080/auth/webauthn/register/start \
 1. Open DevTools Console
 2. Check for CSRF token:
    ```javascript
-   document.cookie.match(/csrf_token=([^;]+)/)?.[1]
+   document.cookie.match(/csrf_token=([^;]+)/)?.[1];
    ```
 3. Make a test request:
+
    ```javascript
    const token = document.cookie.match(/csrf_token=([^;]+)/)?.[1];
 
@@ -281,24 +291,24 @@ curl -X POST http://localhost:8080/auth/webauthn/register/start \
      },
      credentials: 'include',
      body: JSON.stringify({ email: 'test@example.com' }),
-   }).then(r => r.json()).then(console.log);
+   })
+     .then((r) => r.json())
+     .then(console.log);
    ```
 
 ## Security Considerations
 
 ### Do's
 
-✅ **Do** include `credentials: 'include'` in fetch requests
-✅ **Do** read the token fresh from the cookie each time
-✅ **Do** handle 403 CSRF errors gracefully
-✅ **Do** use HTTPS in production (set `CSRF_COOKIE_SECURE=true`)
+✅ **Do** include `credentials: 'include'` in fetch requests ✅ **Do** read the token
+fresh from the cookie each time ✅ **Do** handle 403 CSRF errors gracefully ✅ **Do**
+use HTTPS in production (set `CSRF_COOKIE_SECURE=true`)
 
 ### Don'ts
 
-❌ **Don't** cache the CSRF token in state/localStorage
-❌ **Don't** send requests without the token
-❌ **Don't** expose the token in URLs or GET parameters
-❌ **Don't** disable CSRF protection for convenience
+❌ **Don't** cache the CSRF token in state/localStorage ❌ **Don't** send requests
+without the token ❌ **Don't** expose the token in URLs or GET parameters ❌ **Don't**
+disable CSRF protection for convenience
 
 ## Troubleshooting
 
@@ -307,16 +317,19 @@ curl -X POST http://localhost:8080/auth/webauthn/register/start \
 **Problem:** `document.cookie` doesn't show `csrf_token`
 
 **Solutions:**
+
 - Make sure you've made at least one GET request to the backend
 - Check that cookies are enabled in the browser
 - Verify the backend is setting the cookie (check Network tab → Response Headers)
-- Ensure the frontend and backend are on the same domain (or CORS is configured correctly)
+- Ensure the frontend and backend are on the same domain (or CORS is configured
+  correctly)
 
 ### CORS errors
 
 **Problem:** Request blocked by CORS policy
 
 **Solutions:**
+
 - Verify `CORS_ORIGINS` in backend `.env` includes your frontend URL
 - Ensure `credentials: 'include'` is set in fetch options
 - Check that backend CORS middleware allows credentials
@@ -326,6 +339,7 @@ curl -X POST http://localhost:8080/auth/webauthn/register/start \
 **Problem:** Getting "CSRF token invalid" despite sending token
 
 **Solutions:**
+
 - Ensure the same token is in both cookie and header
 - Don't manually modify the token value
 - Check for trailing whitespace in token
@@ -363,5 +377,5 @@ EXEMPT_PATHS = {
 
 ---
 
-**Last Updated:** 2025-10-27
-**Backend CSRF Implementation:** `backend/app/middleware/csrf.py`
+**Last Updated:** 2025-10-27 **Backend CSRF Implementation:**
+`backend/app/middleware/csrf.py`

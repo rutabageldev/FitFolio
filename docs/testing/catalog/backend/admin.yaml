@@ -1,0 +1,359 @@
+schema: 1
+area: admin
+updated: 2025-11-13
+owners:
+  - backend-admin
+  - qa
+items:
+  - id: ADMIN-AUDIT-001
+    title: Audit endpoints exist and require authentication
+    level: integration
+    markers:
+      - admin
+      - contract
+      - integration
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/admin/test_audit_logging.py
+      - backend/tests/contract/test_admin_contract.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-010
+    title: Unauthenticated request returns 401 (events)
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-011
+    title: Inactive user returns 403 (events)
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-012
+    title: Active user returns audit events
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-013
+    title: Admin role enforcement (future)
+    level: integration
+    markers:
+      - security
+    risk: critical
+    status: planned
+    tests: []
+    last_verified: null
+  - id: ADMIN-AUDIT-020
+    title: No filters returns paginated events
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-021
+    title: Filter by user_id returns only user events
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-022
+    title: Filter by event_type returns only event type
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-023
+    title: Filter by start_date
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-024
+    title: Filter by end_date
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-025
+    title: Filter by date range (start+end)
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-026
+    title: Multiple filters combined
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-030
+    title: Invalid user_id format returns 400
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-031
+    title: Invalid date format validation error
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-032
+    title: Page < 1 validation error
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-033
+    title: Page_size < 1 validation error
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-034
+    title: Page_size > 1000 validation error
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-040
+    title: Pagination first page with results
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-041
+    title: Pagination middle page correctness
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-042
+    title: Pagination last page has_more=false
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-043
+    title: Pagination beyond available results returns empty
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-044
+    title: Custom page_size honored
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-050
+    title: Response includes user_email when user present
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-051
+    title: Response handles null user_id/user_email
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-052
+    title: Total count matches filtered results
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-AUDIT-053
+    title: Events ordered by created_at desc
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: high
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-TYPES-010
+    title: Event types unauthenticated returns 401
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-TYPES-011
+    title: Event types inactive user returns 403
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-TYPES-012
+    title: Event types authenticated returns list
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-TYPES-013
+    title: Return distinct event types
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: critical
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-TYPES-014
+    title: Event types sorted alphabetically
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
+  - id: ADMIN-TYPES-015
+    title: Empty database returns empty list
+    level: integration
+    markers:
+      - admin
+      - integration
+    risk: low
+    status: implemented
+    tests:
+      - backend/tests/admin/test_admin_endpoints.py
+    last_verified: 2025-11-13
