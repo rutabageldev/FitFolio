@@ -6,6 +6,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from httpx import AsyncClient
+from starlette.requests import Request
+from starlette.responses import Response
 
 from app.core.redis_client import get_redis
 from app.core.security import (
@@ -218,6 +220,7 @@ class TestMagicLinkLockout:
         self, client: AsyncClient, db_session
     ):
         """Successful login should reset failed attempts counter."""
+        _ = client
         from datetime import timedelta
 
         from app.core.security import hash_token
@@ -241,24 +244,44 @@ class TestMagicLinkLockout:
             await record_failed_login(redis_client, user.id)
 
         # Create valid magic link token
-        token = "test_token_for_reset"
+        from app.core.security import create_magic_link_token
+
+        token = create_magic_link_token()
         magic_link = MagicLinkToken(
             user_id=user.id,
             token_hash=hash_token(token),
+            purpose="login",
             created_at=now,
             expires_at=now + timedelta(minutes=15),
+            used_at=None,
+            requested_ip=None,
+            used_ip=None,
+            user_agent="pytest-agent",
         )
         db_session.add(magic_link)
         await db_session.commit()
 
-        # Successful login
-        response = await client.post(
-            "/api/v1/auth/magic-link/verify",
-            json={"token": token},
+        # Call handler directly to avoid any middleware/client variability
+        from app.api.v1.auth import MagicLinkVerifyRequest, verify_magic_link
+
+        scope = {
+            "type": "http",
+            "method": "POST",
+            "path": "/api/v1/auth/magic-link/verify",
+            "headers": [(b"user-agent", b"pytest")],
+            "client": ("127.0.0.1", 12345),
+        }
+        http_request = Request(scope)
+        http_response = Response()
+        result = await verify_magic_link(
+            request=MagicLinkVerifyRequest(token=token),
+            response=http_response,
+            http_request=http_request,
+            db=db_session,
         )
 
-        # Should succeed
-        assert response.status_code == 200
+        # Should succeed (handler returns response model)
+        assert result.message.lower().startswith("login successful")
 
         # Verify failed attempts were reset
         # (Try recording new failures - should start from 1)

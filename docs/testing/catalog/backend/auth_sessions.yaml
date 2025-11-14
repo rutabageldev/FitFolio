@@ -178,6 +178,50 @@ items:
     tests:
       - backend/tests/auth/sessions/test_sessions_listing_variants.py
     last_verified: 2025-11-14
+  - id: AUTH-SESS-060
+    title: Logout handler revokes session and clears cookie
+    level: unit
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_logout_handler.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-061
+    title: List sessions handler returns all with is_current marked
+    level: unit
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_handlers_unit.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-062
+    title: Revoke session handler success marks revoked and logs
+    level: unit
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_handlers_unit.py
+    last_verified: 2025-11-14
+  - id: AUTH-SESS-063
+    title: Revoke all other sessions handler revokes others and logs count
+    level: unit
+    markers:
+      - integration
+      - security
+    risk: medium
+    status: implemented
+    tests:
+      - backend/tests/auth/sessions/test_session_handlers_unit.py
+    last_verified: 2025-11-14
   - id: AUTH-SESS-051
     title: List sessions excludes expired, revoked, or rotated sessions
     level: integration

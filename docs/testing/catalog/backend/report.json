@@ -18,8 +18,8 @@
     },
     "auth.email": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_email.yaml",
-      "total": 9,
-      "implemented": 9,
+      "total": 14,
+      "implemented": 14,
       "planned": 0,
       "deprecated": 0,
       "implementation_rate": 1.0
@@ -34,19 +34,19 @@
     },
     "auth.sessions": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_sessions.yaml",
-      "total": 17,
-      "implemented": 17,
+      "total": 21,
+      "implemented": 21,
       "planned": 0,
       "deprecated": 0,
       "implementation_rate": 1.0
     },
     "auth.webauthn": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/auth_webauthn.yaml",
-      "total": 43,
-      "implemented": 41,
+      "total": 52,
+      "implemented": 50,
       "planned": 2,
       "deprecated": 0,
-      "implementation_rate": 0.9535
+      "implementation_rate": 0.9615
     },
     "contract": {
       "file": "/workspaces/fitfolio/docs/testing/catalog/backend/contract.yaml",
@@ -99,11 +99,11 @@
   },
   "totals": {
     "areas": 12,
-    "items_total": 195,
-    "items_implemented": 192,
+    "items_total": 213,
+    "items_implemented": 210,
     "items_planned": 3,
     "items_deprecated": 2,
-    "overall_implementation_rate": 0.9846
+    "overall_implementation_rate": 0.9859
   },
   "duplicate_ids": {
     "AUTH-EMAIL-201": [

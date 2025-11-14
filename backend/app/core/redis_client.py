@@ -5,6 +5,7 @@ import os
 import redis.asyncio as redis
 
 _redis_client: redis.Redis | None = None
+_redis_url_cache: str | None = None
 
 
 async def get_redis() -> redis.Redis:
@@ -17,10 +18,11 @@ async def get_redis() -> redis.Redis:
     Raises:
         RuntimeError: If Redis connection fails
     """
-    global _redis_client
+    global _redis_client, _redis_url_cache
 
-    if _redis_client is None:
-        redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
+    redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
+    # Recreate client if URL changed (e.g., tests override REDIS_URL after import)
+    if _redis_client is None or _redis_url_cache != redis_url:
         try:
             _redis_client = redis.from_url(
                 redis_url,
@@ -31,6 +33,7 @@ async def get_redis() -> redis.Redis:
             )
             # Test connection
             await _redis_client.ping()
+            _redis_url_cache = redis_url
         except Exception as e:
             # Ensure we don't cache a bad client on failure
             _redis_client = None

@@ -176,6 +176,18 @@ items:
   tests:
   - backend/tests/auth/webauthn/test_webauthn_credentials.py
   last_verified: 2025-11-14
+-
+  id: AUTH-WA-061
+  title: List credentials handler returns user's credentials
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_credentials_handler.py
+  last_verified: 2025-11-14
 - id: AUTH-WA-076
   title: List credentials invalid session returns 401
   level: integration
@@ -261,6 +273,94 @@ items:
   status: implemented
   tests:
   - backend/tests/auth/webauthn/test_webauthn_register_finish_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-018
+  title: Register finish challenge email mismatch returns 400
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_register_finish_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-019
+  title: Register finish verify error returns 400
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_register_finish_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-025
+  title: Register finish rotates cookie when session present
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_register_finish_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-080
+  title: Authenticate start success; challenge stored and returned
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_auth_start_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-081
+  title: Authenticate start without credentials returns 400
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_auth_start_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-082
+  title: Authenticate start store_challenge failure returns 500
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_auth_start_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-091
+  title: Authenticate finish user not found returns 404
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_auth_finish_handler.py
+  last_verified: 2025-11-14
+- id: AUTH-WA-090
+  title: Authenticate finish missing credential id returns 400
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/webauthn/test_webauthn_auth_finish_handler.py
   last_verified: 2025-11-14
 - id: AUTH-WA-024
   title: Registration finish rotates existing session and sets cookie (privilege escalation)

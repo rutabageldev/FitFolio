@@ -14,7 +14,7 @@ concurrency:
 permissions:
   contents: read
   security-events: write  # Required for CodeQL
-  pull-requests: read     # Required for Dependency Review
+  pull-requests: write    # Required for coverage comments and Dependency Review
 
 jobs:
   backend-tests:
@@ -84,15 +84,83 @@ jobs:
           SMTP_HOST: localhost
           SMTP_PORT: 1025
         run: |
-          pytest --cov=app --cov-report=xml --cov-report=term
+          pytest --cov=app --cov-report=xml --cov-report=html --cov-report=term --cov-fail-under=85
 
-      - name: Upload coverage reports
+      - name: Upload coverage reports to artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-coverage
+          name: backend-coverage-report
           path: |
             backend/coverage.xml
+            backend/htmlcov/
             backend/.coverage
+          retention-days: 30
+
+      - name: Generate coverage badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          COVERAGE=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('backend/coverage.xml'); root = tree.getroot(); print(f\"{float(root.attrib['line-rate']) * 100:.1f}\")")
+          echo "Coverage: $COVERAGE%"
+
+          # Determine badge color
+          if (( $(echo "$COVERAGE >= 90" | bc -l) )); then
+            COLOR="brightgreen"
+          elif (( $(echo "$COVERAGE >= 85" | bc -l) )); then
+            COLOR="green"
+          elif (( $(echo "$COVERAGE >= 80" | bc -l) )); then
+            COLOR="yellow"
+          elif (( $(echo "$COVERAGE >= 70" | bc -l) )); then
+            COLOR="orange"
+          else
+            COLOR="red"
+          fi
+
+          # Create badge JSON
+          mkdir -p badges
+          cat > badges/coverage.json << EOF
+          {
+            "schemaVersion": 1,
+            "label": "coverage",
+            "message": "${COVERAGE}%",
+            "color": "${COLOR}"
+          }
+          EOF
+
+          echo "COVERAGE_PERCENT=$COVERAGE" >> $GITHUB_ENV
+          echo "BADGE_COLOR=$COLOR" >> $GITHUB_ENV
+
+      - name: Upload badge to artifacts
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-badge
+          path: badges/coverage.json
+          retention-days: 90
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const xml = fs.readFileSync('backend/coverage.xml', 'utf8');
+            const match = xml.match(/line-rate="([\d.]+)"/);
+            if (match) {
+              const coverage = (parseFloat(match[1]) * 100).toFixed(1);
+              const emoji = coverage >= 90 ? '🟢' : coverage >= 85 ? '🟡' : '🔴';
+
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## ${emoji} Backend Test Coverage: ${coverage}%\n\n` +
+                      `Minimum required: **85%**\n\n` +
+                      `${coverage >= 85 ? '✅ Coverage requirement met!' : '❌ Coverage below minimum threshold'}\n\n` +
+                      `[View detailed coverage report in artifacts](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`
+              });
+            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   backend-lint:
     name: Backend Linting

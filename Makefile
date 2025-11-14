@@ -1,4 +1,4 @@
-.PHONY: help up down ps be-health rebuild be-logs fe-logs logs be fe dbshell migrate autogen fmt lint test mail-logs mail-verify mail-ui magic-link open-mailpit open-frontend build-prod up-prod down-prod logs-prod
+.PHONY: help up down ps be-health rebuild be-logs fe-logs logs be fe dbshell migrate autogen fmt lint test test-parity mail-logs mail-verify mail-ui magic-link open-mailpit open-frontend build-prod up-prod down-prod logs-prod
 
 help:        ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sed 's/:.*##/: /'
@@ -52,6 +52,9 @@ lint:        ## Lint (pre-commit if you use it)
 
 test:        ## Run backend tests
 	docker compose -f compose.dev.yml exec backend bash -lc "pytest -q"
+
+test-parity: ## Run tests with RL on and isolated Redis DB (db=1). Usage: make test-parity ARGS='path::to::test -k pattern'
+	docker compose -f compose.dev.yml exec backend bash -lc "REDIS_URL=redis://redis:6379/1 RATE_LIMIT_ENABLED=true pytest -q -ra $(ARGS)"
 
 mail-logs:
 	docker compose -f compose.dev.yml logs -f mail

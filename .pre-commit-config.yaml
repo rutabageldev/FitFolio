@@ -98,7 +98,7 @@ repos:
       - id: pytest-security
         name: pytest security tests
         language: system
-        entry: bash -lc 'cd backend && pytest tests/security/test_security.py tests/security/test_csrf.py tests/security/test_session_rotation.py -v --tb=short'
+        entry: bash -lc 'cd backend && pytest -v --tb=short'
         pass_filenames: false
         files: ^backend/(app/(core/(security|session_rotation|csrf)|middleware/csrf|api/(routes/auth|deps))|tests/security/test_(security|csrf|session_rotation)\.py)$
 

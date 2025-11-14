@@ -108,3 +108,63 @@ items:
   tests:
   - backend/tests/auth/email/test_email_error_paths.py
   last_verified: 2025-11-14
+-
+  id: AUTH-EMAIL-300
+  title: Verify email handler success sets cookie and session
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/email/test_email_verify_handler.py
+  last_verified: 2025-11-14
+-
+  id: AUTH-EMAIL-301
+  title: Verify email handler invalid token 400
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/email/test_email_verify_error_paths_handler.py
+  last_verified: 2025-11-14
+-
+  id: AUTH-EMAIL-302
+  title: Verify email handler inactive user 400
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/email/test_email_verify_error_paths_handler.py
+  last_verified: 2025-11-14
+-
+  id: AUTH-EMAIL-303
+  title: Resend verification handler sends email and logs event
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/email/test_email_resend_handler.py
+  last_verified: 2025-11-14
+-
+  id: AUTH-EMAIL-304
+  title: Resend verification handler send failure returns 500
+  level: unit
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/email/test_email_resend_handler.py
+  last_verified: 2025-11-14
