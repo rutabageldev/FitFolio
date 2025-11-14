@@ -319,6 +319,7 @@ items:
   status: implemented
   tests:
   - backend/tests/security/test_account_lockout.py
+  - backend/tests/auth/magic_link/test_magic_link_verify_precheck_handler.py
   last_verified: 2025-11-14
 - id: AUTH-ML-240
   title: Start (unit) new user executes creation and sends verification
