@@ -86,6 +86,38 @@ open-mailpit:
 open-frontend:
 	@echo "Frontend -> http://localhost:5173"
 
+up-staging: ## Start staging stack
+	docker compose -f compose.staging.yml up -d
+
+down-staging: ## Stop staging stack
+	docker compose -f compose.staging.yml down -v
+
+logs-staging: ## Tail staging logs
+	docker compose -f compose.staging.yml logs -f --tail=200
+
+migrate-staging: ## Apply DB migrations in staging
+	docker compose -f compose.staging.yml exec backend bash -lc "alembic -c /app/alembic.ini upgrade head"
+
+smoke-staging: ## Quick staging smoke tests
+	@set -e; \
+	echo "Health check -> https://staging.fitfolio.rutabagel.com/healthz"; \
+	curl -fsS -I https://staging.fitfolio.rutabagel.com/healthz | head -n 1; \
+	echo "API root -> https://staging.fitfolio.rutabagel.com/api"; \
+	curl -fsS https://staging.fitfolio.rutabagel.com/api | python3 -m json.tool || true; \
+	echo "Auth me (expect 401) -> https://staging.fitfolio.rutabagel.com/api/v1/auth/me"; \
+	curl -s -o /dev/null -w "%{http_code}\n" https://staging.fitfolio.rutabagel.com/api/v1/auth/me | grep -q "^401$$"; \
+	curl -s -I -o /dev/null -w "%{http_code}\n" https://staging.fitfolio.rutabagel.com/api/v1/auth/me | grep -q "^401$$"; \
+	echo "Frontend root (HEAD) -> https://staging.fitfolio.rutabagel.com/"; \
+	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | head -n 1; \
+	echo "Frontend root (GET) -> https://staging.fitfolio.rutabagel.com/"; \
+	curl -fsS https://staging.fitfolio.rutabagel.com/ >/dev/null; \
+	echo "Validate security headers (HSTS, CSP)"; \
+	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi \"strict-transport-security\"; \
+	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi \"content-security-policy\"
+
+smoke-url: ## Run generic smoke against BASE (usage: make smoke-url BASE=https://host)
+	@bash scripts/smoke_deploy.sh "$(BASE)" false
+
 build-prod:
 	docker build -f backend/Dockerfile.prod -t fitfolio-backend:prod .
 	docker build -f frontend/Dockerfile.prod -t fitfolio-frontend:prod .
