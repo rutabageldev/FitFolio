@@ -22,6 +22,8 @@ jobs:
       contents: read
       packages: write
       id-token: write
+    outputs:
+      image_tag: ${{ steps.tag.outputs.image_tag }}
     steps:
       - uses: actions/checkout@v4
 
@@ -30,8 +32,11 @@ jobs:
         run: |
           if [ -n "${{ github.event.inputs.image_tag }}" ]; then
             echo "IMAGE_TAG=${{ github.event.inputs.image_tag }}" >> $GITHUB_ENV
+            echo "image_tag=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
           else
-            echo "IMAGE_TAG=sha-$(git rev-parse --short=12 HEAD)" >> $GITHUB_ENV
+            TAG="sha-$(git rev-parse --short=12 HEAD)"
+            echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
+            echo "image_tag=$TAG" >> $GITHUB_OUTPUT
           fi
 
       - name: Log in to GHCR
@@ -70,7 +75,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set IMAGE_TAG
-        run: echo "IMAGE_TAG=${{ needs.build-and-push.outputs.image_tag || env.IMAGE_TAG }}" >> $GITHUB_ENV
+        run: echo "IMAGE_TAG=${{ needs.build-and-push.outputs.image_tag }}" >> $GITHUB_ENV
+      - name: Sync compose files to staging host
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STAGING_SSH_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          source: "compose.staging.yml,compose.prod.yml"
+          target: "${{ secrets.STAGING_APP_DIR }}"
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.1.0
         with:
@@ -83,6 +96,7 @@ jobs:
             export GHCR_REPO=${{ env.GHCR_REPO }}
             export IMAGE_TAG=${{ env.IMAGE_TAG }}
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+            cd "${{ secrets.STAGING_APP_DIR }}"
             docker compose -f compose.staging.yml pull
             docker compose -f compose.staging.yml up -d
             docker compose -f compose.staging.yml exec -T backend bash -lc "alembic -c /app/alembic.ini upgrade head"
@@ -110,6 +124,16 @@ jobs:
       url: https://fitfolio.rutabagel.com
     steps:
       - uses: actions/checkout@v4
+      - name: Set IMAGE_TAG
+        run: echo "IMAGE_TAG=${{ needs.build-and-push.outputs.image_tag }}" >> $GITHUB_ENV
+      - name: Sync compose files to prod host
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          source: "compose.prod.yml"
+          target: "${{ secrets.PROD_APP_DIR }}"
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.1.0
         with:
@@ -122,6 +146,7 @@ jobs:
             export GHCR_REPO=${{ env.GHCR_REPO }}
             export IMAGE_TAG=${{ env.IMAGE_TAG }}
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+            cd "${{ secrets.PROD_APP_DIR }}"
             docker compose -f compose.prod.yml pull
             docker compose -f compose.prod.yml up -d
             docker compose -f compose.prod.yml exec -T backend bash -lc "alembic -c /app/alembic.ini upgrade head"

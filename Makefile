@@ -106,8 +106,11 @@ smoke-staging: ## Quick staging smoke tests
 	curl -fsS https://staging.fitfolio.rutabagel.com/api | python3 -m json.tool || true; \
 	echo "Auth me (expect 401) -> https://staging.fitfolio.rutabagel.com/api/v1/auth/me"; \
 	curl -s -o /dev/null -w "%{http_code}\n" https://staging.fitfolio.rutabagel.com/api/v1/auth/me | grep -q "^401$$"; \
+	curl -s -I -o /dev/null -w "%{http_code}\n" https://staging.fitfolio.rutabagel.com/api/v1/auth/me | grep -q "^401$$"; \
 	echo "Frontend root (HEAD) -> https://staging.fitfolio.rutabagel.com/"; \
 	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | head -n 1; \
+	echo "Frontend root (GET) -> https://staging.fitfolio.rutabagel.com/"; \
+	curl -fsS https://staging.fitfolio.rutabagel.com/ >/dev/null; \
 	echo "Validate security headers (HSTS, CSP)"; \
 	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi \"strict-transport-security\"; \
 	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi \"content-security-policy\"
