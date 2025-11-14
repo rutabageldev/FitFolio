@@ -86,6 +86,15 @@ open-mailpit:
 open-frontend:
 	@echo "Frontend -> http://localhost:5173"
 
+up-staging: ## Start staging stack
+	docker compose -f compose.staging.yml up -d
+
+down-staging: ## Stop staging stack
+	docker compose -f compose.staging.yml down -v
+
+logs-staging: ## Tail staging logs
+	docker compose -f compose.staging.yml logs -f --tail=200
+
 build-prod:
 	docker build -f backend/Dockerfile.prod -t fitfolio-backend:prod .
 	docker build -f frontend/Dockerfile.prod -t fitfolio-frontend:prod .

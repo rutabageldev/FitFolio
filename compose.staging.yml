@@ -1,0 +1,145 @@
+services:
+  backend:
+    image: ghcr.io/${GHCR_OWNER:-rutabageldev}/${GHCR_REPO:-fitfolio}/backend:${IMAGE_TAG:-latest}
+    container_name: fitfolio-backend-staging
+    restart: unless-stopped
+    secrets:
+      - source: postgres_password_staging
+        target: postgres_password
+      - source: smtp_username_staging
+        target: smtp_username
+      - source: smtp_password_staging
+        target: smtp_password
+    environment:
+      # Non-sensitive configuration
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-fitfolio_staging}
+      POSTGRES_USER: ${POSTGRES_USER:-fitfolio_user}
+      REDIS_URL: redis://redis:6379/0
+      EMAIL_SENDER: ${EMAIL_SENDER:-noreply@staging.fitfolio.rutabagel.com}
+      SMTP_HOST: mail
+      SMTP_PORT: 1025
+      PYTHONPATH: /workspaces/fitfolio
+      LOG_LEVEL: info
+      OTEL_SERVICE_NAME: fitfolio-backend-staging
+      # Staging CORS
+      CORS_ORIGINS: https://staging.fitfolio.rutabagel.com
+      # Signal to app to read secrets from Docker secrets
+      USE_DOCKER_SECRETS: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Traefik integration (staging)
+    labels:
+      - "traefik.enable=true"
+      # Router for API endpoints - higher priority to match /api paths first
+      - "traefik.http.routers.fitfolio-backend-staging.rule=Host(`staging.fitfolio.rutabagel.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.fitfolio-backend-staging.entrypoints=websecure"
+      - "traefik.http.routers.fitfolio-backend-staging.tls=true"
+      - "traefik.http.routers.fitfolio-backend-staging.priority=10"
+      # Service config (backend runs on port 8000 internally)
+      - "traefik.http.services.fitfolio-backend-staging.loadbalancer.server.port=8000"
+    networks:
+      - traefik-public  # For Traefik routing
+      - default         # For internal service communication
+
+  frontend:
+    image: ghcr.io/${GHCR_OWNER:-rutabageldev}/${GHCR_REPO:-fitfolio}/frontend:${IMAGE_TAG:-latest}
+    container_name: fitfolio-frontend-staging
+    restart: unless-stopped
+    # Traefik integration (staging)
+    labels:
+      - "traefik.enable=true"
+      # Router for frontend - lower priority catches all non-API paths
+      - "traefik.http.routers.fitfolio-frontend-staging.rule=Host(`staging.fitfolio.rutabagel.com`)"
+      - "traefik.http.routers.fitfolio-frontend-staging.entrypoints=websecure"
+      - "traefik.http.routers.fitfolio-frontend-staging.tls=true"
+      - "traefik.http.routers.fitfolio-frontend-staging.priority=1"
+      # Service config (nginx runs on port 80 internally)
+      - "traefik.http.services.fitfolio-frontend-staging.loadbalancer.server.port=80"
+    networks:
+      - traefik-public  # For Traefik routing
+      - default         # For internal service communication
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:16
+    container_name: fitfolio-db-staging
+    restart: unless-stopped
+    secrets:
+      - source: postgres_password_staging
+        target: postgres_password
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-fitfolio_staging}
+      POSTGRES_USER: ${POSTGRES_USER:-fitfolio_user}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    volumes:
+      - pgdata-staging:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fitfolio_user} -d ${POSTGRES_DB:-fitfolio_staging}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - default
+
+  # Staging mail service (Mailpit)
+  # Replace with a real SMTP provider before promoting email tests to prod
+  mail:
+    image: axllent/mailpit:latest
+    container_name: fitfolio-mail-staging
+    restart: unless-stopped
+    ports:
+      - "8026:8025"   # Web UI (staging)
+      - "1026:1025"   # SMTP (staging)
+    networks:
+      - default
+
+  redis:
+    image: redis:7-alpine
+    container_name: fitfolio-redis-staging
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    volumes:
+      - redisdata-staging:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - default
+
+# Networks
+networks:
+  traefik-public:
+    external: true  # Connects to external Traefik network
+  default:
+    driver: bridge  # Internal network for service-to-service communication
+
+volumes:
+  pgdata-staging:
+  redisdata-staging:
+
+# Docker secrets configuration (staging)
+# Secrets are external in Swarm/Compose. Create these in staging:
+#   echo "staging-db-password" | docker secret create postgres_password_staging -
+#   echo "staging-smtp-username" | docker secret create smtp_username_staging -
+#   echo "staging-smtp-password" | docker secret create smtp_password_staging -
+secrets:
+  postgres_password_staging:
+    external: true
+  smtp_username_staging:
+    external: true
+  smtp_password_staging:
+    external: true
