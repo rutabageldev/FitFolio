@@ -21,10 +21,10 @@ from app.db.base import Base
 if os.getenv("TEST_OTEL", "").lower() not in {"1", "true", "yes"}:
     os.environ.setdefault("OTEL_SDK_DISABLED", "true")
 
-from app.main import app
-
 # Disable rate limiting for most tests (rate limiting tests will override)
 os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
+
+from app.main import app
 
 
 # Use separate Redis database for tests to avoid conflicts with dev data

@@ -244,7 +244,9 @@ class TestWebAuthnRegisterFinish:
         # Bypass Redis by mocking challenge retrieval to expected value
         import app.core.challenge_storage as cs
 
-        async def _fake_retrieve_and_delete_challenge(_challenge_id, _challenge_type):
+        async def _fake_retrieve_and_delete_challenge(
+            _challenge_id=None, _challenge_type=None, **_kwargs
+        ):
             return (email, challenge_hex)
 
         monkeypatch.setattr(

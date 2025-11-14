@@ -244,6 +244,30 @@ items:
   - backend/tests/auth/magic_link/test_magic_link_verify_happy_paths.py
   last_verified: 2025-11-13
 -
+  id: AUTH-ML-233
+  title: Verify inactive user returns 400
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_verify_user_state_lines.py
+  last_verified: 2025-11-14
+-
+  id: AUTH-ML-234
+  title: Verify unverified user returns 403
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_verify_user_state_lines.py
+  last_verified: 2025-11-14
+-
   id: AUTH-ML-220
   title: New user verification email send failure returns 500 and logs error
   level: integration
@@ -302,4 +326,52 @@ items:
   status: implemented
   tests:
   - backend/tests/security/test_account_lockout.py
+  last_verified: 2025-11-14
+-
+  id: AUTH-ML-240
+  title: Start new user creates user record and sends verification email
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_start_new_user_lines.py
+  last_verified: 2025-11-14
+-
+  id: AUTH-ML-241
+  title: Start existing user sends login email
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_start_existing_user_lines.py
+  last_verified: 2025-11-14
+-
+  id: AUTH-ML-242
+  title: Verify invalid token lockout check and Redis error fallback
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_verify_missing_lines.py
+  last_verified: 2025-11-14
+-
+  id: AUTH-ML-243
+  title: Verify precheck lockout returns 429 and records login_attempt_locked event
+  level: integration
+  markers:
+  - integration
+  - security
+  risk: medium
+  status: implemented
+  tests:
+  - backend/tests/auth/magic_link/test_magic_link_verify_precheck_lines.py
   last_verified: 2025-11-14
