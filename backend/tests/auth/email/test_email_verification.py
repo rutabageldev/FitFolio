@@ -388,4 +388,5 @@ class TestEmailVerification:
         assert "session_token" in response.json()
 
     @pytest.mark.asyncio
-    async def test_me_endpoint_includes_verification_status(self): ...
+    async def test_me_endpoint_includes_verification_status(self):
+        pass  # TODO: Implement test

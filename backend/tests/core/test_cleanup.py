@@ -23,7 +23,7 @@ async def test_run_cleanup_job_happy_path(monkeypatch):
 
     # Provide a dummy AsyncSessionLocal context manager
     monkeypatch.setattr(
-        cleanup_mod, "AsyncSessionLocal", lambda: _DummySessionCtx(), raising=True
+        cleanup_mod, "AsyncSessionLocal", _DummySessionCtx, raising=True
     )
     monkeypatch.setattr(
         cleanup_mod, "cleanup_expired_sessions", fake_cleanup_sessions, raising=True
@@ -45,7 +45,7 @@ async def test_run_cleanup_job_error_path_re_raises(monkeypatch):
         raise RuntimeError("boom")
 
     monkeypatch.setattr(
-        cleanup_mod, "AsyncSessionLocal", lambda: _DummySessionCtx(), raising=True
+        cleanup_mod, "AsyncSessionLocal", _DummySessionCtx, raising=True
     )
     monkeypatch.setattr(
         cleanup_mod, "cleanup_expired_sessions", failing_cleanup_sessions, raising=True

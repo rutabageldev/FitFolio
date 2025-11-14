@@ -155,6 +155,7 @@ class TestOldPathsRemoved:
             response = await client.post(path, json={})
         else:
             pytest.fail(f"Unsupported method: {method}")
+            return  # Never reached, but satisfies static analysis
 
         assert response.status_code in (403, 404), (
             f"{method} {path} should return 404 (endpoint moved to /api/v1). "

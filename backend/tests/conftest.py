@@ -49,7 +49,7 @@ def get_redis_url() -> str:
             container_ip = result.stdout.strip()
             return f"redis://{container_ip}:6379/1"
     except Exception:
-        pass
+        pass  # Docker not available or container not running; use localhost fallback
     # Fallback to localhost (works in most environments)
     return "redis://localhost:6379/1"
 
@@ -207,4 +207,4 @@ def close_redis_session():
     try:
         asyncio.run(close_redis())
     except Exception:
-        pass
+        pass  # Ignore errors during test teardown to avoid test failures
