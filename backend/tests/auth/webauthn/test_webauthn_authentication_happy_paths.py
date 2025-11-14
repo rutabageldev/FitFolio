@@ -135,7 +135,7 @@ class TestWebAuthnAuthenticationHappyPaths:
         # Validate cookie flags and presence of rate limit headers
         set_cookie = response.headers.get("set-cookie", "")
         assert "HttpOnly" in set_cookie
-        assert "SameSite=Lax" in set_cookie
+        assert "SameSite=lax" in set_cookie
         # In dev config, Secure may be false
         assert "X-RateLimit-Limit" in response.headers
         assert "X-RateLimit-Remaining" in response.headers

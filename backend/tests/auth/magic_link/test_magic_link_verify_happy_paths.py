@@ -107,7 +107,7 @@ class TestMagicLinkVerifyHappyPaths:
         # Validate cookie flags on Set-Cookie header
         set_cookie = response.headers.get("set-cookie", "")
         assert "HttpOnly" in set_cookie
-        assert "SameSite=Lax" in set_cookie
+        assert "SameSite=lax" in set_cookie
         # In dev config, Secure is False
         assert "Secure" not in set_cookie
 
