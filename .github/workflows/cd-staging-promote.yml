@@ -137,6 +137,7 @@ jobs:
           port: 2222
           source: 'deploy/stack.staging.yml'
           target: '${{ secrets.STAGING_APP_DIR }}'
+          strip_components: 1
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.1.0
         with:
