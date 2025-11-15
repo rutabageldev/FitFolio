@@ -162,6 +162,7 @@ jobs:
             else
               echo "No backend container found to run migrations" >&2
               exit 1
+            fi
 
   smoke-staging:
     name: Smoke Tests (Staging)
