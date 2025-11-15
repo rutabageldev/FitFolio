@@ -26,13 +26,13 @@ services:
       POSTGRES_DB: fitfolio_staging
       POSTGRES_USER: fitfolio_user
       REDIS_URL: redis://redis:6379/0
-      EMAIL_SENDER: noreply@staging.fitfolio.rutabagel.com
+      EMAIL_SENDER: noreply@fitfolio-staging.rutabagel.com
       SMTP_HOST: mail
       SMTP_PORT: 1025
       LOG_LEVEL: info
       OTEL_SERVICE_NAME: fitfolio-backend-staging
       ENVIRONMENT: staging
-      CORS_ORIGINS: https://staging.fitfolio.rutabagel.com
+      CORS_ORIGINS: https://fitfolio-staging.rutabagel.com
       USE_DOCKER_SECRETS: "true"
     secrets:
       - source: postgres_password_staging
@@ -43,20 +43,21 @@ services:
         target: smtp_password
     deploy:
       labels:
-        - traefik.enable=true
-        - traefik.http.routers.fitfolio-backend-stg.rule=Host(`staging.fitfolio.rutabagel.com`) && PathPrefix(`/api`)
-        - traefik.http.routers.fitfolio-backend-stg.entrypoints=websecure
-        - traefik.http.routers.fitfolio-backend-stg.tls=true
-        - traefik.http.routers.fitfolio-backend-stg.middlewares=fitfolio-staging-security
-        - traefik.http.services.fitfolio-backend-stg.loadbalancer.server.port=8000
-        - traefik.http.middlewares.fitfolio-staging-security.headers.stsSeconds=31536000
-        - traefik.http.middlewares.fitfolio-staging-security.headers.stsIncludeSubdomains=true
-        - traefik.http.middlewares.fitfolio-staging-security.headers.stsPreload=true
-        - traefik.http.middlewares.fitfolio-staging-security.headers.contentTypeNosniff=true
-        - traefik.http.middlewares.fitfolio-staging-security.headers.frameDeny=true
-        - traefik.http.middlewares.fitfolio-staging-security.headers.referrerPolicy=no-referrer-when-downgrade
-        - traefik.http.middlewares.fitfolio-staging-security.headers.permissionsPolicy=geolocation=(), microphone=(), camera=()
-        - traefik.http.middlewares.fitfolio-staging-security.headers.contentSecurityPolicy=default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://staging.fitfolio.rutabagel.com; frame-ancestors 'none'
+        - "traefik.enable=true"
+        - "traefik.http.routers.fitfolio-staging-backend.rule=Host(`fitfolio-staging.rutabagel.com`) && PathPrefix(`/api`)"
+        - "traefik.http.routers.fitfolio-staging-backend.entrypoints=websecure"
+        - "traefik.http.routers.fitfolio-staging-backend.tls=true"
+        - "traefik.http.routers.fitfolio-staging-backend.middlewares=fitfolio-staging-security"
+        - "traefik.http.routers.fitfolio-staging-backend.service=fitfolio-staging-backend"
+        - "traefik.http.services.fitfolio-staging-backend.loadbalancer.server.port=8000"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.stsSeconds=31536000"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.stsIncludeSubdomains=true"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.stsPreload=true"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.contentTypeNosniff=true"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.frameDeny=true"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.referrerPolicy=no-referrer-when-downgrade"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.permissionsPolicy=geolocation=(), microphone=(), camera=()"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.contentSecurityPolicy=default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://fitfolio-staging.rutabagel.com; frame-ancestors 'none'"
       resources:
         limits:
           cpus: "0.50"
@@ -71,19 +72,19 @@ services:
       ENVIRONMENT: staging
     deploy:
       labels:
-        - traefik.enable=true
-        - traefik.http.routers.fitfolio-frontend-stg.rule=Host(`staging.fitfolio.rutabagel.com`)
-        - traefik.http.routers.fitfolio-frontend-stg.entrypoints=websecure
-        - traefik.http.routers.fitfolio-frontend-stg.tls=true
-        - traefik.http.routers.fitfolio-frontend-stg.middlewares=fitfolio-staging-security
-        - traefik.http.services.fitfolio-frontend-stg.loadbalancer.server.port=80
+        - "traefik.enable=true"
+        - "traefik.http.routers.fitfolio-staging-frontend.rule=Host(`fitfolio-staging.rutabagel.com`)"
+        - "traefik.http.routers.fitfolio-staging-frontend.entrypoints=websecure"
+        - "traefik.http.routers.fitfolio-staging-frontend.tls=true"
+        - "traefik.http.routers.fitfolio-staging-frontend.middlewares=fitfolio-staging-security"
+        - "traefik.http.routers.fitfolio-staging-frontend.service=fitfolio-staging-frontend"
+        - "traefik.http.services.fitfolio-staging-frontend.loadbalancer.server.port=80"
       resources:
         limits:
           cpus: "0.25"
           memory: 256M
     networks:
       - traefik-public
-      - default
 
   db:
     image: postgres:16
