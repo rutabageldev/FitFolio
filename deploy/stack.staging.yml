@@ -70,6 +70,12 @@ services:
     image: ghcr.io/${GHCR_OWNER:-rutabageldev}/${GHCR_REPO:-fitfolio}/frontend:${IMAGE_TAG:-sha-<commit>}
     environment:
       ENVIRONMENT: staging
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
     deploy:
       labels:
         - "traefik.enable=true"
