@@ -22,20 +22,28 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+
 # Construct DATABASE_URL using the same logic as the app
 def get_alembic_database_url() -> str:
     """Get database URL for migrations, respecting Docker secrets."""
     import os
-    use_docker_secrets = os.getenv("USE_DOCKER_SECRETS", "").lower() in ("true", "1", "yes")
+
+    use_docker_secrets = os.getenv("USE_DOCKER_SECRETS", "").lower() in (
+        "true",
+        "1",
+        "yes",
+    )
 
     if use_docker_secrets:
         from app.core.secrets import get_database_url
+
         return get_database_url()
     else:
         return os.getenv(
             "DATABASE_URL",
             "postgresql+psycopg://fitfolio_user:supersecret@db:5432/fitfolio",
         )
+
 
 config.set_main_option("sqlalchemy.url", get_alembic_database_url())
 
