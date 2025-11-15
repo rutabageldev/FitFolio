@@ -17,7 +17,7 @@ on:
   workflow_run:
     workflows: ['CI']
     branches:
-      - staging-env
+      - main
     types:
       - completed
 
@@ -32,14 +32,21 @@ jobs:
     permissions:
       actions: read
       contents: read
-    # Run this job only when:
-    # - event is push (if enabled) or workflow_dispatch without bypass flag
-    # Skip when triggered by workflow_run (already guarantees CI success)
+    # Skip this job only when workflow_dispatch with bypass flag
     if: >
-      github.event_name != 'workflow_run' &&
-      (github.event_name != 'workflow_dispatch' || github.event.inputs.bypass_ci_gate != 'true')
+      github.event_name != 'workflow_dispatch' || github.event.inputs.bypass_ci_gate != 'true'
     steps:
+      - name: Check workflow_run conclusion (if triggered by workflow_run)
+        if: github.event_name == 'workflow_run'
+        run: |
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "CI workflow did not succeed: ${{ github.event.workflow_run.conclusion }}"
+            exit 1
+          fi
+          echo "CI workflow succeeded, proceeding with deployment"
+
       - name: Check latest CI run for this commit
+        if: github.event_name != 'workflow_run'
         uses: actions/github-script@v7
         with:
           script: |
@@ -127,6 +134,7 @@ jobs:
           host: ${{ secrets.STAGING_SSH_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
+          port: 2222
           source: 'deploy/stack.staging.yml'
           target: '${{ secrets.STAGING_APP_DIR }}'
       - name: Deploy via SSH
@@ -135,6 +143,7 @@ jobs:
           host: ${{ secrets.STAGING_SSH_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
+          port: 2222
           script: |
             set -euo pipefail
             export GHCR_OWNER=${{ env.GHCR_OWNER }}
@@ -179,6 +188,7 @@ jobs:
           host: ${{ secrets.PROD_SSH_HOST }}
           username: ${{ secrets.PROD_SSH_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
+          port: 2222
           source: 'compose.prod.yml'
           target: '${{ secrets.PROD_APP_DIR }}'
       - name: Deploy via SSH
@@ -187,6 +197,7 @@ jobs:
           host: ${{ secrets.PROD_SSH_HOST }}
           username: ${{ secrets.PROD_SSH_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
+          port: 2222
           script: |
             set -euo pipefail
             export GHCR_OWNER=${{ env.GHCR_OWNER }}
