@@ -17,16 +17,15 @@ if str(BASE_DIR) not in sys.path:
 
 # ruff: noqa: E402
 from app.db import models  # noqa: F401  <-- important: loads submodules via __init__.py
+from app.db.database import DATABASE_URL
 
 # Alembic Config
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Prefer env var; fall back to alembic.ini value
-db_url = os.getenv("DATABASE_URL")
-if db_url:
-    config.set_main_option("sqlalchemy.url", db_url)
+# Use DATABASE_URL from database module (which handles Docker secrets)
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 target_metadata = Base.metadata
 
