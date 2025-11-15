@@ -155,12 +155,22 @@ jobs:
             cd "${{ secrets.STAGING_APP_DIR }}"
             # Deploy or update the stack with current IMAGE_TAG
             IMAGE_TAG="${IMAGE_TAG}" docker stack deploy -c stack.staging.yml fitfolio-staging
-            # Run DB migrations inside one backend task
-            cid=$(docker ps --filter "name=fitfolio-staging_backend" --format '{{.ID}}' | head -n1)
+            # Wait for backend container to be running before running migrations
+            echo "Waiting for backend container to be ready..."
+            for i in {1..30}; do
+              cid=$(docker ps --filter "name=fitfolio-staging_backend" --filter "status=running" --format '{{.ID}}' | head -n1)
+              if [ -n "$cid" ]; then
+                echo "Backend container found: $cid"
+                break
+              fi
+              echo "Waiting... ($i/30)"
+              sleep 2
+            done
+            # Run DB migrations
             if [ -n "$cid" ]; then
               docker exec -i "$cid" bash -lc "alembic -c /app/alembic.ini upgrade head"
             else
-              echo "No backend container found to run migrations" >&2
+              echo "No backend container found after 60 seconds" >&2
               exit 1
             fi
 
