@@ -1,0 +1,130 @@
+version: "3.8"
+
+networks:
+  traefik-public:
+    external: true
+  default: {}
+
+secrets:
+  postgres_password_staging:
+    external: true
+  smtp_username_staging:
+    external: true
+  smtp_password_staging:
+    external: true
+
+volumes:
+  pgdata-staging: {}
+  redisdata-staging: {}
+
+services:
+  backend:
+    image: ghcr.io/${GHCR_OWNER:-rutabageldev}/${GHCR_REPO:-fitfolio}/backend:${IMAGE_TAG:-sha-<commit>}
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: fitfolio_staging
+      POSTGRES_USER: fitfolio_user
+      REDIS_URL: redis://redis:6379/0
+      EMAIL_SENDER: noreply@fitfolio-staging.rutabagel.com
+      SMTP_HOST: mail
+      SMTP_PORT: 1025
+      LOG_LEVEL: info
+      OTEL_SERVICE_NAME: fitfolio-backend-staging
+      ENVIRONMENT: staging
+      CORS_ORIGINS: https://fitfolio-staging.rutabagel.com
+      USE_DOCKER_SECRETS: "true"
+    secrets:
+      - source: postgres_password_staging
+        target: postgres_password
+      - source: smtp_username_staging
+        target: smtp_username
+      - source: smtp_password_staging
+        target: smtp_password
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.fitfolio-staging-backend.rule=Host(`fitfolio-staging.rutabagel.com`) && PathPrefix(`/api`)"
+        - "traefik.http.routers.fitfolio-staging-backend.entrypoints=websecure"
+        - "traefik.http.routers.fitfolio-staging-backend.tls=true"
+        - "traefik.http.routers.fitfolio-staging-backend.middlewares=fitfolio-staging-security"
+        - "traefik.http.routers.fitfolio-staging-backend.service=fitfolio-staging-backend"
+        - "traefik.http.services.fitfolio-staging-backend.loadbalancer.server.port=8000"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.stsSeconds=31536000"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.stsIncludeSubdomains=true"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.stsPreload=true"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.contentTypeNosniff=true"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.frameDeny=true"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.referrerPolicy=no-referrer-when-downgrade"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.permissionsPolicy=geolocation=(), microphone=(), camera=()"
+        - "traefik.http.middlewares.fitfolio-staging-security.headers.contentSecurityPolicy=default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://fitfolio-staging.rutabagel.com; frame-ancestors 'none'"
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+    networks:
+      - traefik-public
+      - default
+
+  frontend:
+    image: ghcr.io/${GHCR_OWNER:-rutabageldev}/${GHCR_REPO:-fitfolio}/frontend:${IMAGE_TAG:-sha-<commit>}
+    environment:
+      ENVIRONMENT: staging
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.fitfolio-staging-frontend.rule=Host(`fitfolio-staging.rutabagel.com`)"
+        - "traefik.http.routers.fitfolio-staging-frontend.entrypoints=websecure"
+        - "traefik.http.routers.fitfolio-staging-frontend.tls=true"
+        - "traefik.http.routers.fitfolio-staging-frontend.middlewares=fitfolio-staging-security"
+        - "traefik.http.routers.fitfolio-staging-frontend.service=fitfolio-staging-frontend"
+        - "traefik.http.services.fitfolio-staging-frontend.loadbalancer.server.port=80"
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+    networks:
+      - traefik-public
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: fitfolio_staging
+      POSTGRES_USER: fitfolio_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - source: postgres_password_staging
+        target: postgres_password
+    volumes:
+      - pgdata-staging:/var/lib/postgresql/data
+    networks:
+      - default
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1G
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    volumes:
+      - redisdata-staging:/data
+    networks:
+      - default
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  mail:
+    image: axllent/mailpit:latest
+    networks:
+      - default
