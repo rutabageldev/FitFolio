@@ -4,18 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: "Immutable image tag (e.g., sha-<commit>)"
+        description: 'Immutable image tag (e.g., sha-<commit>)'
         required: true
       extended_smoke:
-        description: "Run extended auth smoke (/_debug/mail) if enabled"
+        description: 'Run extended auth smoke (/_debug/mail) if enabled'
         required: false
-        default: "false"
+        default: 'false'
       bypass_ci_gate:
-        description: "Bypass CI success requirement (manual runs only)"
+        description: 'Bypass CI success requirement (manual runs only)'
         required: false
-        default: "false"
+        default: 'false'
   workflow_run:
-    workflows: ["CI"]
+    workflows: ['CI']
     branches:
       - staging-env
     types:
@@ -121,14 +121,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Set IMAGE_TAG
         run: echo "IMAGE_TAG=${{ needs.build-and-push.outputs.image_tag }}" >> $GITHUB_ENV
-      - name: Sync compose files to staging host
+      - name: Sync stack file to staging host
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.STAGING_SSH_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
-          source: "compose.staging.yml,compose.prod.yml"
-          target: "${{ secrets.STAGING_APP_DIR }}"
+          source: 'deploy/stack.staging.yml'
+          target: '${{ secrets.STAGING_APP_DIR }}'
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.1.0
         with:
@@ -140,11 +140,18 @@ jobs:
             export GHCR_OWNER=${{ env.GHCR_OWNER }}
             export GHCR_REPO=${{ env.GHCR_REPO }}
             export IMAGE_TAG=${{ env.IMAGE_TAG }}
-            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+            # Login to GHCR using fine-grained read-only token
+            docker login ghcr.io -u "${{ secrets.STAGING_GHCR_READ_USER }}" -p "${{ secrets.STAGING_GHCR_READ_TOKEN }}"
             cd "${{ secrets.STAGING_APP_DIR }}"
-            docker compose -f compose.staging.yml pull
-            docker compose -f compose.staging.yml up -d
-            docker compose -f compose.staging.yml exec -T backend bash -lc "alembic -c /app/alembic.ini upgrade head"
+            # Deploy or update the stack with current IMAGE_TAG
+            IMAGE_TAG="${IMAGE_TAG}" docker stack deploy -c stack.staging.yml fitfolio-staging
+            # Run DB migrations inside one backend task
+            cid=$(docker ps --filter "name=fitfolio-staging_backend" --format '{{.ID}}' | head -n1)
+            if [ -n "$cid" ]; then
+              docker exec -i "$cid" bash -lc "alembic -c /app/alembic.ini upgrade head"
+            else
+              echo "No backend container found to run migrations" >&2
+              exit 1
 
   smoke-staging:
     name: Smoke Tests (Staging)
@@ -172,8 +179,8 @@ jobs:
           host: ${{ secrets.PROD_SSH_HOST }}
           username: ${{ secrets.PROD_SSH_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
-          source: "compose.prod.yml"
-          target: "${{ secrets.PROD_APP_DIR }}"
+          source: 'compose.prod.yml'
+          target: '${{ secrets.PROD_APP_DIR }}'
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.1.0
         with:
