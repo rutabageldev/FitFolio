@@ -17,15 +17,28 @@ if str(BASE_DIR) not in sys.path:
 
 # ruff: noqa: E402
 from app.db import models  # noqa: F401  <-- important: loads submodules via __init__.py
-from app.db.database import DATABASE_URL
 
 # Alembic Config
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Use DATABASE_URL from database module (which handles Docker secrets)
-config.set_main_option("sqlalchemy.url", DATABASE_URL)
+# Construct DATABASE_URL using the same logic as the app
+def get_alembic_database_url() -> str:
+    """Get database URL for migrations, respecting Docker secrets."""
+    import os
+    use_docker_secrets = os.getenv("USE_DOCKER_SECRETS", "").lower() in ("true", "1", "yes")
+
+    if use_docker_secrets:
+        from app.core.secrets import get_database_url
+        return get_database_url()
+    else:
+        return os.getenv(
+            "DATABASE_URL",
+            "postgresql+psycopg://fitfolio_user:supersecret@db:5432/fitfolio",
+        )
+
+config.set_main_option("sqlalchemy.url", get_alembic_database_url())
 
 target_metadata = Base.metadata
 
