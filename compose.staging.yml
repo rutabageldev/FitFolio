@@ -51,6 +51,7 @@ services:
       - "traefik.http.routers.fitfolio-backend-staging.rule=Host(`fitfolio-staging.rutabagel.com`) && PathPrefix(`/api`)"
       - "traefik.http.routers.fitfolio-backend-staging.entrypoints=websecure"
       - "traefik.http.routers.fitfolio-backend-staging.tls=true"
+      - "traefik.http.routers.fitfolio-backend-staging.tls.certresolver=cloudflare"
       - "traefik.http.routers.fitfolio-backend-staging.priority=10"
       # Attach security headers middleware
       - "traefik.http.routers.fitfolio-backend-staging.middlewares=fitfolio-staging-security"
@@ -80,6 +81,7 @@ services:
       - "traefik.http.routers.fitfolio-frontend-staging.rule=Host(`fitfolio-staging.rutabagel.com`)"
       - "traefik.http.routers.fitfolio-frontend-staging.entrypoints=websecure"
       - "traefik.http.routers.fitfolio-frontend-staging.tls=true"
+      - "traefik.http.routers.fitfolio-frontend-staging.tls.certresolver=cloudflare"
       - "traefik.http.routers.fitfolio-frontend-staging.priority=1"
       # Attach security headers middleware
       - "traefik.http.routers.fitfolio-frontend-staging.middlewares=fitfolio-staging-security"
