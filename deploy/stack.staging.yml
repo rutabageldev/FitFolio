@@ -34,6 +34,7 @@ services:
       ENVIRONMENT: staging
       CORS_ORIGINS: https://fitfolio-staging.rutabagel.com
       USE_DOCKER_SECRETS: "true"
+      GUNICORN_WORKERS: "2"
     secrets:
       - source: postgres_password_staging
         target: postgres_password

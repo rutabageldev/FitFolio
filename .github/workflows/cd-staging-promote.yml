@@ -198,12 +198,14 @@ jobs:
               ghcr.io/${GHCR_OWNER}/${GHCR_REPO}/backend:${IMAGE_TAG} \
               bash -c 'python3 -u /app/scripts/preflight_check.py && python3 -u /app/scripts/db_stamp_check.py && alembic -c /app/alembic.ini upgrade head'
 
-            # Wait for migration service to complete
-            echo "Waiting for migrations to complete..."
-            for i in {1..60}; do
+            # Wait for migration service to complete (max 5 minutes)
+            echo "Waiting for migrations to complete (max 300s)..."
+            migration_complete=false
+            for i in {1..150}; do
               state=$(docker service ps fitfolio-staging-migrate --format '{{.CurrentState}}' --filter "desired-state=shutdown" | head -n1)
               if echo "$state" | grep -q "Complete"; then
                 echo "Migrations completed successfully!"
+                migration_complete=true
                 break
               elif echo "$state" | grep -q "Failed"; then
                 echo "ERROR: Migration service failed"
@@ -211,7 +213,7 @@ jobs:
                 docker service rm fitfolio-staging-migrate
                 exit 1
               fi
-              echo "Migration still running... ($i/60)"
+              echo "Migration still running... ($i/150)"
               sleep 2
             done
 
@@ -220,8 +222,14 @@ jobs:
             echo "=== Migration logs ==="
             docker service logs fitfolio-staging-migrate
 
-            # Clean up migration service
+            # Clean up migration service (always remove, success or failure)
             docker service rm fitfolio-staging-migrate
+
+            # Check if migrations timed out
+            if [ "$migration_complete" = false ]; then
+              echo "ERROR: Migration did not complete within 300 seconds"
+              exit 1
+            fi
 
             echo ""
             echo "Waiting for backend to be healthy..."
@@ -260,7 +268,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run smoke test script
-        run: bash scripts/smoke_deploy.sh "https://staging.fitfolio.rutabagel.com" "${{ github.event.inputs.extended_smoke || 'false' }}"
+        run: bash scripts/smoke_deploy.sh "https://fitfolio-staging.rutabagel.com" "${{ github.event.inputs.extended_smoke || 'false' }}"
 
   promote-prod:
     name: Promote to Production (Manual)
