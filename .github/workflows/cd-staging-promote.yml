@@ -294,7 +294,7 @@ jobs:
               exit 1
             fi
 
-            # Debug DNS resolution first
+            # Debug DNS resolution first to help troubleshooting
             echo "=== DNS Debug ==="
             echo "Checking /etc/resolv.conf:"
             cat /etc/resolv.conf || echo "Cannot read resolv.conf"
@@ -307,14 +307,10 @@ jobs:
             echo "Checking /etc/hosts:"
             grep -i fitfolio /etc/hosts || echo "Not in /etc/hosts"
             echo ""
+            echo "=== End DNS Debug ==="
+            echo ""
 
-            # If DNS doesn't resolve, add to /etc/hosts temporarily
-            if ! getent hosts fitfolio-staging.rutabagel.com >/dev/null 2>&1; then
-              echo "DNS not resolving, adding to /etc/hosts temporarily..."
-              echo "127.0.0.1 fitfolio-staging.rutabagel.com" | sudo tee -a /etc/hosts
-            fi
-
-            # Run smoke tests
+            # Run smoke tests - if DNS doesn't work, this will fail (as it should)
             bash scripts/smoke_deploy.sh "https://fitfolio-staging.rutabagel.com" "${{ github.event.inputs.extended_smoke || 'false' }}"
 
   promote-prod:
