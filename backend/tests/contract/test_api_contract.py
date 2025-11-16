@@ -21,6 +21,13 @@ class TestHealthEndpoints:
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
 
+    async def test_healthz_head_supported(self, client: AsyncClient):
+        """HEAD requests to /healthz should succeed for infra probes."""
+        response = await client.head("/healthz")
+        assert response.status_code == 200
+        # HEAD responses should have no body
+        assert response.content == b""
+
     async def test_healthz_not_at_api_prefix(self, client: AsyncClient):
         """Health check should NOT be at /api/healthz."""
         response = await client.get("/api/healthz")
@@ -92,6 +99,7 @@ class TestEndpointInventory:
 
     EXPECTED_GLOBAL = [
         ("GET", "/healthz", 200),
+        ("HEAD", "/healthz", 200),
         ("GET", "/docs", 200),
         ("GET", "/redoc", 200),
         ("GET", "/openapi.json", 200),
@@ -109,6 +117,8 @@ class TestEndpointInventory:
             pytest.skip(f"Endpoint {path} is environment-specific")
         if method == "GET":
             response = await client.get(path)
+        elif method == "HEAD":
+            response = await client.head(path)
         elif method == "POST":
             response = await client.post(path, json={})
         elif method == "DELETE":
