@@ -13,8 +13,8 @@ concurrency:
 
 permissions:
   contents: read
-  security-events: write  # Required for CodeQL
-  pull-requests: write    # Required for coverage comments and Dependency Review
+  security-events: write # Required for CodeQL
+  pull-requests: write # Required for coverage comments and Dependency Review
 
 jobs:
   backend-tests:
@@ -244,7 +244,7 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
-          category: "/language:${{ matrix.language }}"
+          category: '/language:${{ matrix.language }}'
 
   dependency-review:
     name: Dependency Review
@@ -425,7 +425,7 @@ jobs:
   frontend-tests:
     name: Frontend Tests & Coverage
     runs-on: ubuntu-latest
-    continue-on-error: true  # Don't fail CI if no tests exist yet
+    continue-on-error: true # Don't fail CI if no tests exist yet
 
     steps:
       - uses: actions/checkout@v4
