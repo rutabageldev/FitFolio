@@ -17,7 +17,8 @@ ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 
 # minimal runtime deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates && \
+    ca-certificates \
+    curl && \
     rm -rf /var/lib/apt/lists/*
 
 # non-root user
