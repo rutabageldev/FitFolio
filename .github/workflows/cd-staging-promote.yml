@@ -153,18 +153,86 @@ jobs:
             # Login to GHCR using fine-grained read-only token
             docker login ghcr.io -u "${{ secrets.STAGING_GHCR_READ_USER }}" -p "${{ secrets.STAGING_GHCR_READ_TOKEN }}"
             cd "${{ secrets.STAGING_APP_DIR }}"
-            # Deploy or update the stack with current IMAGE_TAG
+            # Deploy the stack (backend will start but we'll run migrations first)
             IMAGE_TAG="${IMAGE_TAG}" docker stack deploy -c stack.staging.yml fitfolio-staging
-            # Wait for backend container to be running and healthy
-            echo "Waiting for backend container to be ready and healthy..."
+
+            echo "Waiting for database to be ready..."
+            # Wait for PostgreSQL to be ready (max 60 seconds)
+            db_ready=false
+            for i in {1..30}; do
+              db_cid=$(docker ps --filter "name=fitfolio-staging_db" --filter "status=running" --format '{{.ID}}' | head -n1)
+              if [ -n "$db_cid" ]; then
+                if docker exec -i "$db_cid" pg_isready -h localhost -p 5432 >/dev/null 2>&1; then
+                  echo "PostgreSQL is ready!"
+                  db_ready=true
+                  break
+                fi
+              fi
+              echo "PostgreSQL not ready yet, waiting... ($i/30)"
+              sleep 2
+            done
+
+            if [ "$db_ready" = false ]; then
+              echo "ERROR: PostgreSQL did not become ready within 60 seconds"
+              exit 1
+            fi
+
+            echo ""
+            echo "Running database migrations in one-off container..."
+            # Create a one-off service for migrations (not in the app workers)
+            # This avoids OOM from running migrations alongside 4 gunicorn workers
+            docker service create \
+              --name fitfolio-staging-migrate \
+              --network fitfolio-staging_default \
+              --secret source=postgres_password_staging,target=postgres_password,mode=0444 \
+              --secret source=smtp_username_staging,target=smtp_username,mode=0444 \
+              --secret source=smtp_password_staging,target=smtp_password,mode=0444 \
+              --env POSTGRES_HOST=db \
+              --env POSTGRES_PORT=5432 \
+              --env POSTGRES_DB=fitfolio_staging \
+              --env POSTGRES_USER=fitfolio_user \
+              --env USE_DOCKER_SECRETS=true \
+              --env PYTHONUNBUFFERED=1 \
+              --restart-condition none \
+              --detach \
+              ghcr.io/${GHCR_OWNER}/${GHCR_REPO}/backend:${IMAGE_TAG} \
+              bash -c 'python3 -u /app/scripts/preflight_check.py && python3 -u /app/scripts/db_stamp_check.py && alembic -c /app/alembic.ini upgrade head'
+
+            # Wait for migration service to complete
+            echo "Waiting for migrations to complete..."
+            for i in {1..60}; do
+              state=$(docker service ps fitfolio-staging-migrate --format '{{.CurrentState}}' --filter "desired-state=shutdown" | head -n1)
+              if echo "$state" | grep -q "Complete"; then
+                echo "Migrations completed successfully!"
+                break
+              elif echo "$state" | grep -q "Failed"; then
+                echo "ERROR: Migration service failed"
+                docker service logs fitfolio-staging-migrate
+                docker service rm fitfolio-staging-migrate
+                exit 1
+              fi
+              echo "Migration still running... ($i/60)"
+              sleep 2
+            done
+
+            # Show migration logs
+            echo ""
+            echo "=== Migration logs ==="
+            docker service logs fitfolio-staging-migrate
+
+            # Clean up migration service
+            docker service rm fitfolio-staging-migrate
+
+            echo ""
+            echo "Waiting for backend to be healthy..."
+            # Now wait for backend to be running and healthy
             cid=""
             for i in {1..60}; do
               cid=$(docker ps --filter "name=fitfolio-staging_backend" --filter "status=running" --format '{{.ID}}' | head -n1)
               if [ -n "$cid" ]; then
-                # Check if container is healthy
                 health=$(docker inspect --format='{{.State.Health.Status}}' "$cid" 2>/dev/null || echo "none")
                 if [ "$health" = "healthy" ]; then
-                  echo "Backend container found and healthy: $cid"
+                  echo "Backend container is healthy: $cid"
                   break
                 elif [ "$health" = "none" ]; then
                   echo "Backend container has no healthcheck, proceeding anyway: $cid"
@@ -173,76 +241,17 @@ jobs:
                   echo "Waiting for healthy status (currently: $health)... ($i/60)"
                 fi
               else
-                echo "Waiting for container to start... ($i/60)"
+                echo "Waiting for backend to start... ($i/60)"
               fi
               sleep 2
             done
-            # Run DB migrations
-            if [ -n "$cid" ]; then
-              # Wait for PostgreSQL to be ready (max 60 seconds)
-              echo "Waiting for PostgreSQL to be ready..."
-              db_cid=$(docker ps --filter "name=fitfolio-staging_db" --filter "status=running" --format '{{.ID}}' | head -n1)
-              if [ -z "$db_cid" ]; then
-                echo "ERROR: DB container not found"
-                exit 1
-              fi
 
-              db_ready=false
-              for i in {1..30}; do
-                if docker exec -i "$db_cid" pg_isready -h localhost -p 5432 >/dev/null 2>&1; then
-                  echo "PostgreSQL is ready!"
-                  db_ready=true
-                  break
-                fi
-                echo "PostgreSQL not ready yet, waiting... ($i/30)"
-                sleep 2
-              done
-
-              if [ "$db_ready" = false ]; then
-                echo "ERROR: PostgreSQL did not become ready within 60 seconds"
-                exit 1
-              fi
-
-              echo "Running preflight checks..."
-              docker exec -i "$cid" python3 -u /app/scripts/preflight_check.py
-
-              echo ""
-              echo "Listing migrations present..."
-              docker exec -i "$cid" ls -la /app/migrations/versions || true
-
-              echo ""
-              echo "Checking secrets are mounted..."
-              docker exec -i "$cid" ls -l /run/secrets/ || echo "No secrets found"
-
-              echo ""
-              echo "Checking database migration state..."
-              # Use dedicated script to check and stamp if needed (avoids OOM from loading Alembic models)
-              # -u flag disables buffering so we see output immediately
-              docker exec -i "$cid" python3 -u /app/scripts/db_stamp_check.py
-
-              echo ""
-              echo "Running Alembic upgrade (verbose)..."
-              set +e  # Temporarily disable exit on error to capture output
-              upgrade_output=$(docker exec -i "$cid" bash -lc 'set -o pipefail; alembic -c /app/alembic.ini upgrade head -x verbose=true' 2>&1)
-              upgrade_exit=$?
-              set -e  # Re-enable exit on error
-
-              echo "$upgrade_output"
-
-              if [ $upgrade_exit -eq 0 ]; then
-                echo "Migrations completed successfully"
-              else
-                echo "Migration upgrade failed with exit code: $upgrade_exit"
-                if [ $upgrade_exit -eq 137 ]; then
-                  echo "Exit 137 = SIGKILL (likely OOM - check container memory limits)"
-                fi
-                echo "Full output above"
-                exit 1
-              fi
-            else
-              echo "No healthy backend container found after 120 seconds" >&2
+            if [ -z "$cid" ]; then
+              echo "ERROR: Backend did not become healthy within 120 seconds" >&2
               exit 1
             fi
+
+            echo "Deployment successful!"
 
   smoke-staging:
     name: Smoke Tests (Staging)
