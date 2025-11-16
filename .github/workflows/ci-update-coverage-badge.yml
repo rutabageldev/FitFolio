@@ -1,8 +1,8 @@
-name: Update Coverage Badge
+name: CI - Update Coverage Badge
 
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["CI - Quality Gate"]
     types:
       - completed
     branches:
