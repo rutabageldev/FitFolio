@@ -1,4 +1,4 @@
-name: Build and Push Images
+name: CD - Build and Push Images
 
 on:
   push:
