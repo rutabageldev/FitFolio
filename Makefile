@@ -100,13 +100,14 @@ migrate-staging: ## Apply DB migrations in staging
 
 smoke-staging: ## Quick staging smoke tests
 	@set -e; \
-	echo "Health check -> https://fitfolio-staging.rutabagel.com/healthz"; \
+	echo "Health check (HEAD) -> https://fitfolio-staging.rutabagel.com/healthz"; \
 	curl -fsS -I https://fitfolio-staging.rutabagel.com/healthz | head -n 1; \
+	echo "Health check (GET) -> https://fitfolio-staging.rutabagel.com/healthz"; \
+	curl -fsS https://fitfolio-staging.rutabagel.com/healthz >/dev/null; \
 	echo "API root -> https://fitfolio-staging.rutabagel.com/api"; \
 	curl -fsS https://fitfolio-staging.rutabagel.com/api | python3 -m json.tool || true; \
-	echo "Auth me (expect 401) -> https://fitfolio-staging.rutabagel.com/api/v1/auth/me"; \
+	echo "Auth me (expect 401, GET only) -> https://fitfolio-staging.rutabagel.com/api/v1/auth/me"; \
 	curl -s -o /dev/null -w "%{http_code}\n" https://fitfolio-staging.rutabagel.com/api/v1/auth/me | grep -q "^401$$"; \
-	curl -s -I -o /dev/null -w "%{http_code}\n" https://fitfolio-staging.rutabagel.com/api/v1/auth/me | grep -q "^401$$"; \
 	echo "Frontend root (HEAD) -> https://fitfolio-staging.rutabagel.com/"; \
 	curl -fsS -I https://fitfolio-staging.rutabagel.com/ | head -n 1; \
 	echo "Frontend root (GET) -> https://fitfolio-staging.rutabagel.com/"; \

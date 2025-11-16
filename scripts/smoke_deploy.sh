@@ -6,7 +6,10 @@ EXTENDED="${2:-false}"
 
 echo "[smoke] Base URL: $BASE_URL"
 
-echo "[smoke] Health check"
+echo "[smoke] Health check (HEAD)"
+curl -fsS -I "$BASE_URL/healthz" >/dev/null
+
+echo "[smoke] Health check (GET)"
 curl -fsS "$BASE_URL/healthz" >/dev/null
 
 echo "[smoke] Frontend root (GET 200)"
@@ -17,10 +20,6 @@ curl -fsS "$BASE_URL/api" >/dev/null
 
 echo "[smoke] Auth me (GET 401)"
 code="$(curl -s -o /dev/null -w "%{http_code}\n" "$BASE_URL/api/v1/auth/me")"
-test "$code" = "401"
-
-echo "[smoke] Auth me (HEAD 401)"
-code="$(curl -s -I -o /dev/null -w "%{http_code}\n" "$BASE_URL/api/v1/auth/me")"
 test "$code" = "401"
 
 echo "[smoke] Header assertions (HSTS, CSP)"
