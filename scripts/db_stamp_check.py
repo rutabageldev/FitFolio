@@ -3,6 +3,7 @@
 Lightweight script to check if database has schema but no version tracking,
 and stamp it if needed. This avoids OOM from loading Alembic models.
 """
+
 import os
 import sys
 from pathlib import Path
@@ -21,6 +22,7 @@ def get_database_url():
     if use_docker_secrets:
         sys.path.insert(0, "/app")
         from app.core.secrets import get_database_url as get_url
+
         return get_url()
     else:
         return os.getenv(
@@ -45,14 +47,14 @@ def get_head_revision():
         with open(migration_file) as f:
             content = f.read()
             # Extract revision ID
-            for line in content.split('\n'):
-                if 'revision:' in line and '=' in line:
-                    revision = line.split('=')[1].strip().strip('"').strip("'")
+            for line in content.split("\n"):
+                if "revision:" in line and "=" in line:
+                    revision = line.split("=")[1].strip().strip('"').strip("'")
                     revisions[migration_file.name] = revision
-                elif 'down_revision:' in line and '=' in line:
+                elif "down_revision:" in line and "=" in line:
                     # Extract what this revises (handle None case)
-                    down_rev = line.split('=')[1].strip()
-                    if 'None' not in down_rev and down_rev not in ('None', ''):
+                    down_rev = line.split("=")[1].strip()
+                    if "None" not in down_rev and down_rev not in ("None", ""):
                         # Parse the revision ID from the string
                         down_rev = down_rev.strip().strip('"').strip("'")
                         if down_rev:
@@ -111,7 +113,10 @@ def main():
                     current_version = result[0] if result else None
 
                     if current_version != head_revision:
-                        print(f"Database at wrong version: {current_version}, expected: {head_revision}")
+                        print(
+                            f"Database at wrong version: {current_version}, "
+                            f"expected: {head_revision}"
+                        )
                         print(f"Re-stamping to {head_revision}...")
                         cur.execute(
                             "UPDATE alembic_version SET version_num = %s",
@@ -127,6 +132,7 @@ def main():
     except Exception as e:
         print(f"Error during version check/stamp: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
