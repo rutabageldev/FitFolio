@@ -204,7 +204,7 @@ jobs:
               fi
 
               echo "=== Preflight: verify Alembic URL resolution and DB connectivity ==="
-              docker exec -i "$cid" python3 -u - <<'PY'
+              docker exec -i "$cid" python3 -u -c '
 import os, sys
 from pathlib import Path
 sys.path.insert(0, "/app")
@@ -216,7 +216,7 @@ for k in ("POSTGRES_HOST","POSTGRES_PORT","POSTGRES_DB","POSTGRES_USER"):
 try:
     from app.core.secrets import get_database_url
     url = get_database_url()
-    print("[dbg] DB URL (masked):", url.replace(url.split(':',2)[2].split('@')[0],'***') if '@' in url else url)
+    print("[dbg] DB URL (masked):", url.replace(url.split(":",2)[2].split("@")[0],"***") if "@" in url else url)
 except Exception as e:
     print("[err] get_database_url failed:", e)
     import traceback
@@ -244,7 +244,7 @@ except Exception as e:
     import traceback
     traceback.print_exc()
     sys.exit(4)
-PY
+'
 
               echo ""
               echo "=== List migrations present ==="
