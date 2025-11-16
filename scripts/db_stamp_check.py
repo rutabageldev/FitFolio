@@ -30,18 +30,40 @@ def get_database_url():
 
 
 def get_head_revision():
-    """Get the head revision from migration files without loading Alembic."""
+    """Get the head revision by finding the migration with no children."""
     migrations_dir = Path("/app/migrations/versions")
-    migration_files = sorted(migrations_dir.glob("*.py"), reverse=True)
+    migration_files = list(migrations_dir.glob("*.py"))
 
     if not migration_files:
         return None
 
-    # Extract revision from the latest migration file
-    with open(migration_files[0]) as f:
-        for line in f:
-            if "Revision ID:" in line:
-                return line.split(":")[1].strip()
+    # Build a map of revisions and what they revise
+    revisions = {}
+    revises = set()
+
+    for migration_file in migration_files:
+        with open(migration_file) as f:
+            content = f.read()
+            # Extract revision ID
+            for line in content.split('\n'):
+                if 'revision:' in line and '=' in line:
+                    revision = line.split('=')[1].strip().strip('"').strip("'")
+                    revisions[migration_file.name] = revision
+                elif 'down_revision:' in line and '=' in line:
+                    # Extract what this revises (handle None case)
+                    down_rev = line.split('=')[1].strip()
+                    if 'None' not in down_rev and down_rev not in ('None', ''):
+                        # Parse the revision ID from the string
+                        down_rev = down_rev.strip().strip('"').strip("'")
+                        if down_rev:
+                            revises.add(down_rev)
+                    break
+
+    # Head is the revision that no other migration revises
+    for revision in revisions.values():
+        if revision not in revises:
+            return revision
+
     return None
 
 
