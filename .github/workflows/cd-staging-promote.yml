@@ -269,6 +269,27 @@ jobs:
               exit 1
             fi
 
+            echo ""
+            echo "Waiting for Traefik to obtain Let's Encrypt certificate..."
+            # Poll for valid certificate (DNS-01 challenge takes 10-20 seconds typically)
+            cert_valid=false
+            for i in {1..4}; do
+              echo "Checking certificate validity (attempt $i/4)..."
+              if curl -fsS --max-time 5 https://fitfolio-staging.rutabagel.com/ >/dev/null 2>&1; then
+                echo "Certificate is valid!"
+                cert_valid=true
+                break
+              else
+                echo "Certificate not ready yet, waiting 10 seconds..."
+                sleep 10
+              fi
+            done
+
+            if [ "$cert_valid" = false ]; then
+              echo "WARNING: Certificate still not valid after 40 seconds, but continuing..."
+              echo "This may cause smoke tests to fail. Check Traefik logs for certificate errors."
+            fi
+
             echo "Deployment successful!"
 
   smoke-staging:
