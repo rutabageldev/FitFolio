@@ -189,7 +189,7 @@ jobs:
 
               db_ready=false
               for i in {1..30}; do
-                if docker exec -i "$db_cid" pg_isready -h localhost -p 5432 -U fitfolio_user -d fitfolio_staging >/dev/null 2>&1; then
+                if docker exec -i "$db_cid" pg_isready -h localhost -p 5432 >/dev/null 2>&1; then
                   echo "PostgreSQL is ready!"
                   db_ready=true
                   break
@@ -203,14 +203,67 @@ jobs:
                 exit 1
               fi
 
+              echo "=== Preflight: verify Alembic URL resolution and DB connectivity ==="
+              docker exec -i "$cid" python3 -u - <<'PY'
+import os, sys
+from pathlib import Path
+sys.path.insert(0, "/app")
+
+print("[dbg] USE_DOCKER_SECRETS:", os.getenv("USE_DOCKER_SECRETS"))
+for k in ("POSTGRES_HOST","POSTGRES_PORT","POSTGRES_DB","POSTGRES_USER"):
+    print(f"[dbg] {k}=", os.getenv(k))
+
+try:
+    from app.core.secrets import get_database_url
+    url = get_database_url()
+    print("[dbg] DB URL (masked):", url.replace(url.split(':',2)[2].split('@')[0],'***') if '@' in url else url)
+except Exception as e:
+    print("[err] get_database_url failed:", e)
+    import traceback
+    traceback.print_exc()
+    sys.exit(2)
+
+try:
+    import psycopg
+    test_url = url.replace("postgresql+psycopg://","postgresql://",1)
+    with psycopg.connect(test_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1")
+            print("[dbg] DB connectivity OK")
+except Exception as e:
+    print("[err] psycopg connect failed:", e)
+    import traceback
+    traceback.print_exc()
+    sys.exit(3)
+
+try:
+    from app.db.base import Base
+    print("[dbg] app imports OK")
+except Exception as e:
+    print("[err] app import failed:", e)
+    import traceback
+    traceback.print_exc()
+    sys.exit(4)
+PY
+
+              echo ""
+              echo "=== List migrations present ==="
+              docker exec -i "$cid" bash -lc 'ls -la /app/migrations/versions || true'
+
+              echo ""
+              echo "=== Check secrets are mounted ==="
+              docker exec -i "$cid" ls -l /run/secrets/ || echo "No secrets found"
+
+              echo ""
               echo "Checking database migration state..."
               # Use dedicated script to check and stamp if needed (avoids OOM from loading Alembic models)
               # -u flag disables buffering so we see output immediately
               docker exec -i "$cid" python3 -u /app/scripts/db_stamp_check.py
 
-              echo "Running Alembic upgrade..."
+              echo ""
+              echo "Running Alembic upgrade (verbose)..."
               set +e  # Temporarily disable exit on error to capture output
-              upgrade_output=$(docker exec -i "$cid" bash -lc 'alembic -c /app/alembic.ini upgrade head' 2>&1)
+              upgrade_output=$(docker exec -i "$cid" bash -lc 'set -o pipefail; alembic -c /app/alembic.ini upgrade head -x verbose=true' 2>&1)
               upgrade_exit=$?
               set -e  # Re-enable exit on error
 
@@ -220,6 +273,9 @@ jobs:
                 echo "Migrations completed successfully"
               else
                 echo "Migration upgrade failed with exit code: $upgrade_exit"
+                if [ $upgrade_exit -eq 137 ]; then
+                  echo "Exit 137 = SIGKILL (likely OOM - check container memory limits)"
+                fi
                 echo "Full output above"
                 exit 1
               fi

@@ -37,6 +37,7 @@ def get_head_revision():
     migration_files = list(migrations_dir.glob("*.py"))
 
     if not migration_files:
+        print("[warn] No migration files found in /app/migrations/versions")
         return None
 
     # Build a map of revisions and what they revise
@@ -46,26 +47,36 @@ def get_head_revision():
     for migration_file in migration_files:
         with open(migration_file) as f:
             content = f.read()
-            # Extract revision ID
+            current_revision = None
+            current_down_rev = None
+
+            # Extract both revision and down_revision from this file
             for line in content.split("\n"):
-                if "revision:" in line and "=" in line:
-                    revision = line.split("=")[1].strip().strip('"').strip("'")
-                    revisions[migration_file.name] = revision
-                elif "down_revision:" in line and "=" in line:
-                    # Extract what this revises (handle None case)
-                    down_rev = line.split("=")[1].strip()
-                    if "None" not in down_rev and down_rev not in ("None", ""):
-                        # Parse the revision ID from the string
-                        down_rev = down_rev.strip().strip('"').strip("'")
-                        if down_rev:
-                            revises.add(down_rev)
-                    break
+                line_stripped = line.strip()
+                if line_stripped.startswith("revision") and "=" in line:
+                    # Parse: revision = "abc123" or revision: str = "abc123"
+                    current_revision = line.split("=", 1)[1].strip().strip('"').strip("'")
+                elif line_stripped.startswith("down_revision") and "=" in line:
+                    # Parse: down_revision = "xyz789" or None
+                    down_rev_part = line.split("=", 1)[1].strip()
+                    if "None" not in down_rev_part and down_rev_part not in ("None", ""):
+                        current_down_rev = down_rev_part.strip().strip('"').strip("'")
+
+            if current_revision:
+                revisions[migration_file.name] = current_revision
+                if current_down_rev:
+                    revises.add(current_down_rev)
+
+    print(f"[dbg] Found {len(revisions)} migrations: {list(revisions.values())}")
+    print(f"[dbg] Revisions that are parents: {list(revises)}")
 
     # Head is the revision that no other migration revises
     for revision in revisions.values():
         if revision not in revises:
+            print(f"[dbg] Head revision (not revised by others): {revision}")
             return revision
 
+    print("[warn] Could not determine head revision")
     return None
 
 
