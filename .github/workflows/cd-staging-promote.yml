@@ -168,7 +168,16 @@ jobs:
             done
             # Run DB migrations
             if [ -n "$cid" ]; then
-              docker exec -i "$cid" bash -lc "alembic -c /app/alembic.ini upgrade head"
+              docker exec -i "$cid" bash -lc '
+                set -euo pipefail
+                echo "Checking Alembic version..."
+                if ! alembic -c /app/alembic.ini current >/tmp/alembic_current.log 2>&1; then
+                  echo "Alembic version missing or inaccessible; stamping head"
+                  alembic -c /app/alembic.ini stamp head
+                fi
+                echo "Running Alembic upgrade..."
+                alembic -c /app/alembic.ini upgrade head
+              '
             else
               echo "No backend container found after 60 seconds" >&2
               exit 1
