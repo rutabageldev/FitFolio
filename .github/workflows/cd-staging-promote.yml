@@ -182,63 +182,63 @@ jobs:
               echo "Checking database migration state..."
               # Lightweight check and stamp using direct SQL to avoid OOM from loading all models
               docker exec -i "$cid" bash -lc '
-                python3 -c "
-import os
-import psycopg
-from app.core.secrets import get_database_url
+              python3 -c "
+              import os
+              import psycopg
+              from app.core.secrets import get_database_url
 
-db_url = get_database_url() if os.getenv(\"USE_DOCKER_SECRETS\", \"\").lower() in (\"true\", \"1\", \"yes\") else os.getenv(\"DATABASE_URL\")
-db_url = db_url.replace(\"postgresql+psycopg://\", \"postgresql://\")
+              db_url = get_database_url() if os.getenv(\"USE_DOCKER_SECRETS\", \"\").lower() in (\"true\", \"1\", \"yes\") else os.getenv(\"DATABASE_URL\")
+              db_url = db_url.replace(\"postgresql+psycopg://\", \"postgresql://\")
 
-# Get the head revision without loading models
-import configparser
-config = configparser.ConfigParser()
-config.read(\"/app/alembic.ini\")
+              # Get the head revision without loading models
+              import configparser
+              config = configparser.ConfigParser()
+              config.read(\"/app/alembic.ini\")
 
-# Find the latest migration file
-import os
-from pathlib import Path
-migrations_dir = Path(\"/app/migrations/versions\")
-migration_files = sorted(migrations_dir.glob(\"*.py\"), reverse=True)
-if migration_files:
-    # Extract revision from first line of latest migration file
-    with open(migration_files[0]) as f:
-        for line in f:
-            if \"Revision ID:\" in line:
-                head_revision = line.split(\":\")[1].strip()
-                break
-else:
-    head_revision = None
+              # Find the latest migration file
+              import os
+              from pathlib import Path
+              migrations_dir = Path(\"/app/migrations/versions\")
+              migration_files = sorted(migrations_dir.glob(\"*.py\"), reverse=True)
+              if migration_files:
+                  # Extract revision from first line of latest migration file
+                  with open(migration_files[0]) as f:
+                      for line in f:
+                          if \"Revision ID:\" in line:
+                              head_revision = line.split(\":\")[1].strip()
+                              break
+              else:
+                  head_revision = None
 
-try:
-    with psycopg.connect(db_url) as conn:
-        with conn.cursor() as cur:
-            # Check if alembic_version table exists
-            cur.execute(\"SELECT EXISTS(SELECT FROM information_schema.tables WHERE table_name=\047alembic_version\047)\")
-            table_exists = cur.fetchone()[0]
+              try:
+                  with psycopg.connect(db_url) as conn:
+                      with conn.cursor() as cur:
+                          # Check if alembic_version table exists
+                          cur.execute(\"SELECT EXISTS(SELECT FROM information_schema.tables WHERE table_name=\047alembic_version\047)\")
+                          table_exists = cur.fetchone()[0]
 
-            # Check if user tables exist (indicates schema is present)
-            cur.execute(\"SELECT EXISTS(SELECT FROM information_schema.tables WHERE table_name=\047users\047)\")
-            users_table_exists = cur.fetchone()[0]
+                          # Check if user tables exist (indicates schema is present)
+                          cur.execute(\"SELECT EXISTS(SELECT FROM information_schema.tables WHERE table_name=\047users\047)\")
+                          users_table_exists = cur.fetchone()[0]
 
-            if users_table_exists and not table_exists and head_revision:
-                # Schema exists but no version tracking - stamp directly with SQL
-                print(f\"Stamping database to {head_revision} using direct SQL...\")
-                cur.execute(\"CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL, CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num))\")
-                cur.execute(\"INSERT INTO alembic_version (version_num) VALUES (%s)\", (head_revision,))
-                conn.commit()
-                print(\"Database stamped successfully via SQL\")
-            elif users_table_exists and table_exists:
-                cur.execute(\"SELECT version_num FROM alembic_version\")
-                result = cur.fetchone()
-                print(f\"Database already tracked at version: {result[0] if result else \047empty\047}\")
-            else:
-                print(\"Fresh database - ready for migrations\")
-except Exception as e:
-    print(f\"Error during version check/stamp: {e}\")
-    import traceback
-    traceback.print_exc()
-"
+                          if users_table_exists and not table_exists and head_revision:
+                              # Schema exists but no version tracking - stamp directly with SQL
+                              print(f\"Stamping database to {head_revision} using direct SQL...\")
+                              cur.execute(\"CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL, CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num))\")
+                              cur.execute(\"INSERT INTO alembic_version (version_num) VALUES (%s)\", (head_revision,))
+                              conn.commit()
+                              print(\"Database stamped successfully via SQL\")
+                          elif users_table_exists and table_exists:
+                              cur.execute(\"SELECT version_num FROM alembic_version\")
+                              result = cur.fetchone()
+                              print(f\"Database already tracked at version: {result[0] if result else \047empty\047}\")
+                          else:
+                              print(\"Fresh database - ready for migrations\")
+              except Exception as e:
+                  print(f\"Error during version check/stamp: {e}\")
+                  import traceback
+                  traceback.print_exc()
+              "
               '
 
               echo "Running Alembic upgrade..."
