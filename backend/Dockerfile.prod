@@ -32,6 +32,8 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 # copy app
 COPY backend/ /app/
+# copy deployment scripts
+COPY scripts/ /app/scripts/
 
 USER appuser
 EXPOSE 8000
