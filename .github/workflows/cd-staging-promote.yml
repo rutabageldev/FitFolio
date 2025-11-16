@@ -179,12 +179,29 @@ jobs:
             done
             # Run DB migrations
             if [ -n "$cid" ]; then
+              # Wait for PostgreSQL to be ready (max 60 seconds)
               echo "Waiting for PostgreSQL to be ready..."
-              until docker exec -i "$cid" bash -lc 'command -v pg_isready >/dev/null 2>&1 && pg_isready -h db -p 5432 -U fitfolio_user -d fitfolio_staging' 2>/dev/null; do
-                echo "PostgreSQL not ready yet, waiting..."
+              db_cid=$(docker ps --filter "name=fitfolio-staging_db" --filter "status=running" --format '{{.ID}}' | head -n1)
+              if [ -z "$db_cid" ]; then
+                echo "ERROR: DB container not found"
+                exit 1
+              fi
+
+              db_ready=false
+              for i in {1..30}; do
+                if docker exec -i "$db_cid" pg_isready -h localhost -p 5432 -U fitfolio_user -d fitfolio_staging >/dev/null 2>&1; then
+                  echo "PostgreSQL is ready!"
+                  db_ready=true
+                  break
+                fi
+                echo "PostgreSQL not ready yet, waiting... ($i/30)"
                 sleep 2
               done
-              echo "PostgreSQL is ready!"
+
+              if [ "$db_ready" = false ]; then
+                echo "ERROR: PostgreSQL did not become ready within 60 seconds"
+                exit 1
+              fi
 
               echo "Checking database migration state..."
               # Use dedicated script to check and stamp if needed (avoids OOM from loading Alembic models)

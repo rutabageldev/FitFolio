@@ -74,7 +74,19 @@ def main():
     # Convert SQLAlchemy URL to psycopg format
     db_url = db_url.replace("postgresql+psycopg://", "postgresql://")
 
+    # Log masked URL for debugging (hide password)
+    masked_url = db_url
+    if "@" in db_url:
+        # Mask password: postgres://user:XXXXX@host/db
+        parts = db_url.split("@")
+        user_pass = parts[0].split("://")[1]
+        if ":" in user_pass:
+            user = user_pass.split(":")[0]
+            masked_url = f"postgresql://{user}:****@{parts[1]}"
+    print(f"Database URL resolved: {masked_url}")
+
     head_revision = get_head_revision()
+    print(f"Head revision determined: {head_revision}")
 
     try:
         with psycopg.connect(db_url) as conn:
