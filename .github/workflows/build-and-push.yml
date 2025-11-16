@@ -5,6 +5,7 @@ on:
     workflows: ['CI']
     branches:
       - dev
+      - main
     types:
       - completed
   workflow_dispatch: {}
