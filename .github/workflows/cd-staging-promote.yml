@@ -194,6 +194,7 @@ jobs:
               --env USE_DOCKER_SECRETS=true \
               --env PYTHONUNBUFFERED=1 \
               --restart-condition none \
+              --with-registry-auth \
               --detach \
               ghcr.io/${GHCR_OWNER}/${GHCR_REPO}/backend:${IMAGE_TAG} \
               bash -c 'python3 -u /app/scripts/preflight_check.py && python3 -u /app/scripts/db_stamp_check.py && alembic -c /app/alembic.ini upgrade head'

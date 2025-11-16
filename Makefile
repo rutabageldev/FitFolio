@@ -100,20 +100,20 @@ migrate-staging: ## Apply DB migrations in staging
 
 smoke-staging: ## Quick staging smoke tests
 	@set -e; \
-	echo "Health check -> https://staging.fitfolio.rutabagel.com/healthz"; \
-	curl -fsS -I https://staging.fitfolio.rutabagel.com/healthz | head -n 1; \
-	echo "API root -> https://staging.fitfolio.rutabagel.com/api"; \
-	curl -fsS https://staging.fitfolio.rutabagel.com/api | python3 -m json.tool || true; \
-	echo "Auth me (expect 401) -> https://staging.fitfolio.rutabagel.com/api/v1/auth/me"; \
-	curl -s -o /dev/null -w "%{http_code}\n" https://staging.fitfolio.rutabagel.com/api/v1/auth/me | grep -q "^401$$"; \
-	curl -s -I -o /dev/null -w "%{http_code}\n" https://staging.fitfolio.rutabagel.com/api/v1/auth/me | grep -q "^401$$"; \
-	echo "Frontend root (HEAD) -> https://staging.fitfolio.rutabagel.com/"; \
-	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | head -n 1; \
-	echo "Frontend root (GET) -> https://staging.fitfolio.rutabagel.com/"; \
-	curl -fsS https://staging.fitfolio.rutabagel.com/ >/dev/null; \
+	echo "Health check -> https://fitfolio-staging.rutabagel.com/healthz"; \
+	curl -fsS -I https://fitfolio-staging.rutabagel.com/healthz | head -n 1; \
+	echo "API root -> https://fitfolio-staging.rutabagel.com/api"; \
+	curl -fsS https://fitfolio-staging.rutabagel.com/api | python3 -m json.tool || true; \
+	echo "Auth me (expect 401) -> https://fitfolio-staging.rutabagel.com/api/v1/auth/me"; \
+	curl -s -o /dev/null -w "%{http_code}\n" https://fitfolio-staging.rutabagel.com/api/v1/auth/me | grep -q "^401$$"; \
+	curl -s -I -o /dev/null -w "%{http_code}\n" https://fitfolio-staging.rutabagel.com/api/v1/auth/me | grep -q "^401$$"; \
+	echo "Frontend root (HEAD) -> https://fitfolio-staging.rutabagel.com/"; \
+	curl -fsS -I https://fitfolio-staging.rutabagel.com/ | head -n 1; \
+	echo "Frontend root (GET) -> https://fitfolio-staging.rutabagel.com/"; \
+	curl -fsS https://fitfolio-staging.rutabagel.com/ >/dev/null; \
 	echo "Validate security headers (HSTS, CSP)"; \
-	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi \"strict-transport-security\"; \
-	curl -fsS -I https://staging.fitfolio.rutabagel.com/ | grep -qi \"content-security-policy\"
+	curl -fsS -I https://fitfolio-staging.rutabagel.com/ | grep -qi \"strict-transport-security\"; \
+	curl -fsS -I https://fitfolio-staging.rutabagel.com/ | grep -qi \"content-security-policy\"
 
 smoke-url: ## Run generic smoke against BASE (usage: make smoke-url BASE=https://host)
 	@bash scripts/smoke_deploy.sh "$(BASE)" false

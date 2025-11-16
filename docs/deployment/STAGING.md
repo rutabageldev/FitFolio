@@ -4,7 +4,7 @@ This guide covers staging deployment, secrets, and promotion workflow.
 
 ## Domain and Routing
 
-- Domain: `staging.fitfolio.rutabagel.com`
+- Domain: `fitfolio-staging.rutabagel.com`
 - Reverse proxy: Traefik on the external `traefik-public` network
 - TLS: ACME (Let's Encrypt) via Traefik
 

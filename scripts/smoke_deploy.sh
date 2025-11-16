@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${1:-https://staging.fitfolio.rutabagel.com}"
+BASE_URL="${1:-https://fitfolio-staging.rutabagel.com}"
 EXTENDED="${2:-false}"
 
 echo "[smoke] Base URL: $BASE_URL"
