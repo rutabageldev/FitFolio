@@ -3,113 +3,197 @@ name: CD - Staging and Promote
 on:
   workflow_dispatch:
     inputs:
-      image_tag:
-        description: 'Immutable image tag (e.g., sha-<commit>)'
-        required: true
       extended_smoke:
         description: 'Run extended auth smoke (/_debug/mail) if enabled'
         required: false
         default: 'false'
-      bypass_ci_gate:
-        description: 'Bypass CI success requirement (manual runs only)'
-        required: false
-        default: 'false'
   workflow_run:
-    workflows: ['CI - Quality Gate']
+    workflows: ['CI - Quality Gate', 'CD - Build and Push Images']
     branches:
       - main
     types:
       - completed
+
+concurrency:
+  group: promote-${{ github.event.workflow_run.head_sha || github.sha }}
+  cancel-in-progress: true
 
 env:
   GHCR_OWNER: rutabageldev
   GHCR_REPO: fitfolio
 
 jobs:
-  require-ci:
-    name: Require CI Success
+  gate:
+    name: Validate Build & CI
     runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
-    # Skip this job only when workflow_dispatch with bypass flag
-    if: >
-      github.event_name != 'workflow_dispatch' || github.event.inputs.bypass_ci_gate != 'true'
-    steps:
-      - name: Check workflow_run conclusion (if triggered by workflow_run)
-        if: github.event_name == 'workflow_run'
-        run: |
-          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
-            echo "CI workflow did not succeed: ${{ github.event.workflow_run.conclusion }}"
-            exit 1
-          fi
-          echo "CI workflow succeeded, proceeding with deployment"
-
-      - name: Check latest CI run for this commit
-        if: github.event_name != 'workflow_run'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const sha = context.sha;
-            const { owner, repo } = context.repo;
-            const runs = await github.rest.actions.listWorkflowRunsForRepo({
-              owner, repo, per_page: 50, head_sha: sha
-            });
-            const ciRun = runs.data.workflow_runs.find(r => r.name === "CI - Quality Gate" && r.head_sha === sha);
-            if (!ciRun) {
-              core.setFailed("No CI run found for this commit.");
-              return;
-            }
-            if (ciRun.status !== "completed" || ciRun.conclusion !== "success") {
-              core.setFailed(`CI run not successful: status=${ciRun.status} conclusion=${ciRun.conclusion}`);
-            } else {
-              core.info("CI success verified.");
-            }
-
-  deploy-staging:
-    name: Deploy to Staging
-    needs: require-ci
-    runs-on: ubuntu-latest
-    environment: staging
     outputs:
-      image_tag: ${{ steps.image_tag.outputs.image_tag }}
+      image_tag: ${{ steps.compute_tag.outputs.image_tag }}
+      skip: ${{ steps.idempotent.outputs.skip }}
+      head_sha: ${{ steps.determine_sha.outputs.sha }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Set IMAGE_TAG
-        id: image_tag
+      - name: Determine head SHA
+        id: determine_sha
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.image_tag }}" ]; then
-            TAG="${{ github.event.inputs.image_tag }}"
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "sha=${{ github.event.workflow_run.head_sha }}" >> $GITHUB_OUTPUT
           else
-            TAG="sha-$(git rev-parse --short=12 HEAD)"
+            echo "sha=${GITHUB_SHA}" >> $GITHUB_OUTPUT
           fi
-          echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
-          echo "image_tag=$TAG" >> $GITHUB_OUTPUT
-      - name: Ensure build pipeline succeeded
-        if: github.event_name != 'workflow_dispatch'
+
+      - name: Enforce idempotency
+        id: idempotent
         uses: actions/github-script@v7
         with:
           script: |
-            const {owner, repo} = context.repo;
-            const workflowFile = 'cd-build-and-push.yml';
-            const headSha = context.payload.workflow_run?.head_sha || context.sha;
+            const sha = '${{ steps.determine_sha.outputs.sha }}';
+            const { owner, repo } = context.repo;
             const runs = await github.rest.actions.listWorkflowRuns({
               owner,
               repo,
-              workflow_id: workflowFile,
-              per_page: 20,
-              head_sha: headSha,
+              workflow_id: context.workflow_id,
+              status: 'completed',
+              per_page: 50,
             });
-            const run = runs.data.workflow_runs.find(r => r.head_sha === headSha);
-            if (!run) {
-              core.setFailed(`No build workflow run found for commit ${headSha}`);
-              return;
-            }
-            if (run.conclusion !== 'success') {
-              core.setFailed(`Latest build workflow for ${headSha} did not succeed (state=${run.status} conclusion=${run.conclusion})`);
+            const prior = runs.data.workflow_runs.find(
+              (run) => run.head_sha === sha && run.conclusion === 'success'
+            );
+            if (prior) {
+              core.notice(`Promotion for ${sha} already succeeded in run #${prior.id}. Skipping.`);
+              core.setOutput('skip', 'true');
             } else {
-              core.info(`Confirmed build workflow ${run.id} succeeded for ${headSha}`);
+              core.setOutput('skip', 'false');
             }
+
+      - name: Compute image tag
+        id: compute_tag
+        if: steps.idempotent.outputs.skip != 'true'
+        run: |
+          SHA=${{ steps.determine_sha.outputs.sha }}
+          TAG="sha-${SHA:0:12}"
+          echo "image_tag=$TAG" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Confirm triggering workflow succeeded
+        if: github.event_name == 'workflow_run'
+        run: |
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "Triggering workflow did not succeed: ${{ github.event.workflow_run.conclusion }}"
+            exit 1
+          fi
+
+      - name: Wait for CI success
+        if: steps.idempotent.outputs.skip != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = '${{ steps.determine_sha.outputs.sha }}';
+            const workflowName = 'CI - Quality Gate';
+            const { owner, repo } = context.repo;
+            const maxAttempts = 30;
+            const delayMs = 10000;
+
+            async function sleep(ms) {
+              return new Promise((resolve) => setTimeout(resolve, ms));
+            }
+
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                owner,
+                repo,
+                per_page: 50,
+                head_sha: sha,
+              });
+              const ciRun = runs.data.workflow_runs.find(
+                (run) => run.name === workflowName && run.head_sha === sha
+              );
+
+              if (!ciRun) {
+                core.info(`Attempt ${attempt}: CI run not found yet for ${sha}; waiting...`);
+              } else if (ciRun.status !== 'completed') {
+                core.info(`Attempt ${attempt}: CI status ${ciRun.status}; waiting...`);
+              } else if (ciRun.conclusion !== 'success') {
+                core.setFailed(`CI run concluded with ${ciRun.conclusion} for ${sha}`);
+                return;
+              } else {
+                core.info(`CI success verified via run ${ciRun.id}`);
+                return;
+              }
+
+              if (attempt === maxAttempts) {
+                core.setFailed(`CI run did not complete within timeout for ${sha}`);
+                return;
+              }
+              await sleep(delayMs);
+            }
+
+      - name: Wait for Build success
+        if: steps.idempotent.outputs.skip != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = '${{ steps.determine_sha.outputs.sha }}';
+            const workflowName = 'CD - Build and Push Images';
+            const { owner, repo } = context.repo;
+            const maxAttempts = 30;
+            const delayMs = 10000;
+
+            async function sleep(ms) {
+              return new Promise((resolve) => setTimeout(resolve, ms));
+            }
+
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                owner,
+                repo,
+                per_page: 50,
+                head_sha: sha,
+              });
+              const buildRun = runs.data.workflow_runs.find(
+                (run) => run.name === workflowName && run.head_sha === sha
+              );
+
+              if (!buildRun) {
+                core.info(`Attempt ${attempt}: Build run not found yet for ${sha}; waiting...`);
+              } else if (buildRun.status !== 'completed') {
+                core.info(`Attempt ${attempt}: Build status ${buildRun.status}; waiting...`);
+              } else if (buildRun.conclusion !== 'success') {
+                core.setFailed(`Build run concluded with ${buildRun.conclusion} for ${sha}`);
+                return;
+              } else {
+                core.info(`Build success verified via run ${buildRun.id}`);
+                return;
+              }
+
+              if (attempt === maxAttempts) {
+                core.setFailed(`Build run did not complete within timeout for ${sha}`);
+                return;
+              }
+              await sleep(delayMs);
+            }
+
+      - name: Verify images exist in GHCR
+        if: steps.idempotent.outputs.skip != 'true'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker manifest inspect ghcr.io/${{ env.GHCR_OWNER }}/${{ env.GHCR_REPO }}/backend:${IMAGE_TAG} >/dev/null
+          docker manifest inspect ghcr.io/${{ env.GHCR_OWNER }}/${{ env.GHCR_REPO }}/frontend:${IMAGE_TAG} >/dev/null
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: gate
+    if: needs.gate.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    outputs:
+      image_tag: ${{ needs.gate.outputs.image_tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use IMAGE_TAG from gate
+        run: |
+          echo "IMAGE_TAG=${{ needs.gate.outputs.image_tag }}" >> $GITHUB_ENV
       - name: Sync stack file to staging host
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -278,6 +362,7 @@ jobs:
     name: Smoke Tests (Staging)
     needs: deploy-staging
     runs-on: ubuntu-latest
+    if: needs.deploy-staging.result == 'success'
     steps:
       - uses: actions/checkout@v4
       - name: Run smoke tests via SSH
@@ -320,6 +405,7 @@ jobs:
     name: Staging Success
     needs: smoke-staging
     runs-on: ubuntu-latest
+    if: needs.smoke-staging.result == 'success'
     steps:
       - name: Record success
         run: |
