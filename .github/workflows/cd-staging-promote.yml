@@ -179,6 +179,13 @@ jobs:
             done
             # Run DB migrations
             if [ -n "$cid" ]; then
+              echo "Waiting for PostgreSQL to be ready..."
+              until docker exec -i "$cid" bash -lc 'command -v pg_isready >/dev/null 2>&1 && pg_isready -h db -p 5432 -U fitfolio_user -d fitfolio_staging' 2>/dev/null; do
+                echo "PostgreSQL not ready yet, waiting..."
+                sleep 2
+              done
+              echo "PostgreSQL is ready!"
+
               echo "Checking database migration state..."
               # Use dedicated script to check and stamp if needed (avoids OOM from loading Alembic models)
               docker exec -i "$cid" python3 /app/scripts/db_stamp_check.py

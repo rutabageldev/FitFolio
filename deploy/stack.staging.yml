@@ -37,10 +37,13 @@ services:
     secrets:
       - source: postgres_password_staging
         target: postgres_password
+        mode: 0444
       - source: smtp_username_staging
         target: smtp_username
+        mode: 0444
       - source: smtp_password_staging
         target: smtp_password
+        mode: 0444
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1"]
       interval: 10s
@@ -107,6 +110,7 @@ services:
     secrets:
       - source: postgres_password_staging
         target: postgres_password
+        mode: 0444
     volumes:
       - pgdata-staging:/var/lib/postgresql/data
     networks:

@@ -8,9 +8,12 @@ services:
     container_name: fitfolio-backend-prod
     restart: unless-stopped
     secrets:
-      - postgres_password
-      - smtp_username
-      - smtp_password
+      - source: postgres_password
+        mode: 0444
+      - source: smtp_username
+        mode: 0444
+      - source: smtp_password
+        mode: 0444
     environment:
       # Non-sensitive configuration
       POSTGRES_HOST: db
@@ -106,7 +109,8 @@ services:
     container_name: fitfolio-db-prod
     restart: unless-stopped
     secrets:
-      - postgres_password
+      - source: postgres_password
+        mode: 0444
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-fitfolio}
       POSTGRES_USER: ${POSTGRES_USER:-fitfolio_user}
