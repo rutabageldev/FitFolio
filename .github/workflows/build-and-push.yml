@@ -1,14 +1,16 @@
 name: Build and Push Images
 
 on:
-  workflow_run:
-    workflows: ['CI']
+  push:
     branches:
       - dev
       - main
-    types:
-      - completed
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Optional override for image tag (e.g., sha-abcdef123456)'
+        required: false
+        default: ''
 
 env:
   GHCR_OWNER: rutabageldev
@@ -21,14 +23,15 @@ concurrency:
 jobs:
   build-push:
     name: Build and Push to GHCR
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
       id-token: write
+    outputs:
+      image_tag: ${{ steps.tag.outputs.image_tag }}
+      backend_digest: ${{ steps.be.outputs.digest }}
+      frontend_digest: ${{ steps.fe.outputs.digest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,9 +39,21 @@ jobs:
       - name: Compute tags
         id: tag
         run: |
-          echo "IMAGE_TAG=sha-$(git rev-parse --short=12 HEAD)" >> $GITHUB_ENV
-          if [ "${{ github.ref_name }}" = "main" ]; then echo "EXTRA_TAG=latest" >> $GITHUB_ENV; fi
-          if [ "${{ github.ref_name }}" = "staging-env" ]; then echo "EXTRA_TAG=staging-latest" >> $GITHUB_ENV; fi
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.image_tag }}" ]; then
+            TAG="${{ inputs.image_tag }}"
+          else
+            TAG="sha-$(git rev-parse --short=12 HEAD)"
+          fi
+          echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
+          echo "image_tag=$TAG" >> $GITHUB_OUTPUT
+
+          EXTRA_TAG=""
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            EXTRA_TAG="latest"
+          elif [ "${{ github.ref_name }}" = "staging-env" ]; then
+            EXTRA_TAG="staging-latest"
+          fi
+          echo "EXTRA_TAG=$EXTRA_TAG" >> $GITHUB_ENV
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
