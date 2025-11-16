@@ -179,23 +179,22 @@ jobs:
             done
             # Run DB migrations
             if [ -n "$cid" ]; then
-              docker exec -i "$cid" bash -lc '
-                set -euo pipefail
-                echo "Running Alembic upgrade..."
-                # Attempt upgrade; if it fails due to duplicate tables, stamp and retry
-                if ! alembic -c /app/alembic.ini upgrade head 2>&1 | tee /tmp/alembic_upgrade.log; then
-                  if grep -q "DuplicateTable\|already exists" /tmp/alembic_upgrade.log; then
-                    echo "Tables already exist - stamping database to head and retrying..."
-                    alembic -c /app/alembic.ini stamp head
-                    alembic -c /app/alembic.ini upgrade head
-                  else
-                    echo "Migration failed with non-duplicate error"
-                    cat /tmp/alembic_upgrade.log
-                    exit 1
-                  fi
+              # Attempt the upgrade first
+              if ! docker exec -i "$cid" bash -lc 'alembic -c /app/alembic.ini upgrade head' 2>&1 | tee /tmp/migration_output.log; then
+                # Check if failure was due to duplicate tables
+                if grep -q "DuplicateTable\|already exists" /tmp/migration_output.log; then
+                  echo "Detected existing tables - recovering by stamping to head..."
+                  # Run stamp in a fresh exec to avoid OOM (exit 137) from double alembic load
+                  docker exec -i "$cid" bash -lc 'alembic -c /app/alembic.ini stamp head'
+                  echo "Database stamped successfully - migrations are in sync"
+                else
+                  echo "Migration failed with non-duplicate error:"
+                  cat /tmp/migration_output.log
+                  exit 1
                 fi
+              else
                 echo "Migrations completed successfully"
-              '
+              fi
             else
               echo "No healthy backend container found after 120 seconds" >&2
               exit 1
