@@ -203,55 +203,15 @@ jobs:
                 exit 1
               fi
 
-              echo "=== Preflight: verify Alembic URL resolution and DB connectivity ==="
-              docker exec -i "$cid" python3 -u -c '
-import os, sys
-from pathlib import Path
-sys.path.insert(0, "/app")
-
-print("[dbg] USE_DOCKER_SECRETS:", os.getenv("USE_DOCKER_SECRETS"))
-for k in ("POSTGRES_HOST","POSTGRES_PORT","POSTGRES_DB","POSTGRES_USER"):
-    print(f"[dbg] {k}=", os.getenv(k))
-
-try:
-    from app.core.secrets import get_database_url
-    url = get_database_url()
-    print("[dbg] DB URL (masked):", url.replace(url.split(":",2)[2].split("@")[0],"***") if "@" in url else url)
-except Exception as e:
-    print("[err] get_database_url failed:", e)
-    import traceback
-    traceback.print_exc()
-    sys.exit(2)
-
-try:
-    import psycopg
-    test_url = url.replace("postgresql+psycopg://","postgresql://",1)
-    with psycopg.connect(test_url) as conn:
-        with conn.cursor() as cur:
-            cur.execute("SELECT 1")
-            print("[dbg] DB connectivity OK")
-except Exception as e:
-    print("[err] psycopg connect failed:", e)
-    import traceback
-    traceback.print_exc()
-    sys.exit(3)
-
-try:
-    from app.db.base import Base
-    print("[dbg] app imports OK")
-except Exception as e:
-    print("[err] app import failed:", e)
-    import traceback
-    traceback.print_exc()
-    sys.exit(4)
-'
+              echo "Running preflight checks..."
+              docker exec -i "$cid" python3 -u /app/scripts/preflight_check.py
 
               echo ""
-              echo "=== List migrations present ==="
-              docker exec -i "$cid" bash -lc 'ls -la /app/migrations/versions || true'
+              echo "Listing migrations present..."
+              docker exec -i "$cid" ls -la /app/migrations/versions || true
 
               echo ""
-              echo "=== Check secrets are mounted ==="
+              echo "Checking secrets are mounted..."
               docker exec -i "$cid" ls -l /run/secrets/ || echo "No secrets found"
 
               echo ""
