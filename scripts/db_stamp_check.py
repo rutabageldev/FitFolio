@@ -108,8 +108,19 @@ def main():
                 elif users_table_exists and version_table_exists:
                     cur.execute("SELECT version_num FROM alembic_version")
                     result = cur.fetchone()
-                    version = result[0] if result else "empty"
-                    print(f"Database already tracked at version: {version}")
+                    current_version = result[0] if result else None
+
+                    if current_version != head_revision:
+                        print(f"Database at wrong version: {current_version}, expected: {head_revision}")
+                        print(f"Re-stamping to {head_revision}...")
+                        cur.execute(
+                            "UPDATE alembic_version SET version_num = %s",
+                            (head_revision,),
+                        )
+                        conn.commit()
+                        print("Database re-stamped successfully via SQL")
+                    else:
+                        print(f"Database already at correct version: {current_version}")
                 else:
                     print("Fresh database - ready for migrations")
 

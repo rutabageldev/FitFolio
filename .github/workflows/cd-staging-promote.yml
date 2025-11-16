@@ -184,10 +184,11 @@ jobs:
               docker exec -i "$cid" python3 /app/scripts/db_stamp_check.py
 
               echo "Running Alembic upgrade..."
-              if docker exec -i "$cid" bash -lc 'alembic -c /app/alembic.ini upgrade head'; then
+              if docker exec -i "$cid" bash -lc 'alembic -c /app/alembic.ini upgrade head' 2>&1 | tee /tmp/upgrade_output.log; then
                 echo "Migrations completed successfully"
               else
-                echo "Migration upgrade failed"
+                echo "Migration upgrade failed. Output:"
+                cat /tmp/upgrade_output.log
                 exit 1
               fi
             else
