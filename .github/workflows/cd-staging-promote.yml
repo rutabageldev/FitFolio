@@ -181,13 +181,20 @@ jobs:
             if [ -n "$cid" ]; then
               docker exec -i "$cid" bash -lc '
                 set -euo pipefail
-                echo "Checking Alembic version..."
-                if ! alembic -c /app/alembic.ini current >/tmp/alembic_current.log 2>&1; then
-                  echo "Alembic version missing or inaccessible; stamping head"
-                  alembic -c /app/alembic.ini stamp head
-                fi
                 echo "Running Alembic upgrade..."
-                alembic -c /app/alembic.ini upgrade head
+                # Attempt upgrade; if it fails due to duplicate tables, stamp and retry
+                if ! alembic -c /app/alembic.ini upgrade head 2>&1 | tee /tmp/alembic_upgrade.log; then
+                  if grep -q "DuplicateTable\|already exists" /tmp/alembic_upgrade.log; then
+                    echo "Tables already exist - stamping database to head and retrying..."
+                    alembic -c /app/alembic.ini stamp head
+                    alembic -c /app/alembic.ini upgrade head
+                  else
+                    echo "Migration failed with non-duplicate error"
+                    cat /tmp/alembic_upgrade.log
+                    exit 1
+                  fi
+                fi
+                echo "Migrations completed successfully"
               '
             else
               echo "No healthy backend container found after 120 seconds" >&2
