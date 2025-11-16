@@ -205,14 +205,22 @@ jobs:
 
               echo "Checking database migration state..."
               # Use dedicated script to check and stamp if needed (avoids OOM from loading Alembic models)
-              docker exec -i "$cid" python3 /app/scripts/db_stamp_check.py
+              # -u flag disables buffering so we see output immediately
+              docker exec -i "$cid" python3 -u /app/scripts/db_stamp_check.py
 
               echo "Running Alembic upgrade..."
-              if docker exec -i "$cid" bash -lc 'alembic -c /app/alembic.ini upgrade head' 2>&1 | tee /tmp/upgrade_output.log; then
+              set +e  # Temporarily disable exit on error to capture output
+              upgrade_output=$(docker exec -i "$cid" bash -lc 'alembic -c /app/alembic.ini upgrade head' 2>&1)
+              upgrade_exit=$?
+              set -e  # Re-enable exit on error
+
+              echo "$upgrade_output"
+
+              if [ $upgrade_exit -eq 0 ]; then
                 echo "Migrations completed successfully"
               else
-                echo "Migration upgrade failed. Output:"
-                cat /tmp/upgrade_output.log
+                echo "Migration upgrade failed with exit code: $upgrade_exit"
+                echo "Full output above"
                 exit 1
               fi
             else
