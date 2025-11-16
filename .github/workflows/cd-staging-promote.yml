@@ -138,6 +138,15 @@ jobs:
           source: 'deploy/stack.staging.yml'
           target: '${{ secrets.STAGING_APP_DIR }}'
           strip_components: 1
+      - name: Sync scripts to staging host
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STAGING_SSH_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: 2222
+          source: 'scripts/'
+          target: '${{ secrets.STAGING_APP_DIR }}'
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.1.0
         with:
@@ -268,8 +277,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run smoke test script
-        run: bash scripts/smoke_deploy.sh "https://fitfolio-staging.rutabagel.com" "${{ github.event.inputs.extended_smoke || 'false' }}"
+      - name: Run smoke tests via SSH
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.STAGING_SSH_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: 2222
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.STAGING_APP_DIR }}"
+
+            # Copy smoke script from repo (already synced during deploy)
+            if [ ! -f scripts/smoke_deploy.sh ]; then
+              echo "ERROR: smoke_deploy.sh not found in ${{ secrets.STAGING_APP_DIR }}/scripts/"
+              exit 1
+            fi
+
+            # Run smoke tests from staging server (can resolve internal DNS)
+            bash scripts/smoke_deploy.sh "https://fitfolio-staging.rutabagel.com" "${{ github.event.inputs.extended_smoke || 'false' }}"
 
   promote-prod:
     name: Promote to Production (Manual)
