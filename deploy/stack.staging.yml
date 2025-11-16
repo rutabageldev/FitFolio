@@ -54,7 +54,7 @@ services:
     deploy:
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.fitfolio-staging-backend.rule=Host(`fitfolio-staging.rutabagel.com`) && PathPrefix(`/api`)"
+        - "traefik.http.routers.fitfolio-staging-backend.rule=Host(`fitfolio-staging.rutabagel.com`) && (PathPrefix(`/api`) || PathPrefix(`/_debug`) || Path(`/healthz`))"
         - "traefik.http.routers.fitfolio-staging-backend.entrypoints=websecure"
         - "traefik.http.routers.fitfolio-staging-backend.tls=true"
         - "traefik.http.routers.fitfolio-staging-backend.tls.certresolver=cloudflare"

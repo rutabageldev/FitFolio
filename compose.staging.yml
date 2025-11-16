@@ -47,8 +47,8 @@ services:
     # Traefik integration (staging)
     labels:
       - "traefik.enable=true"
-      # Router for API endpoints - higher priority to match /api paths first
-      - "traefik.http.routers.fitfolio-backend-staging.rule=Host(`fitfolio-staging.rutabagel.com`) && PathPrefix(`/api`)"
+      # Router for backend endpoints - API, health check, and debug endpoints
+      - "traefik.http.routers.fitfolio-backend-staging.rule=Host(`fitfolio-staging.rutabagel.com`) && (PathPrefix(`/api`) || PathPrefix(`/_debug`) || Path(`/healthz`))"
       - "traefik.http.routers.fitfolio-backend-staging.entrypoints=websecure"
       - "traefik.http.routers.fitfolio-backend-staging.tls=true"
       - "traefik.http.routers.fitfolio-backend-staging.tls.certresolver=cloudflare"
