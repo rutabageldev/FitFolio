@@ -155,15 +155,26 @@ jobs:
             cd "${{ secrets.STAGING_APP_DIR }}"
             # Deploy or update the stack with current IMAGE_TAG
             IMAGE_TAG="${IMAGE_TAG}" docker stack deploy -c stack.staging.yml fitfolio-staging
-            # Wait for backend container to be running before running migrations
-            echo "Waiting for backend container to be ready..."
-            for i in {1..30}; do
+            # Wait for backend container to be running and healthy
+            echo "Waiting for backend container to be ready and healthy..."
+            cid=""
+            for i in {1..60}; do
               cid=$(docker ps --filter "name=fitfolio-staging_backend" --filter "status=running" --format '{{.ID}}' | head -n1)
               if [ -n "$cid" ]; then
-                echo "Backend container found: $cid"
-                break
+                # Check if container is healthy
+                health=$(docker inspect --format='{{.State.Health.Status}}' "$cid" 2>/dev/null || echo "none")
+                if [ "$health" = "healthy" ]; then
+                  echo "Backend container found and healthy: $cid"
+                  break
+                elif [ "$health" = "none" ]; then
+                  echo "Backend container has no healthcheck, proceeding anyway: $cid"
+                  break
+                else
+                  echo "Waiting for healthy status (currently: $health)... ($i/60)"
+                fi
+              else
+                echo "Waiting for container to start... ($i/60)"
               fi
-              echo "Waiting... ($i/30)"
               sleep 2
             done
             # Run DB migrations
@@ -179,7 +190,7 @@ jobs:
                 alembic -c /app/alembic.ini upgrade head
               '
             else
-              echo "No backend container found after 60 seconds" >&2
+              echo "No healthy backend container found after 120 seconds" >&2
               exit 1
             fi
 

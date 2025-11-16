@@ -41,6 +41,12 @@ services:
         target: smtp_username
       - source: smtp_password_staging
         target: smtp_password
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
     deploy:
       labels:
         - "traefik.enable=true"
