@@ -3,9 +3,9 @@
 Preflight checks for deployment migrations.
 Verifies database connectivity, secret reading, and import paths.
 """
+
 import os
 import sys
-from pathlib import Path
 
 sys.path.insert(0, "/app")
 
@@ -59,8 +59,9 @@ def main():
 
     print("\n=== Preflight: App Imports ===")
     try:
-        from app.db.base import Base
+        from app.db.base import Base  # noqa: F401
 
+        _ = Base.metadata  # touch an attribute so Ruff keeps the import
         print("[dbg] app imports OK")
     except Exception as e:
         print(f"[err] app import failed: {e}")
