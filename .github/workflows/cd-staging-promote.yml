@@ -307,9 +307,9 @@ jobs:
             echo "Waiting for migrations to complete (max 300s)..."
             migration_complete=false
             for i in {1..150}; do
-              state=$(docker service ps fitfolio-staging-migrate --format '{{.CurrentState}}' --filter "desired-state=shutdown" | head -n1)
-              tasks=$(docker service ps fitfolio-staging-migrate --no-trunc --filter "desired-state=shutdown")
-              completed=$(echo "$tasks" | grep -c "Complete")
+              state=$(docker service ps fitfolio-staging-migrate --format '{{.CurrentState}}' --filter "desired-state=shutdown" 2>/dev/null | head -n1 || true)
+              tasks=$(docker service ps fitfolio-staging-migrate --no-trunc --filter "desired-state=shutdown" 2>/dev/null || true)
+              completed=$(printf '%s\n' "$tasks" | grep -c "Complete" || true)
               if echo "$state" | grep -q "Complete" && [ "$completed" -ge 1 ]; then
                 echo "Migrations completed successfully!"
                 migration_complete=true
