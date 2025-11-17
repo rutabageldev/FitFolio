@@ -1,42 +1,212 @@
 #root {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 2rem;
-    text-align: center;
+    width: 100%;
 }
 
-.logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-}
-.logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-    filter: drop-shadow(0 0 2em #61dafbaa);
+.landing-page {
+    min-height: 100vh;
+    padding: clamp(3rem, 6vw, 6rem);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2rem, 5vw, 4rem);
 }
 
-@keyframes logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.hero {
+    max-width: 780px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    a:nth-of-type(2) .logo {
-        animation: logo-spin infinite 20s linear;
-    }
+.eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #0ea5e9;
+    margin-bottom: 0.5rem;
+}
+
+.hero h1 {
+    font-size: clamp(2.5rem, 6vw, 3.75rem);
+    line-height: 1.1;
+    margin: 0.25rem 0 1rem;
+    color: #0f172a;
+}
+
+.subhead {
+    font-size: 1.15rem;
+    color: #475569;
+    margin-bottom: 1.5rem;
+}
+
+.cta-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.cta {
+    border-radius: 999px;
+    padding: 0.85rem 1.6rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    transition:
+        transform 120ms ease,
+        box-shadow 120ms ease;
+}
+
+.cta.primary {
+    background: linear-gradient(135deg, #0ea5e9, #2563eb);
+    color: #fff;
+    border-color: transparent;
+}
+
+.cta.secondary {
+    background-color: rgba(14, 165, 233, 0.08);
+    color: #0369a1;
+    border-color: rgba(14, 165, 233, 0.35);
+}
+
+.cta:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.4);
+    outline-offset: 2px;
+}
+
+.cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.disclaimer {
+    font-size: 0.95rem;
+    color: #65748b;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
 }
 
 .card {
-    padding: 2em;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 1.25rem;
+    padding: 1.75rem;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.05);
 }
 
-.read-the-docs {
-    color: #888;
+.card h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: #0f172a;
+}
+
+.card p {
+    margin: 0;
+    color: #556070;
+}
+
+.stats-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(15, 23, 42, 0.9);
+    border-radius: 1.5rem;
+    color: #e2e8f0;
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat .value {
+    font-size: 2rem;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.stat .label {
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(226, 232, 240, 0.8);
+}
+
+.info-panel {
+    background-color: #fff;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.info-panel h2 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: #0f172a;
+}
+
+.info-panel p {
+    color: #475569;
+    margin-bottom: 1.25rem;
+}
+
+.info-panel ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.info-panel li {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.info-panel li:last-of-type {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.milestone-label {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.milestone-detail {
+    color: #556070;
+    font-size: 0.95rem;
+}
+
+.footer {
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    padding-top: 1.5rem;
+    text-align: center;
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+.footer a {
+    color: #0ea5e9;
+    font-weight: 600;
+}
+
+@media (max-width: 640px) {
+    .cta-group {
+        flex-direction: column;
+    }
+
+    .stats-panel {
+        text-align: left;
+    }
 }
