@@ -50,16 +50,23 @@ jobs:
           script: |
             const sha = '${{ steps.determine_sha.outputs.sha }}';
             const { owner, repo } = context.repo;
-            const runs = await github.rest.actions.listWorkflowRuns({
+            const workflowName = 'CD - Staging and Promote';
+
+            const runs = await github.rest.actions.listWorkflowRunsForRepo({
               owner,
               repo,
-              workflow_id: context.workflow_id,
-              status: 'completed',
               per_page: 50,
+              head_sha: sha,
+              status: 'completed',
             });
+
             const prior = runs.data.workflow_runs.find(
-              (run) => run.head_sha === sha && run.conclusion === 'success'
+              (run) =>
+                run.name === workflowName &&
+                run.head_sha === sha &&
+                run.conclusion === 'success'
             );
+
             if (prior) {
               core.notice(`Promotion for ${sha} already succeeded in run #${prior.id}. Skipping.`);
               core.setOutput('skip', 'true');
