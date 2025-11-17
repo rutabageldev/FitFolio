@@ -285,6 +285,8 @@ jobs:
             echo "Running database migrations in one-off container..."
             # Create a one-off service for migrations (not in the app workers)
             # This avoids OOM from running migrations alongside 4 gunicorn workers
+            docker service rm fitfolio-staging-migrate 2>/dev/null || true
+
             docker service create \
               --name fitfolio-staging-migrate \
               --network fitfolio-staging_default \
