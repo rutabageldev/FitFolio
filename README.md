@@ -122,7 +122,7 @@ For the latest status and plans, see:
 | [DOCKER_SECRETS.md](docs/development/DOCKER_SECRETS.md)         | Secrets in development and production     |
 | [STAGING.md](docs/deployment/STAGING.md)                        | Staging domain, secrets, deploy/promotion |
 | [backend/CSRF_INTEGRATION.md](docs/backend/CSRF_INTEGRATION.md) | CSRF implementation details               |
-| [Design System](docs/design/README.md)                          | Brand, foundations, components, patterns  |
+| gi[Design System](docs/design/README.md)                        | Brand, foundations, components, patterns  |
 
 ---
 

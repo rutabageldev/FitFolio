@@ -137,3 +137,6 @@ down-prod:
 
 logs-prod:
 	docker compose -f compose.prod.yml logs -f --tail=200
+
+labels-init: ## Create GitHub labels for design workflow (requires gh or GITHUB_TOKEN)
+	@bash scripts/create_design_labels.sh
