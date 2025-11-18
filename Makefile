@@ -86,6 +86,12 @@ open-mailpit:
 open-frontend:
 	@echo "Frontend -> http://localhost:5173"
 
+storybook: ## Run Storybook (frontend)
+	cd frontend && npm run storybook
+
+storybook-build: ## Build Storybook static site
+	cd frontend && npm run build:storybook
+
 up-staging: ## Start staging stack
 	docker compose -f compose.staging.yml up -d
 

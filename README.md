@@ -2,7 +2,7 @@
 
 **Modern fitness tracking application with passwordless authentication and comprehensive security.**
 
-[![CI](https://github.com/rutabageldev/fitfolio/workflows/CI/badge.svg)](https://github.com/rutabageldev/fitfolio/actions) [![Coverage](https://img.shields.io/badge/coverage-97.9%25-brightgreen)]() [![Security](https://img.shields.io/badge/security-A+-success)]() [![Python](https://img.shields.io/badge/python-3.12-blue)]() [![FastAPI](https://img.shields.io/badge/FastAPI-0.120-009688)]() [![React](https://img.shields.io/badge/React-19-61dafb)]()
+[![CI - Quality Gate](https://github.com/rutabageldev/fitfolio/actions/workflows/ci-quality-gate.yml/badge.svg?branch=main)](https://github.com/rutabageldev/fitfolio/actions/workflows/ci-quality-gate.yml) [![Coverage](https://img.shields.io/badge/coverage-97.9%25-brightgreen)]() [![Python](https://img.shields.io/badge/python-3.12-blue)]()
 
 ---
 
@@ -94,59 +94,21 @@ _Coming after Phase 3 deployment:_
 
 ---
 
-## Technology Stack
+## Technology
 
-### Backend
-
-- **Python 3.12** - Modern async Python
-- **FastAPI 0.120** - High-performance async web framework
-- **SQLAlchemy 2.0** - Async ORM with type hints
-- **PostgreSQL 16** - Primary database
-- **Redis 7** - Caching, sessions, rate limiting
-- **Alembic** - Database migrations
-
-### Frontend
-
-- **React 19** - Latest React with modern features
-- **Vite 7** - Fast build tool and dev server
-- **TypeScript** - Type-safe frontend code
-
-### Infrastructure
-
-- **Docker + Compose** - Containerized development and deployment
-- **Nginx** - Production frontend serving
-- **Gunicorn + Uvicorn** - Production WSGI/ASGI server
-- **Traefik** - Reverse proxy with automatic TLS (dev and prod)
-
-### Quality & Observability
-
-- **pytest** - 397 tests, 97.81% coverage, 100% pass rate
-- **Pre-commit hooks** - Automated quality gates (ruff, mypy, bandit)
-- **structlog** - Structured JSON logging
-- **OpenTelemetry** - Distributed tracing
+- Backend: Python (FastAPI), SQLAlchemy, PostgreSQL, Redis, Alembic
+- Frontend: React, Vite, TypeScript
+- Infrastructure: Docker/Compose, Traefik, Nginx, Gunicorn/Uvicorn
+- Quality & Observability: pytest, pre-commit (ruff/mypy/bandit), structlog, OpenTelemetry
 
 ---
 
-## Project Status
+## Project Status & Planning
 
-**Current Phase:** Phase 3B - Production Setup (In Progress)
-**Next Phase:** Phase 4 - Observability & Operations
+For the latest status and plans, see:
 
-### Completed ✅
-
-- ✅ Phase 0: Local development environment
-- ✅ Phase 1: Database schema & migrations
-- ✅ Phase 2A: Core security (CSRF, rate limiting, session rotation)
-- ✅ Phase 2B: Security hardening (lockout, email verification, audit logging)
-- ✅ API versioning (directory-based `/api/v1/`)
-- ✅ 397 tests / 97.81% coverage
-
-### Up Next 🔄
-
-- [ ] Complete Phase 3B production deployment and validation
-- [ ] Phase 4: Observability & operations (backups, monitoring)
-
-See [docs/ROADMAP.md](docs/ROADMAP.md) for detailed planning.
+- Roadmap: `docs/ROADMAP.md`
+- Changelog: `docs/CHANGELOG.md`
 
 ---
 
@@ -160,6 +122,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for detailed planning.
 | [DOCKER_SECRETS.md](docs/development/DOCKER_SECRETS.md)         | Secrets in development and production     |
 | [STAGING.md](docs/deployment/STAGING.md)                        | Staging domain, secrets, deploy/promotion |
 | [backend/CSRF_INTEGRATION.md](docs/backend/CSRF_INTEGRATION.md) | CSRF implementation details               |
+| [Design System](docs/design/README.md)                          | Brand, foundations, components, patterns  |
 
 ---
 
@@ -182,64 +145,16 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for detailed planning.
 
 ### Security Model
 
-- **Opaque Sessions**: Server-side only, no JWT exposure
-- **Token Hashing**: SHA-256 for all stored tokens
-- **Cookie Security**: HttpOnly, Secure, SameSite=Lax
-- **Session Rotation**: Automatic after 7 days or privilege changes
-- **Rate Limiting**: Token bucket algorithm, per-IP tracking
-- **CSRF Protection**: Double-submit cookie pattern
-
-### Database Schema
-
-5 core tables:
-
-- `users` - User accounts with email verification
-- `sessions` - Server-side session storage with rotation
-- `magic_link_tokens` - Single-use email tokens (login + verification)
-- `webauthn_credentials` - Passkey public keys
-- `login_events` - Comprehensive audit log
+- Opaque sessions, token hashing, secure cookies, session rotation
+- Rate limiting, CSRF protection
+- See `docs/backend/` and ADRs (`docs/adr/`) for details
 
 ---
 
-## API Endpoints
+## API
 
-### Authentication (`/api/v1/auth`)
-
-| Method | Endpoint                        | Purpose                         |
-| ------ | ------------------------------- | ------------------------------- |
-| POST   | `/magic-link/start`             | Request magic link via email    |
-| POST   | `/magic-link/verify`            | Verify magic link token         |
-| POST   | `/webauthn/register/start`      | Start passkey registration      |
-| POST   | `/webauthn/register/finish`     | Complete passkey registration   |
-| POST   | `/webauthn/authenticate/start`  | Start passkey authentication    |
-| POST   | `/webauthn/authenticate/finish` | Complete passkey authentication |
-| GET    | `/webauthn/credentials`         | List user's passkeys            |
-| POST   | `/logout`                       | End current session             |
-| GET    | `/me`                           | Get current user info           |
-
-### Email Verification (`/api/v1/auth/email`)
-
-| Method | Endpoint               | Purpose                   |
-| ------ | ---------------------- | ------------------------- |
-| POST   | `/verify`              | Verify email with token   |
-| POST   | `/resend-verification` | Resend verification email |
-
-### Session Management (`/api/v1/auth/sessions`)
-
-| Method | Endpoint             | Purpose                   |
-| ------ | -------------------- | ------------------------- |
-| GET    | `/`                  | List active sessions      |
-| DELETE | `/{id}`              | Revoke specific session   |
-| POST   | `/revoke-all-others` | Revoke all other sessions |
-
-### Admin (`/api/v1/admin`)
-
-| Method | Endpoint             | Purpose                     |
-| ------ | -------------------- | --------------------------- |
-| GET    | `/audit/events`      | Query audit logs (filtered) |
-| GET    | `/audit/event-types` | List available event types  |
-
-**Full API Documentation:** http://localhost:8080/docs (when running locally)
+- OpenAPI docs (local): `http://localhost:8080/docs`
+- Base path: `/api/v1/`
 
 ---
 
@@ -256,7 +171,7 @@ fitfolio/
 │   │   ├── db/       # Database models & connection
 │   │   └── middleware/ # CSRF, rate limiting, etc.
 │   ├── migrations/   # Alembic database migrations
-│   └── tests/        # 397 tests (see catalog in docs/)
+│   └── tests/        # See test catalog in docs/
 │
 ├── frontend/         # React frontend
 │   ├── src/
@@ -291,36 +206,16 @@ pre-commit run --all-files  # Run all checks
 
 ## Testing
 
-### Test Coverage
-
-397 tests | 97.81% coverage | 100% pass rate
-See catalog reports in `docs/testing/catalog/backend/report.json`.
-Pre-commit integrates coverage and quality gates.
+- Start at: `docs/testing/README.md`
+- Catalog reports: `docs/testing/catalog/backend/report.json`
+- Coverage badge above is auto-updated by CI
 
 ---
 
 ## Security
 
-### Threat Model
-
-**Protected Against:**
-
-- ✅ Brute force attacks (rate limiting + account lockout)
-- ✅ CSRF attacks (double-submit cookie pattern)
-- ✅ Session hijacking (rotation + secure cookies)
-- ✅ Token replay (single-use tokens, Redis TTL)
-- ✅ Email enumeration (consistent timing, error messages)
-- ✅ Unverified accounts (email verification required)
-
-### Security Audits
-
-- **bandit** - Static security analysis (pre-commit)
-- **pip-audit** - Dependency vulnerability scanning (pre-commit)
-- Manual code review for auth-critical paths
-
-### Reporting Security Issues
-
-Please report security vulnerabilities privately (details TBD after public deployment).
+- Audits: bandit (static analysis), pip-audit (dependency vulnerabilities)
+- Reporting: please report privately (full process to be published post-public launch)
 
 ---
 
@@ -355,19 +250,4 @@ Built with:
 
 ---
 
-**Current Status:** Phase 3B In Progress - Production Deployment
-**Next Milestone:** Observability & operations (Phase 4)
-
-### Reproducible deploys
-
-Use immutable image tags for production:
-
-```bash
-export GHCR_OWNER=rutabageldev
-export GHCR_REPO=fitfolio
-export IMAGE_TAG=sha-$(git rev-parse --short=12 HEAD)
-docker compose -f compose.prod.yml pull
-docker compose -f compose.prod.yml up -d
-```
-
-For questions or support, see [docs/RUNBOOK.md](docs/RUNBOOK.md).
+Deployment and operations: see `docs/RUNBOOK.md` and `docs/deployment/STAGING.md`.
