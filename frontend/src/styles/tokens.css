@@ -1,0 +1,146 @@
+/* Design tokens (Foundations v1) */
+:root {
+    /* Brand / Primary (amber) */
+    --color-primary-50: #fff7e6;
+    --color-primary-100: #feefcc;
+    --color-primary-200: #fde0a3;
+    --color-primary-300: #fbc46e;
+    --color-primary-400: #f6ad3d;
+    --color-primary-500: #f5a623; /* brand base */
+    --color-primary-600: #e98f10; /* recommended for solid fills w/ white text */
+    --color-primary-700: #c9770c;
+    --color-primary-800: #9c5c0c;
+    --color-primary-900: #733f08;
+
+    /* Warning (distinct from brand: yellow) */
+    --color-warning-50: #fffbeb;
+    --color-warning-100: #fef3c7;
+    --color-warning-200: #fde68a;
+    --color-warning-300: #fcd34d;
+    --color-warning-400: #facc15;
+    --color-warning-500: #eab308;
+    --color-warning-600: #ca8a04;
+    --color-warning-700: #a16207;
+    --color-warning-800: #854d0e;
+    --color-warning-900: #713f12;
+
+    /* Error */
+    --color-danger-50: #fef2f2;
+    --color-danger-100: #fee2e2;
+    --color-danger-200: #fecaca;
+    --color-danger-300: #fca5a5;
+    --color-danger-400: #f87171;
+    --color-danger-500: #ef4444; /* close to #DC2626 family for accessibility */
+    --color-danger-600: #dc2626;
+    --color-danger-700: #b91c1c;
+    --color-danger-800: #991b1b;
+    --color-danger-900: #7f1d1d;
+
+    /* Success */
+    --color-success-50: #ecfdf5;
+    --color-success-100: #d1fae5;
+    --color-success-200: #a7f3d0;
+    --color-success-300: #6ee7b7;
+    --color-success-400: #34d399;
+    --color-success-500: #10b981; /* provided */
+    --color-success-600: #059669; /* provided */
+    --color-success-700: #047857;
+    --color-success-800: #065f46;
+    --color-success-900: #064e3b;
+
+    /* Info */
+    --color-info-50: #e0f2fe;
+    --color-info-100: #bae6fd;
+    --color-info-200: #7dd3fc;
+    --color-info-300: #38bdf8;
+    --color-info-400: #0ea5e9;
+    --color-info-500: #0284c7; /* provided */
+    --color-info-600: #0369a1;
+    --color-info-700: #075985;
+    --color-info-800: #0c4a6e;
+    --color-info-900: #0a3a57;
+
+    /* Neutrals (slate-like) and surfaces */
+    --color-neutral-50: #f8fafc;
+    --color-neutral-100: #f1f5f9;
+    --color-neutral-200: #e2e8f0; /* provided (also text-on-dark) */
+    --color-neutral-300: #cbd5e1;
+    --color-neutral-400: #94a3b8; /* provided (muted) */
+    --color-neutral-500: #64748b;
+    --color-neutral-600: #475569;
+    --color-neutral-700: #334155;
+    --color-neutral-800: #1e293b; /* provided (text on light) */
+    --color-neutral-900: #0f172a;
+
+    /* Dark bases (for dark sections) */
+    --color-dark-base: #1a1f2e; /* provided */
+    --color-dark-mid: #2d3748; /* provided */
+
+    /* On-colors (text/icons on color surfaces) */
+    --color-on-primary: #ffffff; /* use with primary-600/700 */
+    --color-on-warning: #0f172a; /* dark text on warning backgrounds */
+    --color-on-danger: #ffffff;
+    --color-on-success: #ffffff;
+    --color-on-info: #ffffff;
+    --color-on-surface: var(--color-neutral-800);
+    --color-on-surface-muted: var(--color-neutral-400);
+    --color-on-surface-inverse: var(--color-neutral-200);
+
+    /* App-level aliases */
+    --color-text: var(--color-neutral-800);
+    --color-text-muted: var(--color-neutral-400);
+    --color-surface: #ffffff;
+    --color-surface-2: var(--color-neutral-100);
+    --color-border: rgba(15, 23, 42, 0.12);
+    --focus-ring: var(--color-info-500);
+
+    /* Spacing (base-4 scale) */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-7: 1.75rem;
+    --space-8: 2rem;
+    --space-9: 2.5rem;
+
+    /* Typography */
+    --font-family-sans:
+        'Recursive', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    --font-family-mono:
+        'Recursive', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+        'Courier New', monospace;
+    /* Type scale (approx. 1.2 ratio) */
+    --font-size--2: 0.75rem;
+    --font-size--1: 0.875rem;
+    --font-size-0: 1rem;
+    --font-size-1: 1.125rem;
+    --font-size-2: 1.25rem;
+    --font-size-3: 1.5rem;
+    --font-size-4: 1.875rem;
+    --font-size-5: 2.25rem;
+    --line-height-tight: 1.2;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.7;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* Radius */
+    --radius-1: 0.25rem;
+    --radius-2: 0.5rem;
+    --radius-3: 0.75rem;
+    --radius-4: 1rem;
+    --radius-full: 9999px;
+
+    /* Elevation (shadows) */
+    --elevation-0: none;
+    --elevation-1: 0 1px 2px rgba(2, 8, 23, 0.06), 0 1px 1px rgba(2, 8, 23, 0.06);
+    --elevation-2: 0 2px 6px rgba(2, 8, 23, 0.08), 0 2px 4px rgba(2, 8, 23, 0.06);
+    --elevation-3: 0 6px 16px rgba(2, 8, 23, 0.1), 0 4px 8px rgba(2, 8, 23, 0.08);
+    --elevation-4: 0 12px 24px rgba(2, 8, 23, 0.12), 0 8px 12px rgba(2, 8, 23, 0.1);
+    --elevation-5: 0 20px 40px rgba(2, 8, 23, 0.14), 0 12px 20px rgba(2, 8, 23, 0.12);
+}

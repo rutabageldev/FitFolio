@@ -1,0 +1,57 @@
+<!-- Injected into Storybook preview iframe <head> so stories use Recursive -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+    href="https://fonts.googleapis.com/css2?family=Recursive:slnt,wght,CASL,MONO@-15..0,300..1000,0..1,0..1&display=swap"
+    rel="stylesheet"
+/>
+
+<style>
+    /* Self-hosted fallback (avoids network blocks during build/preview) */
+    @font-face {
+        font-family: 'Recursive';
+        src: url('/fonts/Recursive-VariableFont_CASL,CRSV,MONO,slnt,wght.ttf') format('truetype');
+        font-weight: 300 1000;
+        font-style: oblique -15deg 0deg;
+        font-display: swap;
+    }
+
+    /* Force Recursive across Storybook preview (Canvas + Docs) */
+    :root,
+    body,
+    .sbdocs,
+    .sbdocs-wrapper,
+    .sbdocs-content {
+        font-family:
+            'Recursive',
+            system-ui,
+            -apple-system,
+            'Segoe UI',
+            Roboto,
+            Helvetica,
+            Arial,
+            'Apple Color Emoji',
+            'Segoe UI Emoji',
+            'Segoe UI Symbol',
+            sans-serif !important;
+        font-optical-sizing: auto;
+        font-variation-settings:
+            'slnt' 0,
+            'CASL' 0.2,
+            'CRSV' 0.5,
+            'MONO' 0;
+    }
+
+    /* Mono utility for code in Docs */
+    code,
+    pre {
+        font-family:
+            'Recursive', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+            'Courier New', monospace !important;
+        font-variation-settings:
+            'slnt' 0,
+            'CASL' 0,
+            'CRSV' 0.5,
+            'MONO' 1;
+    }
+</style>

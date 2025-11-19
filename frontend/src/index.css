@@ -1,12 +1,15 @@
 :root {
     font-family:
-        'Inter',
-        'SF Pro Display',
-        'Segoe UI',
+        'Recursive',
         system-ui,
         -apple-system,
-        BlinkMacSystemFont,
-        'Helvetica Neue',
+        'Segoe UI',
+        Roboto,
+        Helvetica,
+        Arial,
+        'Apple Color Emoji',
+        'Segoe UI Emoji',
+        'Segoe UI Symbol',
         sans-serif;
     line-height: 1.6;
     font-weight: 400;
@@ -16,6 +19,12 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-optical-sizing: auto;
+    font-variation-settings:
+        'slnt' 0,
+        'CASL' 0.2,
+        'CRSV' 0.5,
+        'MONO' 0;
 }
 
 *,
@@ -33,4 +42,18 @@ body {
 
 a {
     text-decoration: none;
+}
+
+/* Utility: enable Recursive mono axis for code */
+code,
+pre,
+.font-mono-recursive {
+    font-family:
+        'Recursive', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+        'Courier New', monospace;
+    font-variation-settings:
+        'slnt' 0,
+        'CASL' 0,
+        'CRSV' 0.5,
+        'MONO' 1;
 }

@@ -5,6 +5,52 @@ All notable completed work is documented here. For outstanding work, see
 
 ---
 
+## 2025-11-17 - Staging Continuous Deployment & Promotion Gate
+
+### Deployment Automation
+
+**Staging CD (GitHub Actions)**
+
+- Added automated deploys to staging after CI/build success
+- Workflow: `cd-staging-promote.yml`
+  - Gates on successful runs of:
+    - `CI - Quality Gate` (tests, lint, security, build)
+    - `CD - Build and Push Images` (publishes `backend` and `frontend` images)
+  - Idempotent: skips if a successful promotion for the same SHA already ran
+  - Computes immutable `IMAGE_TAG` as `sha-<12char>`
+  - Verifies GHCR images exist for both services
+  - SSH deploy to staging with stack sync and environment-scoped secrets
+  - Runs DB migrations via a one-off service before app traffic
+  - Waits for backend health and Traefik TLS issuance
+  - Executes smoke tests against `https://fitfolio-staging.rutabagel.com`
+
+**Coverage Badge Automation**
+
+- Workflow: `ci-update-coverage-badge.yml`
+  - Updates README coverage badge on `main` after successful CI
+  - Pulls badge artifact from `CI - Quality Gate`
+
+**CI Quality Gate Enhancements**
+
+- Workflow: `ci-quality-gate.yml`
+  - Parallelized jobs for backend tests/coverage, linting, security (bandit, pip-audit),
+    CodeQL, DB migrations check, frontend lint/build/audit
+  - Coverage badge artifact generation and PR comment with % coverage
+
+**Benefits:**
+
+- Reproducible, gated staging releases tied to commit SHAs
+- Safer migrations via dedicated one-off service
+- Immediate validation via smoke tests and TLS checks
+- Automatic coverage signal in README and PRs
+
+**Environment:**
+
+- Staging domain: `fitfolio-staging.rutabagel.com`
+- Immutable images in GHCR: `ghcr.io/rutabageldev/fitfolio/{backend,frontend}:sha-<12>`
+
+---
+
 ## 2025-11-14 - Docker Secrets & Dev/Prod Parity
 
 ### Security Infrastructure

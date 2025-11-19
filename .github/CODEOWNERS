@@ -1,0 +1,15 @@
+# CODEOWNERS
+# Paths here require review from listed owners when changed in a PR.
+
+# Design documentation
+/docs/design/**                          @rutabageldev
+
+# Frontend design primitives and tokens
+/frontend/src/styles/**                  @rutabageldev
+/frontend/.storybook/**                  @rutabageldev
+
+# Optional: component library ownership (uncomment if desired)
+# /frontend/src/components/**            @rutabageldev
+
+# Fallback: default owners (optional)
+# *                                       @rutabageldev

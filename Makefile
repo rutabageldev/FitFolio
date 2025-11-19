@@ -86,6 +86,12 @@ open-mailpit:
 open-frontend:
 	@echo "Frontend -> http://localhost:5173"
 
+storybook: ## Run Storybook (frontend)
+	cd frontend && npm run storybook
+
+storybook-build: ## Build Storybook static site
+	cd frontend && npm run build:storybook
+
 up-staging: ## Start staging stack
 	docker compose -f compose.staging.yml up -d
 
@@ -131,3 +137,6 @@ down-prod:
 
 logs-prod:
 	docker compose -f compose.prod.yml logs -f --tail=200
+
+labels-init: ## Create GitHub labels for design workflow (requires gh or GITHUB_TOKEN)
+	@bash scripts/create_design_labels.sh

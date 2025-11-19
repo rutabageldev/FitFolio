@@ -1,6 +1,6 @@
 # FitFolio Roadmap
 
-**Last Updated:** 2025-11-14 **Current Status:** Production Deployment (Phase 3B)
+**Last Updated:** 2025-11-17 **Current Status:** Production Deployment (Phase 3B)
 
 This document tracks **outstanding work only**. For completed work, see
 [CHANGELOG.md](CHANGELOG.md).
@@ -11,7 +11,8 @@ This document tracks **outstanding work only**. For completed work, see
 
 ### Phase 3B: Production Setup (In Progress)
 
-**Status:** Docker secrets migration complete, ready for production deployment
+**Status:** Docker secrets migration complete; automated staging deployments live and
+green
 
 #### Completed ✅
 
@@ -33,6 +34,12 @@ This document tracks **outstanding work only**. For completed work, see
   - Development domain working (`fitfolio.dev.rutabagel.com`)
   - Routing configuration complete
   - Network isolation configured
+- ✅ **Staging Environment & CD**
+  - Automated deploys to `fitfolio-staging.rutabagel.com` after CI + image build
+  - Immutable image tags (`sha-<12>`) verified in GHCR
+  - One-off migration service runs before app traffic
+  - Health/TLS checks and smoke tests post-deploy
+  - Docs: `docs/deployment/STAGING.md`, workflow: `cd-staging-promote.yml`
 
 #### Remaining Tasks
 
@@ -141,7 +148,6 @@ This document tracks **outstanding work only**. For completed work, see
 - [ ] Real-time features (WebSocket)
 - [ ] Admin dashboard UI
 - [ ] Multi-language support (i18n)
-- [ ] Staging environment
 
 ---
 
