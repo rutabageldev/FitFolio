@@ -7,6 +7,15 @@
 />
 
 <style>
+    /* Self-hosted fallback (avoids network blocks during build/preview) */
+    @font-face {
+        font-family: 'Recursive';
+        src: url('/fonts/Recursive-VariableFont_CASL,CRSV,MONO,slnt,wght.ttf') format('truetype');
+        font-weight: 300 1000;
+        font-style: oblique -15deg 0deg;
+        font-display: swap;
+    }
+
     /* Force Recursive across Storybook preview (Canvas + Docs) */
     :root,
     body,
