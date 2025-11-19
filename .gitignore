@@ -43,6 +43,9 @@ Thumbs.db
 **/*.pem
 frontend/node_modules
 frontend/storybook-static/
+frontend/public/fonts/*.ttf
+frontend/public/fonts/*.woff2
+/Recursive-VariableFont_CASL,CRSV,MONO,slnt,wght.ttf
 
 # Development/test scripts (ad-hoc)
 # Proper tests belong in backend/tests/ or frontend/src/__tests__/

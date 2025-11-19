@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import './Button.css';
 
 export function Button({ variant = 'primary', children, ...props }) {
   return (

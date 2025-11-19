@@ -3,6 +3,7 @@ const config = {
   framework: '@storybook/react-webpack5',
   stories: ['../src/**/*.stories.@(js|jsx|ts|tsx)'],
   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions', '@storybook/addon-a11y'],
+  staticDirs: ['../public'],
   docs: {
     autodocs: true,
   },

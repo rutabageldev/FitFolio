@@ -1,0 +1,29 @@
+.ff-btn {
+    border: 1px solid transparent;
+    border-radius: var(--radius-3);
+    padding: var(--space-2) var(--space-4);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition:
+        transform 120ms ease,
+        box-shadow 120ms ease;
+}
+
+.ff-btn.primary {
+    background: var(--color-primary-600);
+    color: var(--color-on-primary);
+    box-shadow: var(--elevation-1);
+}
+.ff-btn.primary:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--elevation-2);
+}
+.ff-btn.secondary {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-color: var(--color-border);
+}
+.ff-btn:focus-visible {
+    outline: 3px solid color-mix(in oklab, var(--focus-ring), transparent 40%);
+    outline-offset: 2px;
+}
